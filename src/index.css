@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+/* ── Bảng danh sách chung — border dọc giữa cột ── */
+.tbl-list td {
+  border-right: 1px solid #e2e8f0;
+}
+.tbl-list td:last-child {
+  border-right: none;
+}
