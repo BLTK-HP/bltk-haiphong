@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Search, Trash2, ArrowLeft, TrendingUp, ChevronRight, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 
@@ -643,31 +643,22 @@ const RETURNS = [{
   staff: "NGOC HA",
   status: "Đã từ chối"
 }];
-const TXNS = [{
-  date: "15/06/2026",
-  kind: "Thu",
-  note: "Thu tiền đơn DH260229",
-  acc: "TCB · PAT",
-  amount: 12370000
-}, {
-  date: "12/06/2026",
-  kind: "Thu",
-  note: "Đặt cọc đơn DH260228",
-  acc: "Tiền mặt",
-  amount: 5000000
-}, {
-  date: "10/06/2026",
-  kind: "Chi",
-  note: "Vận chuyển lô PN..0034",
-  acc: "Tiền mặt",
-  amount: -350000
-}, {
-  date: "08/06/2026",
-  kind: "Thu",
-  note: "Thu tiền đơn DH260225",
-  acc: "TCB · Công ty",
-  amount: 3000000
-}];
+const ACCOUNTS_DEF = [
+  {key: "TCB-CTY", bank: "TCB-CTY BLTK HP", stk: "02", owner: "CÔNG TY BTLK HP", openBal: 56358134},
+  {key: "TCB-PAT", bank: "TCB-PAT",          stk: "01", owner: "PAT",              openBal: 1230722374},
+  {key: "Tiền mặt", bank: "TIEN MAT",         stk: "TM", owner: "Tiền mặt",         openBal: 273100000},
+];
+const TXNS = [
+  {id:390,date:"19/06/2026 15:24",entity:"Anh Đạt",  orderId:"DH260262",kind:"Đặt cọc",    acc:"TCB-PAT",  amount:3000000,  note:"",                      staff:"NGOC HA"},
+  {id:389,date:"15/06/2026 10:12",entity:"Chị Mai",  orderId:"DH260229",kind:"Thu tiền",   acc:"TCB-PAT",  amount:12370000, note:"",                      staff:"THUY LINH"},
+  {id:388,date:"13/06/2026 14:30",entity:"Anh Thành",orderId:"DH260248",kind:"Thanh toán", acc:"TCB-PAT",  amount:45600000, note:"",                      staff:"NGOC HA"},
+  {id:387,date:"11/06/2026 09:15",entity:"Chị Hoa",  orderId:"DH260240",kind:"Đặt cọc",   acc:"TCB-PAT",  amount:28000000, note:"",                      staff:"THUY LINH"},
+  {id:386,date:"10/06/2026 11:00",entity:"Anh Tuấn", orderId:"DH260235",kind:"Thanh toán", acc:"TCB-PAT",  amount:53632000, note:"",                      staff:"NGOC HA"},
+  {id:385,date:"10/06/2026 09:30",entity:"NCC INAX", orderId:"",        kind:"Chi mua hàng",acc:"Tiền mặt",amount:-350000,  note:"Vận chuyển lô PN..0034",staff:"THUY LINH"},
+  {id:384,date:"08/06/2026 11:05",entity:"Chị Ngân", orderId:"DH260225",kind:"Thu tiền",   acc:"TCB-CTY",  amount:3000000,  note:"",                      staff:"NGOC HA"},
+  {id:383,date:"07/06/2026 16:20",entity:"Anh Hùng", orderId:"DH260228",kind:"Đặt cọc",   acc:"Tiền mặt", amount:3350000,  note:"",                      staff:"NGOC HA"},
+  {id:382,date:"05/06/2026 10:00",entity:"Chị Mai",  orderId:"DH260218",kind:"Chi phí",    acc:"TCB-CTY",  amount:-280000,  note:"Ship lô hàng TOTO",     staff:"THUY LINH"},
+];
 const CASHFLOW = [{
   d: "01/06",
   thu: 0
@@ -4970,129 +4961,270 @@ function NccDebtDetail({
 }
 
 /* ───────── Finance ───────── */
-function VoucherModal({
-  onClose,
-  onSave
-}) {
-  const [kind, setKind] = useState("Thu");
-  const [acc, setAcc] = useState("Tiền mặt");
+function PhieuThuModal({onClose, onSave, nextId}) {
+  const [acc, setAcc]       = useState("TCB-PAT");
+  const [entity, setEntity] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [kind, setKind]     = useState("Thu tiền");
   const [amount, setAmount] = useState(0);
-  const [note, setNote] = useState("");
-  const can = amount > 0 && note.trim();
-  return /*#__PURE__*/React.createElement(Modal, {
-    title: "Lập phiếu thu / chi",
-    onClose: onClose,
-    maxW: "max-w-lg",
-    footer: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
-      onClick: onClose,
-      className: ghostBtn
-    }, "Hủy"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => can && onSave({
-        date: "16/06/2026",
-        kind,
-        acc,
-        note,
-        amount: kind === "Thu" ? amount : -amount
-      }),
-      disabled: !can,
-      className: blueBtn + " disabled:bg-slate-300"
-    }, /*#__PURE__*/React.createElement(Save, {
-      className: "h-4 w-4"
-    }), " Lưu phiếu"))
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "space-y-4"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-sm font-medium text-slate-700"
-  }, "Loại phiếu"), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-2"
-  }, ["Thu", "Chi"].map(k => /*#__PURE__*/React.createElement("button", {
-    key: k,
-    onClick: () => setKind(k),
-    className: `flex-1 rounded-lg px-3 py-2 text-sm ring-1 ring-inset transition ${kind === k ? k === "Thu" ? "bg-emerald-600 text-white ring-emerald-600" : "bg-rose-600 text-white ring-rose-600" : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"}`
-  }, k === "Thu" ? "Phiếu thu" : "Phiếu chi")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-sm font-medium text-slate-700"
-  }, "Tài khoản"), /*#__PURE__*/React.createElement("select", {
-    className: inputF,
-    value: acc,
-    onChange: e => setAcc(e.target.value)
-  }, /*#__PURE__*/React.createElement("option", null, "Tiền mặt"), /*#__PURE__*/React.createElement("option", null, "TCB · Công ty"), /*#__PURE__*/React.createElement("option", null, "TCB · PAT"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-sm font-medium text-slate-700"
-  }, "Số tiền"), /*#__PURE__*/React.createElement(NumInput, {
-    className: inputF,
-    value: amount,
-    onChange: setAmount
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-sm font-medium text-slate-700"
-  }, "Nội dung"), /*#__PURE__*/React.createElement("input", {
-    className: inputF,
-    value: note,
-    placeholder: "VD: Thu tiền đơn DH...",
-    onChange: e => setNote(e.target.value)
-  }))));
+  const [note, setNote]     = useState("");
+  const canSave = entity.trim() && amount > 0;
+  const now = () => { const d = new Date(); return d.toLocaleDateString('vi-VN') + " " + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); };
+  const doSave = () => onSave({id:nextId,date:now(),entity,orderId,kind,acc,amount,note,staff:"NGOC HA"});
+  const lbl = "mb-1 block text-xs font-medium text-slate-500";
+  return /*#__PURE__*/React.createElement(Modal, {title:"Lập phiếu thu",onClose,maxW:"max-w-lg",
+    footer:/*#__PURE__*/React.createElement(React.Fragment,null,
+      /*#__PURE__*/React.createElement("button",{onClick:onClose,className:ghostBtn},"Hủy"),
+      /*#__PURE__*/React.createElement("button",{onClick:doSave,disabled:!canSave,className:blueBtn+(canSave?"":" opacity-50 cursor-not-allowed")},"Lưu phiếu thu"))},
+    /*#__PURE__*/React.createElement("div",{className:"grid grid-cols-2 gap-3"},
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Tài khoản"),
+        /*#__PURE__*/React.createElement("select",{value:acc,onChange:e=>setAcc(e.target.value),className:inputF},
+          ACCOUNTS_DEF.map(a=>/*#__PURE__*/React.createElement("option",{key:a.key,value:a.key},a.bank+" ("+a.stk+")")))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Loại thu"),
+        /*#__PURE__*/React.createElement("select",{value:kind,onChange:e=>setKind(e.target.value),className:inputF},
+          ["Thu tiền","Đặt cọc","Thanh toán","Thu khác"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Đối tượng *"),
+        /*#__PURE__*/React.createElement("input",{value:entity,onChange:e=>setEntity(e.target.value),placeholder:"Tên khách hàng...",className:inputF})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Mã đơn liên quan"),
+        /*#__PURE__*/React.createElement("input",{value:orderId,onChange:e=>setOrderId(e.target.value),placeholder:"DH...",className:inputF})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Số tiền (đ) *"),
+        /*#__PURE__*/React.createElement(NumInput,{className:inputF,value:amount,onChange:setAmount})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Ghi chú"),
+        /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),placeholder:"Ghi chú...",className:inputF}))));
+}
+function PhieuChiModal({onClose, onSave, nextId}) {
+  const [acc, setAcc]       = useState("TCB-PAT");
+  const [entity, setEntity] = useState("");
+  const [orderId, setOrderId] = useState("");
+  const [kind, setKind]     = useState("Chi phí");
+  const [amount, setAmount] = useState(0);
+  const [note, setNote]     = useState("");
+  const canSave = entity.trim() && amount > 0;
+  const now = () => { const d = new Date(); return d.toLocaleDateString('vi-VN') + " " + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); };
+  const doSave = () => onSave({id:nextId,date:now(),entity,orderId,kind,acc,amount:-amount,note,staff:"NGOC HA"});
+  const lbl = "mb-1 block text-xs font-medium text-slate-500";
+  return /*#__PURE__*/React.createElement(Modal, {title:"Lập phiếu chi",onClose,maxW:"max-w-lg",
+    footer:/*#__PURE__*/React.createElement(React.Fragment,null,
+      /*#__PURE__*/React.createElement("button",{onClick:onClose,className:ghostBtn},"Hủy"),
+      /*#__PURE__*/React.createElement("button",{onClick:doSave,disabled:!canSave,className:"inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50"},"Lưu phiếu chi"))},
+    /*#__PURE__*/React.createElement("div",{className:"grid grid-cols-2 gap-3"},
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Tài khoản"),
+        /*#__PURE__*/React.createElement("select",{value:acc,onChange:e=>setAcc(e.target.value),className:inputF},
+          ACCOUNTS_DEF.map(a=>/*#__PURE__*/React.createElement("option",{key:a.key,value:a.key},a.bank+" ("+a.stk+")")))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Loại chi"),
+        /*#__PURE__*/React.createElement("select",{value:kind,onChange:e=>setKind(e.target.value),className:inputF},
+          ["Chi mua hàng","Chi vận chuyển","Chi phí","Hoàn ứng","Chi khác"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Đối tượng *"),
+        /*#__PURE__*/React.createElement("input",{value:entity,onChange:e=>setEntity(e.target.value),placeholder:"Tên đối tượng...",className:inputF})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Mã đơn liên quan"),
+        /*#__PURE__*/React.createElement("input",{value:orderId,onChange:e=>setOrderId(e.target.value),placeholder:"DH...",className:inputF})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Số tiền (đ) *"),
+        /*#__PURE__*/React.createElement(NumInput,{className:inputF,value:amount,onChange:setAmount})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Ghi chú"),
+        /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),placeholder:"Ghi chú...",className:inputF}))));
+}
+function ChuyenTienModal({onClose, onSave, nextId}) {
+  const [from, setFrom]   = useState("TCB-PAT");
+  const [to, setTo]       = useState("Tiền mặt");
+  const [amount, setAmount] = useState(0);
+  const [note, setNote]   = useState("");
+  const canSave = from !== to && amount > 0;
+  const now = () => { const d = new Date(); return d.toLocaleDateString('vi-VN') + " " + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}); };
+  const doSave = () => {
+    const dt = now();
+    onSave([
+      {id:nextId,   date:dt,entity:"Chuyển nội bộ",orderId:"",kind:"Chuyển đi", acc:from,amount:-amount,note:note||("Chuyển sang "+to),staff:"NGOC HA"},
+      {id:nextId+1, date:dt,entity:"Chuyển nội bộ",orderId:"",kind:"Chuyển về", acc:to,  amount:amount, note:note||("Nhận từ "+from),  staff:"NGOC HA"},
+    ]);
+  };
+  const lbl = "mb-1 block text-xs font-medium text-slate-500";
+  return /*#__PURE__*/React.createElement(Modal, {title:"Chuyển tiền nội bộ",onClose,maxW:"max-w-md",
+    footer:/*#__PURE__*/React.createElement(React.Fragment,null,
+      /*#__PURE__*/React.createElement("button",{onClick:onClose,className:ghostBtn},"Hủy"),
+      /*#__PURE__*/React.createElement("button",{onClick:doSave,disabled:!canSave,className:blueBtn+(canSave?"":" opacity-50 cursor-not-allowed")},"Xác nhận chuyển"))},
+    /*#__PURE__*/React.createElement("div",{className:"space-y-3"},
+      /*#__PURE__*/React.createElement("div",{className:"grid grid-cols-2 gap-3"},
+        /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Tài khoản nguồn"),
+          /*#__PURE__*/React.createElement("select",{value:from,onChange:e=>setFrom(e.target.value),className:inputF},
+            ACCOUNTS_DEF.map(a=>/*#__PURE__*/React.createElement("option",{key:a.key,value:a.key},a.bank)))),
+        /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Tài khoản đích"),
+          /*#__PURE__*/React.createElement("select",{value:to,onChange:e=>setTo(e.target.value),className:inputF},
+            ACCOUNTS_DEF.filter(a=>a.key!==from).map(a=>/*#__PURE__*/React.createElement("option",{key:a.key,value:a.key},a.bank))))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Số tiền (đ) *"),
+        /*#__PURE__*/React.createElement(NumInput,{className:inputF,value:amount,onChange:setAmount})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Ghi chú"),
+        /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),placeholder:"Lý do chuyển...",className:inputF})),
+      from===to&&/*#__PURE__*/React.createElement("p",{className:"text-xs text-rose-500"},"Tài khoản nguồn và đích không được trùng nhau")));
 }
 function Finance() {
   const notify = useToast();
-  const [txns, setTxns] = useState(TXNS);
-  const [modal, setModal] = useState(false);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "space-y-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-2 gap-4 lg:grid-cols-4"
-  }, /*#__PURE__*/React.createElement(StatCard, {
-    label: "TCB · Công ty",
-    value: vndShort(56358134),
-    icon: CreditCard
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "TCB · PAT",
-    value: vndShort(1303668374),
-    icon: CreditCard,
-    tone: "accent"
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Tiền mặt",
-    value: vndShort(273100000),
-    icon: Wallet
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Tổng số dư",
-    value: vndShort(1633126508),
-    tone: "pos",
-    icon: TrendingUp
-  })), /*#__PURE__*/React.createElement(Card, {
-    title: "Phiếu thu / chi gần đây",
-    right: /*#__PURE__*/React.createElement("button", {
-      onClick: () => setModal(true),
-      className: "inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-    }, /*#__PURE__*/React.createElement(Plus, {
-      className: "h-4 w-4"
-    }), " Lập phiếu")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "-mx-5 -mb-5"
-  }, /*#__PURE__*/React.createElement(TableShell, {
-    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Ngày"), /*#__PURE__*/React.createElement(Th, null, "Loại"), /*#__PURE__*/React.createElement(Th, null, "Nội dung"), /*#__PURE__*/React.createElement(Th, null, "Tài khoản"), /*#__PURE__*/React.createElement(Th, {
-      right: true
-    }, "Số tiền"))
-  }, txns.map((t, i) => /*#__PURE__*/React.createElement("tr", {
-    key: i,
-    className: "hover:bg-slate-50/60"
-  }, /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-slate-500"
-  }, t.date), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: `rounded px-1.5 py-0.5 text-xs font-medium ${t.amount >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`
-  }, t.kind)), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-slate-700"
-  }, t.note), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-slate-500"
-  }, t.acc), /*#__PURE__*/React.createElement("td", {
-    className: `px-4 py-3 text-right font-medium tabular-nums ${t.amount >= 0 ? "text-emerald-600" : "text-rose-600"}`
-  }, t.amount >= 0 ? "+" : "", vnd(t.amount))))))), modal && /*#__PURE__*/React.createElement(VoucherModal, {
-    onClose: () => setModal(false),
-    onSave: v => {
-      setTxns(p => [v, ...p]);
-      notify("Đã lập phiếu " + (v.amount >= 0 ? "thu" : "chi"));
-      setModal(false);
-    }
-  }));
+  const [txns, setTxns]       = useState(TXNS);
+  const [q, setQ]             = useState("");
+  const [fromDate, setFromDate] = useState("2026-06-01");
+  const [toDate, setToDate]   = useState("2026-06-19");
+  const [fAcc, setFAcc]       = useState("Tất cả");
+  const [fKind, setFKind]     = useState("Tất cả");
+  const [fAccDetail, setFAccDetail] = useState(null);
+  const [modal, setModal]     = useState(null);
+  const [editTxn, setEditTxn] = useState(null);
+  const nextId = txns.length ? Math.max(...txns.map(t=>t.id))+1 : 1;
+
+  const parseD = s => { const p=s.split(' ')[0].split('/'); return new Date(p[2],p[1]-1,p[0]); };
+  const fromD = fromDate ? new Date(fromDate) : null;
+  const toD   = toDate   ? new Date(toDate)   : null;
+
+  const visibleTxns = txns.filter(t => {
+    const d = parseD(t.date);
+    if (fromD && d < fromD) return false;
+    if (toD   && d > toD)   return false;
+    if (fAcc !== "Tất cả" && t.acc !== fAcc) return false;
+    if (fKind !== "Tất cả" && t.kind !== fKind) return false;
+    if (fAccDetail && t.acc !== fAccDetail) return false;
+    if (q && !`${t.id} ${t.orderId} ${t.note} ${t.entity}`.toLowerCase().includes(q.toLowerCase())) return false;
+    return true;
+  });
+
+  const accSummary = ACCOUNTS_DEF.map(a => {
+    const at = visibleTxns.filter(t=>t.acc===a.key);
+    const totalIn  = at.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+    const totalOut = at.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+    return {...a, totalIn, totalOut, closeBal: a.openBal+totalIn-totalOut};
+  });
+  const tot = {
+    openBal: accSummary.reduce((s,a)=>s+a.openBal,0),
+    totalIn: accSummary.reduce((s,a)=>s+a.totalIn,0),
+    totalOut:accSummary.reduce((s,a)=>s+a.totalOut,0),
+    closeBal:accSummary.reduce((s,a)=>s+a.closeBal,0),
+  };
+  const allKinds = ["Tất cả",...new Set(txns.map(t=>t.kind))];
+  const allAccs  = ["Tất cả",...ACCOUNTS_DEF.map(a=>a.key)];
+
+  const addTxn  = t  => { setTxns(p=>[t,...p]); notify("Đã lưu phiếu thu"); setModal(null); };
+  const addChi  = t  => { setTxns(p=>[t,...p]); notify("Đã lưu phiếu chi"); setModal(null); };
+  const addXfer = ts => { setTxns(p=>[...ts,...p]); notify("Đã chuyển tiền nội bộ"); setModal(null); };
+  const delTxn  = id => { if(window.confirm("Xóa giao dịch này?")){ setTxns(p=>p.filter(t=>t.id!==id)); notify("Đã xóa giao dịch"); }};
+  const resetFilter = () => { setQ(""); setFAcc("Tất cả"); setFKind("Tất cả"); setFAccDetail(null); };
+
+  const KIND_COLORS = {
+    "Thu tiền":   "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+    "Đặt cọc":    "bg-sky-50 text-sky-700 ring-1 ring-sky-200",
+    "Thanh toán": "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+    "Chi mua hàng":"bg-orange-50 text-orange-700 ring-1 ring-orange-200",
+    "Chi vận chuyển":"bg-orange-50 text-orange-700 ring-1 ring-orange-200",
+    "Chi phí":    "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+    "Hoàn ứng":   "bg-purple-50 text-purple-700 ring-1 ring-purple-200",
+    "Chuyển đi":  "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+    "Chuyển về":  "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
+  };
+
+  const thC = "whitespace-nowrap px-3 py-2.5 text-left";
+  const thR = "whitespace-nowrap px-3 py-2.5 text-right";
+  const tdC = "px-3 py-2.5 text-slate-700";
+  const tdR = "px-3 py-2.5 text-right tabular-nums font-medium";
+
+  return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
+
+    /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"},
+      /*#__PURE__*/React.createElement("div", {className:"relative min-w-[200px] flex-1"},
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-xs font-medium text-slate-500"}, "Tìm kiếm"),
+        /*#__PURE__*/React.createElement(Search, {className:"absolute left-2.5 top-[2.05rem] h-4 w-4 text-slate-400"}),
+        /*#__PURE__*/React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm theo đơn hàng, ghi chú...", className:`${field} w-full pl-8`})),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-xs font-medium text-slate-500"}, "Từ ngày"),
+        /*#__PURE__*/React.createElement("input", {type:"date", value:fromDate, onChange:e=>setFromDate(e.target.value), className:field})),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-xs font-medium text-slate-500"}, "Đến ngày"),
+        /*#__PURE__*/React.createElement("input", {type:"date", value:toDate, onChange:e=>setToDate(e.target.value), className:field})),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-xs font-medium text-slate-500"}, "Tài khoản"),
+        /*#__PURE__*/React.createElement("select", {value:fAcc, onChange:e=>{ setFAcc(e.target.value); setFAccDetail(null); }, className:field},
+          allAccs.map(a=>/*#__PURE__*/React.createElement("option",{key:a},a)))),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-xs font-medium text-slate-500"}, "Loại giao dịch"),
+        /*#__PURE__*/React.createElement("select", {value:fKind, onChange:e=>setFKind(e.target.value), className:field},
+          allKinds.map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
+      /*#__PURE__*/React.createElement("div", {className:"flex items-end gap-2 pb-0.5"},
+        /*#__PURE__*/React.createElement("button", {onClick:()=>exportCSV("so-quy",["Mã GD","Ngày","Đối tượng","Mã đơn","Loại GD","Tài khoản","Số tiền","Ghi chú","Người tạo"],visibleTxns.map(t=>[t.id,t.date,t.entity,t.orderId,t.kind,t.acc,t.amount,t.note,t.staff])), className:"inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"},
+          /*#__PURE__*/React.createElement(Upload, {className:"h-3.5 w-3.5"}), "Excel"),
+        /*#__PURE__*/React.createElement("button", {onClick:resetFilter, className:"rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"}, "Hủy lọc"))),
+
+    /*#__PURE__*/React.createElement(Card, {
+      title: "Sổ quỹ",
+      right: /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap gap-2"},
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("thu"), className:"inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"},
+          /*#__PURE__*/React.createElement(Plus, {className:"h-4 w-4"}), "Lập phiếu thu"),
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("chi"), className:"inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600"},
+          /*#__PURE__*/React.createElement(Minus, {className:"h-4 w-4"}), "Lập phiếu chi"),
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("chuyen"), className:"inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700"},
+          /*#__PURE__*/React.createElement(ArrowLeftRight, {className:"h-4 w-4"}), "Chuyển tiền nội bộ"))
+    },
+      /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5 overflow-x-auto"},
+        /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
+          /*#__PURE__*/React.createElement("thead", null,
+            /*#__PURE__*/React.createElement("tr", null,
+              /*#__PURE__*/React.createElement("th",{className:thC},"Ngân hàng"),
+              /*#__PURE__*/React.createElement("th",{className:thC},"Số TK"),
+              /*#__PURE__*/React.createElement("th",{className:thC},"Chủ tài khoản"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư đầu kỳ"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Tổng tiền vào"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Tổng tiền ra"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư cuối kỳ"),
+              /*#__PURE__*/React.createElement("th",{className:"px-3 py-2.5 text-center"},""))),
+          /*#__PURE__*/React.createElement("tbody", null,
+            accSummary.map(a=>/*#__PURE__*/React.createElement("tr",{key:a.key},
+              /*#__PURE__*/React.createElement("td",{className:tdC+" font-medium"},a.bank),
+              /*#__PURE__*/React.createElement("td",{className:tdC},a.stk),
+              /*#__PURE__*/React.createElement("td",{className:tdC},a.owner),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" text-slate-800"},vnd(a.openBal)),
+              /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalIn>0?" text-emerald-600":" text-slate-400")},a.totalIn>0?vnd(a.totalIn):"0đ"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalOut>0?" text-rose-600":" text-slate-400")},a.totalOut>0?vnd(a.totalOut):"0đ"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" text-slate-900 font-semibold"},vnd(a.closeBal)),
+              /*#__PURE__*/React.createElement("td",{className:"px-3 py-2 text-center"},
+                /*#__PURE__*/React.createElement("button",{onClick:()=>{ setFAccDetail(fAccDetail===a.key?null:a.key); setFAcc("Tất cả"); },
+                  className:`rounded-md px-2 py-1 text-xs font-medium transition ${fAccDetail===a.key?"bg-blue-600 text-white":"bg-sky-50 text-sky-700 hover:bg-sky-100 ring-1 ring-sky-200"}`},"Chi tiết")))),
+            /*#__PURE__*/React.createElement("tr",{className:"bg-amber-50"},
+              /*#__PURE__*/React.createElement("td",{className:tdC+" font-bold text-slate-800",colSpan:3},"TỔNG CỘNG"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-slate-900"},vnd(tot.openBal)),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-emerald-600"},tot.totalIn>0?vnd(tot.totalIn):"0đ"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-rose-600"},tot.totalOut>0?vnd(tot.totalOut):"0đ"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-slate-900"},vnd(tot.closeBal)),
+              /*#__PURE__*/React.createElement("td",null)))))),
+
+    /*#__PURE__*/React.createElement(Card, {title: fAccDetail ? `Lịch sử giao dịch: ${ACCOUNTS_DEF.find(a=>a.key===fAccDetail)?.bank||fAccDetail}` : "Lịch sử giao dịch: Tất cả tài khoản"},
+      /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
+        /*#__PURE__*/React.createElement(TableShell, {minW:"1100px",
+          head:/*#__PURE__*/React.createElement(React.Fragment,null,
+            /*#__PURE__*/React.createElement(Th,null,"Mã GD"),
+            /*#__PURE__*/React.createElement(Th,null,"Ngày"),
+            /*#__PURE__*/React.createElement(Th,null,"Đối tượng"),
+            /*#__PURE__*/React.createElement(Th,null,"Mã đơn"),
+            /*#__PURE__*/React.createElement(Th,null,"Loại GD"),
+            /*#__PURE__*/React.createElement(Th,null,"Tài khoản"),
+            /*#__PURE__*/React.createElement(Th,{right:true},"Số tiền"),
+            /*#__PURE__*/React.createElement(Th,null,"Ghi chú"),
+            /*#__PURE__*/React.createElement(Th,null,"Người tạo"),
+            /*#__PURE__*/React.createElement(Th,{center:true},"Thao tác"))},
+          visibleTxns.map(t=>/*#__PURE__*/React.createElement("tr",{key:t.id},
+            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-500 tabular-nums"},t.id),
+            /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-slate-500"},t.date),
+            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-700"},t.entity),
+            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
+              t.orderId ? /*#__PURE__*/React.createElement("span",{className:"font-medium text-blue-600 hover:underline cursor-pointer"},t.orderId) : /*#__PURE__*/React.createElement("span",{className:"text-slate-300"},"—")),
+            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
+              /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS[t.kind]||"bg-slate-100 text-slate-600 ring-1 ring-slate-200"}`},t.kind)),
+            /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-slate-600"},t.acc),
+            /*#__PURE__*/React.createElement("td",{className:`px-3 py-2.5 text-right tabular-nums font-semibold ${t.amount>=0?"text-emerald-600":"text-rose-600"}`},
+              (t.amount>=0?"+":"")+vnd(t.amount)),
+            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-500 text-xs"},t.note||"—"),
+            /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-xs text-slate-500"},t.staff),
+            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
+              /*#__PURE__*/React.createElement("div",{className:"flex items-center justify-center gap-1"},
+                /*#__PURE__*/React.createElement(IconBtn,{icon:Pencil,title:"Sửa",onClick:()=>setEditTxn(t)}),
+                /*#__PURE__*/React.createElement(IconBtn,{icon:Trash2,title:"Xóa",onClick:()=>delTxn(t.id)})))))))),
+
+    modal==="thu"    && /*#__PURE__*/React.createElement(PhieuThuModal,  {onClose:()=>setModal(null), onSave:addTxn,  nextId}),
+    modal==="chi"    && /*#__PURE__*/React.createElement(PhieuChiModal,  {onClose:()=>setModal(null), onSave:addChi,  nextId}),
+    modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null), onSave:addXfer, nextId}));
 }
 
 /* ───────── Reports ───────── */
