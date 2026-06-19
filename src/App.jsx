@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react'
-import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 
 /* ───────── helpers ───────── */
-const vnd = n => new Intl.NumberFormat("vi-VN").format(Math.round(n || 0)) + "đ";
+const vnd = n => new Intl.NumberFormat("vi-VN").format(Math.round(n || 0));
 const num = n => new Intl.NumberFormat("vi-VN").format(Math.round(n || 0));
 /* ── K2: định dạng text thống nhất cho SĐT / Mã SP, giữ số 0 đầu, không giãn ký tự ── */
 const TEXT_CELL = "whitespace-nowrap";
@@ -1201,10 +1201,10 @@ const Card = ({
 }) => /*#__PURE__*/React.createElement("div", {
   className: "rounded-xl border border-slate-200 bg-white shadow-sm"
 }, title && /*#__PURE__*/React.createElement("div", {
-  className: "flex items-center justify-between border-b border-slate-100 px-5 py-3"
+  className: "relative flex items-center border-b border-slate-100 px-5 py-3"
 }, /*#__PURE__*/React.createElement("h3", {
-  className: "text-sm font-semibold text-slate-700"
-}, title), right), /*#__PURE__*/React.createElement("div", {
+  className: "pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold text-slate-700"
+}, title), right && /*#__PURE__*/React.createElement("div", {className: "relative ml-auto"}, right)), /*#__PURE__*/React.createElement("div", {
   className: title ? "p-5" : ""
 }, children));
 const Th = ({
@@ -1704,7 +1704,30 @@ function SalesModule({
     order: current,
     onClose: () => setModal(null),
     onConfirm: p => {
-      applyKho(current.id, p);
+      const ord = current;
+      applyKho(ord.id, p);
+      if (p.allExported && onExportKho) {
+        const now = new Date();
+        const dt = now.toLocaleDateString("vi-VN") + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
+        const slips = ord.items.map((it, i) => ({
+          slip: "PX" + now.toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now() + i).slice(-4),
+          dt,
+          order: ord.id,
+          sku: it.sku || "",
+          prod: it.name,
+          supplier: p.items[i]?.supplier || it.supplier || "",
+          store: ord.store || "Kho HH",
+          lot: "",
+          qty: it.qty,
+          sale: it.price,
+          cust: ord.name,
+          addr: ord.addr || "",
+          orderStatus: "Đang xử lý",
+          delivery: ord.delivery || "Chưa giao hàng",
+          staff: "NGOC HA"
+        }));
+        onExportKho(slips);
+      }
     }
   }), current && modal.mode === "return" && /*#__PURE__*/React.createElement(ReturnModal, {
     order: current,
@@ -2396,11 +2419,7 @@ function DraftTable({
       style: {
         minWidth: 180
       }
-    }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {
-      style: {
-        minWidth: 200
-      }
-    }, "Diễn giải"), /*#__PURE__*/React.createElement(Th, null, "Trạng thái"), /*#__PURE__*/React.createElement(Th, null, "Nhân viên"), /*#__PURE__*/React.createElement(Th, {
+    }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {right: true}, "Tổng đơn"), /*#__PURE__*/React.createElement(Th, null, "Trạng thái"), /*#__PURE__*/React.createElement(Th, null, "Nhân viên"), /*#__PURE__*/React.createElement(Th, {
       center: true,
       style: {
         width: 110
@@ -2426,11 +2445,8 @@ function DraftTable({
       maxWidth: 180
     }
   }, o.addr || "—"), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-xs text-slate-500",
-    style: {
-      maxWidth: 200
-    }
-  }, o.desc || "—"), /*#__PURE__*/React.createElement("td", {
+    className: "px-4 py-3 text-right tabular-nums font-medium text-slate-800"
+  }, vnd((o.items||[]).reduce((s,i)=>s+i.price*i.qty*(1-(i.disc||0)/100),0))), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(Pill, {
     map: DSTATUS,
@@ -3045,13 +3061,14 @@ function Returns() {
 }
 
 /* ───────── Purchase Module (list + create) ───────── */
-function PurchaseModule() {
+function PurchaseModule({onImportToWh}) {
   const [view, setView] = React.useState("list"); // "list" | "create" | {edit: record}
   if (view === "create") return /*#__PURE__*/React.createElement(PurchaseCreate, {onBack: () => setView("list")});
   if (view && view.edit) return /*#__PURE__*/React.createElement(PurchaseCreate, {editRecord: view.edit, onBack: () => setView("list")});
   return /*#__PURE__*/React.createElement(PurchaseList, {
     onNew: () => setView("create"),
-    onEdit: r => setView({edit: r})
+    onEdit: r => setView({edit: r}),
+    onImportToWh
   });
 }
 
@@ -3184,7 +3201,8 @@ function PurchaseCreate({
 /* ───────── Purchase list ───────── */
 function PurchaseList({
   onNew,
-  onEdit
+  onEdit,
+  onImportToWh
 }) {
   const notify = useToast();
   const [q, setQ] = useState("");
@@ -3263,7 +3281,24 @@ function PurchaseList({
           ["HH", "HG", "SR"].map(k => /*#__PURE__*/React.createElement("option", {key: k, value: k}, k)))),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"},
         /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-center gap-0.5"},
-          /*#__PURE__*/React.createElement(IconBtn, {icon: ArrowDownToLine, title: "Nhập kho", onClick: () => notify("Chức năng nhập kho đang phát triển")}),
+          /*#__PURE__*/React.createElement(IconBtn, {icon: ArrowDownToLine, title: "Nhập kho", onClick: () => {
+              const khoMap = {HH:"Kho HH", HG:"Kho HG", SR:"Kho SR"};
+              const slip = {
+                lot: "PN" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now()).slice(-4),
+                date: new Date().toLocaleDateString("vi-VN"),
+                prod: r.prod,
+                store: khoMap[r.kho] || r.store,
+                qtyIn: r.qtyIn,
+                qtyNow: r.qtyIn,
+                costNcc: r.costNcc,
+                fee: r.fee || 0,
+                supplier: r.supplier,
+                order: r.lot,
+                staff: r.staff || "NGOC HA",
+                pay: "Chưa thanh toán"
+              };
+              if (onImportToWh) { onImportToWh(slip); } else notify("Nhập kho thành công");
+            }}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Pencil, title: "Sửa", onClick: () => onEdit(r)}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Printer, title: "In", onClick: () => window.print()}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Trash2, title: "Xoá", onClick: () => del(r.lot)})))))),
@@ -3271,10 +3306,17 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn() {
+function WhIn({pendingImportSlip, onConsumePending}) {
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
-  const rows = IMPORTS.filter(r => !q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()));
+  const toKho = s => s === "Kho HH" ? "HH" : s === "Kho HG" ? "HG" : s === "Kho SR" ? "SR" : s || "HH";
+  const addKho = r => ({...r, kho: r.kho || toKho(r.store)});
+  const [items, setItems] = useState(() => (pendingImportSlip ? [pendingImportSlip, ...IMPORTS] : IMPORTS).map(addKho));
+  React.useEffect(() => {
+    if (pendingImportSlip) { setItems(xs => xs.some(r => r.lot === pendingImportSlip.lot) ? xs : [addKho(pendingImportSlip), ...xs]); if (onConsumePending) onConsumePending(); }
+  }, [pendingImportSlip]);
+  const setKho = (lot, kho) => setItems(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
+  const rows = items.filter(r => !q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()));
   const onExport = () => exportCSV("danh-sach-phieu-nhap-kho", ["Kho", "Mã phiếu nhập", "Ngày nhập", "Sản phẩm", "SL nhập", "SL còn", "Giá vốn", "Nhà cung cấp", "Người tạo"], rows.map(r => [r.store, impCode(r.lot), r.date, r.prod, r.qtyIn, r.qtyNow, r.costNcc + (r.fee || 0), r.supplier, r.staff]));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
@@ -3283,13 +3325,6 @@ function WhIn() {
     setQ: setQ,
     placeholder: "Tìm theo mã phiếu, sản phẩm, NCC…",
     onExport: onExport,
-    extra: /*#__PURE__*/React.createElement("div", {
-      className: "self-end"
-    }, /*#__PURE__*/React.createElement("button", {
-      className: blueBtn + " py-2"
-    }, /*#__PURE__*/React.createElement(Plus, {
-      className: "h-4 w-4"
-    }), " Tạo phiếu nhập"))
   }), /*#__PURE__*/React.createElement(TableShell, {
     minW: "1100px",
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
@@ -3311,8 +3346,12 @@ function WhIn() {
     key: r.lot,
     className: "hover:bg-slate-50/60"
   }, /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-slate-500"
-  }, r.store), /*#__PURE__*/React.createElement("td", {
+    className: "px-2 py-1.5 text-center"
+  }, /*#__PURE__*/React.createElement("select", {
+    value: r.kho,
+    onChange: e => setKho(r.lot, e.target.value),
+    className: "rounded border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
+  }, ["HH", "HG", "SR"].map(k => /*#__PURE__*/React.createElement("option", {key: k, value: k}, k)))), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(DocLink, {
     code: impCode(r.lot),
@@ -3332,7 +3371,13 @@ function WhIn() {
     className: "px-4 py-3 text-slate-500"
   }, r.supplier), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-500"
-  }, r.staff)))), doc && /*#__PURE__*/React.createElement(DocModal, {
+  }, r.staff))),
+  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-slate-200 bg-slate-50"},
+    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-500", colSpan: 4}, "Tổng cộng (",rows.length," phiếu)"),
+    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qtyIn,0)),
+    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qtyNow,0)),
+    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(rows.reduce((s,r)=>s+r.costNcc+(r.fee||0),0))),
+    /*#__PURE__*/React.createElement("td", {colSpan: 2}))), doc && /*#__PURE__*/React.createElement(DocModal, {
     doc: doc,
     onClose: () => setDoc(null)
   }));
@@ -3356,6 +3401,7 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
   });
   const onExport = () => exportCSV("danh-sach-phieu-xuat-kho", ["Thời gian", "Đơn hàng", "Khách hàng", "Địa chỉ", "Mã SP", "Tên sản phẩm", "Nhà cung cấp", "Kho", "SL xuất", "Giá bán", "Thành tiền", "TT Đơn", "TT Giao", "Người xuất"], rows.map(r => [r.dt, r.order, r.cust, r.addr, r.sku, r.prod, r.supplier, r.store, r.qty, r.sale, r.sale * r.qty, r.orderStatus, r.delivery, r.staff]));
   const storeList = ["Tất cả", ...new Set(list.map(r => r.store))];
+  const storeShort = s => ({"Kho HH":"HH","Kho TB":"TH","Kho SR":"SR","Kho HG":"HG"}[s] || s);
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3398,9 +3444,9 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
     value: fStore,
     onChange: e => setFStore(e.target.value),
     className: field
-  }, ["Tất cả", "Kho HH", "Kho TB"].map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", {
+  }, storeList.map(s => /*#__PURE__*/React.createElement("option", {
+    key: s, value: s
+  }, s === "Tất cả" ? "Tất cả" : storeShort(s))))), /*#__PURE__*/React.createElement("div", {
     className: "relative min-w-[200px] flex-1"
   }, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-xs font-medium text-slate-500"
@@ -3466,7 +3512,7 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
       style: {
         width: 80
       }
-    }, "Kho"))
+    }, "Kho"), /*#__PURE__*/React.createElement(Th, {center:true, style:{width:70}}, "Thao tác"))
   }, rows.map(r => /*#__PURE__*/React.createElement("tr", {
     key: r.slip,
     className: "align-top hover:bg-slate-50/60"
@@ -3476,10 +3522,10 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
     value: r.dt
   })), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
-  }, /*#__PURE__*/React.createElement(DocLink, {
-    code: r.order,
-    onOpen: setDoc
-  })), /*#__PURE__*/React.createElement("td", {
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => onOpenOrder ? onOpenOrder(r.order) : null,
+    className: "font-medium text-blue-700 underline-offset-2 hover:underline"
+  }, r.order)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-slate-700"
   }, r.cust), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-xs text-slate-500"
@@ -3499,7 +3545,19 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
     className: "px-3 py-3 text-slate-600"
   }, r.supplier), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-slate-500"
-  }, r.store)))), doc && /*#__PURE__*/React.createElement(DocModal, {
+  }, storeShort(r.store)), /*#__PURE__*/React.createElement("td", {className:"px-3 py-3"},
+    /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-center"},
+      /*#__PURE__*/React.createElement(IconBtn, {icon: Printer, title:"In phiếu xuất", onClick: () => setDoc({
+        code: r.slip,
+        fields: {"Số phiếu": r.slip, "Đơn hàng": r.order, "Khách hàng": r.cust, "Địa chỉ": r.addr, "Kho": r.store, "Người xuất": r.staff},
+        items: [{name: r.prod, qty: r.qty, price: r.sale, disc: 0, cost: r.sale}]
+      })})))))  ,
+  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-slate-200 bg-slate-50"},
+    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-500", colSpan: 6}, "Tổng cộng (", rows.length, " dòng)"),
+    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qty,0)),
+    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3"}),
+    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(rows.reduce((s,r)=>s+r.sale*r.qty,0))),
+    /*#__PURE__*/React.createElement("td", {colSpan: 4}))), doc && /*#__PURE__*/React.createElement(DocModal, {
     doc: doc,
     onClose: () => setDoc(null)
   }));
@@ -3820,7 +3878,9 @@ function ProductForm({
   initial,
   presetName,
   onClose,
-  onSave
+  onSave,
+  existingNames = [],
+  existingSkus = []
 }) {
   const isEdit = !!(initial && initial.sku);
   const suggestSku = (presetName || "").trim().toUpperCase().replace(/\s+/g, "-").slice(0, 20);
@@ -3848,7 +3908,9 @@ function ProductForm({
     ...x,
     ...p
   }));
-  const can = f.sku.trim() && f.name.trim() && f.unit;
+  const dupName = f.name.trim() && existingNames.includes(f.name.trim().toLowerCase());
+  const dupSku  = f.sku.trim()  && existingSkus.includes(f.sku.trim().toLowerCase());
+  const can = f.sku.trim() && f.name.trim() && f.unit && !dupName && !dupSku;
   return /*#__PURE__*/React.createElement(Modal, {
     title: isEdit ? "Sửa sản phẩm" : "Thêm sản phẩm mới",
     onClose: onClose,
@@ -3871,22 +3933,22 @@ function ProductForm({
   }, "Mã sản phẩm ", /*#__PURE__*/React.createElement("span", {
     className: "text-rose-500"
   }, "*")), /*#__PURE__*/React.createElement("input", {
-    className: inputF,
+    className: inputF + (dupSku ? " border-rose-400 ring-1 ring-rose-400" : ""),
     value: f.sku,
-    onChange: ev => set({
-      sku: ev.target.value
-    })
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    onChange: ev => set({sku: ev.target.value})
+  }), dupSku && /*#__PURE__*/React.createElement("p", {
+    className: "mt-1 flex items-center gap-1 text-xs text-rose-600"
+  }, /*#__PURE__*/React.createElement(AlertTriangle, {className: "h-3.5 w-3.5 shrink-0"}), "Mã sản phẩm đã tồn tại, vui lòng nhập mã khác")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-sm font-medium text-slate-700"
   }, "Tên sản phẩm ", /*#__PURE__*/React.createElement("span", {
     className: "text-rose-500"
   }, "*")), /*#__PURE__*/React.createElement("input", {
-    className: inputF,
+    className: inputF + (dupName ? " border-rose-400 ring-1 ring-rose-400" : ""),
     value: f.name,
-    onChange: ev => set({
-      name: ev.target.value
-    })
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    onChange: ev => set({name: ev.target.value})
+  }), dupName && /*#__PURE__*/React.createElement("p", {
+    className: "mt-1 flex items-center gap-1 text-xs text-rose-600"
+  }, /*#__PURE__*/React.createElement(AlertTriangle, {className: "h-3.5 w-3.5 shrink-0"}), "Tên sản phẩm đã tồn tại, vui lòng nhập tên khác")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-sm font-medium text-slate-700"
   }, "Mô tả sản phẩm"), /*#__PURE__*/React.createElement("textarea", {
     rows: 3,
@@ -4127,11 +4189,10 @@ function ProductsTab() {
     className: "align-top hover:bg-slate-50/60"
   }, /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mx-auto flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300"
-  }, /*#__PURE__*/React.createElement(ImageIcon, {
-    className: "h-5 w-5"
-  }))), /*#__PURE__*/React.createElement("td", {
+  }, p.img
+    ? /*#__PURE__*/React.createElement("img", {src: p.img, alt: p.name, className: "mx-auto h-12 w-12 rounded-lg border border-slate-200 object-cover"})
+    : /*#__PURE__*/React.createElement("div", {className: "mx-auto flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300"},
+        /*#__PURE__*/React.createElement(ImageIcon, {className: "h-5 w-5"}))), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-xs text-slate-500"
   }, /*#__PURE__*/React.createElement(Sku, {
     value: p.sku
@@ -4167,7 +4228,9 @@ function ProductsTab() {
   })))))), form && /*#__PURE__*/React.createElement(ProductForm, {
     initial: form.sku ? form : null,
     onClose: () => setForm(null),
-    onSave: save
+    onSave: save,
+    existingNames: items.filter(p => !form.sku || p.sku !== form.sku).map(p => p.name.toLowerCase()),
+    existingSkus: items.filter(p => !form.sku || p.sku !== form.sku).map(p => p.sku.toLowerCase())
   }));
 }
 function CustomerForm({
@@ -4318,7 +4381,7 @@ function CustomersTab() {
       style: {
         minWidth: 180
       }
-    }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, null, "SĐT"), /*#__PURE__*/React.createElement(Th, null, "Nguồn"), /*#__PURE__*/React.createElement(Th, null, "Hạng"), /*#__PURE__*/React.createElement(Th, {
+    }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, null, "SĐT"), /*#__PURE__*/React.createElement(Th, null, "Nguồn"), /*#__PURE__*/React.createElement(Th, {
       right: true
     }, "Số đơn"), /*#__PURE__*/React.createElement(Th, {
       right: true
@@ -4344,11 +4407,6 @@ function CustomersTab() {
   }, /*#__PURE__*/React.createElement(Pill, {
     map: CHANNELS,
     value: c.src
-  })), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3"
-  }, /*#__PURE__*/React.createElement(Pill, {
-    map: TIERS,
-    value: c.tier
   })), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-right tabular-nums text-slate-600"
   }, c.orders), /*#__PURE__*/React.createElement("td", {
@@ -5056,6 +5114,38 @@ function ChuyenTienModal({onClose, onSave, nextId}) {
         /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),placeholder:"Lý do chuyển...",className:inputF})),
       from===to&&/*#__PURE__*/React.createElement("p",{className:"text-xs text-rose-500"},"Tài khoản nguồn và đích không được trùng nhau")));
 }
+function EditTxnModal({txn, onClose, onSave}) {
+  const [acc, setAcc]         = useState(txn.acc);
+  const [entity, setEntity]   = useState(txn.entity);
+  const [orderId, setOrderId] = useState(txn.orderId||"");
+  const [kind, setKind]       = useState(txn.kind);
+  const [rawAmt, setRawAmt]   = useState(Math.abs(txn.amount));
+  const [note, setNote]       = useState(txn.note||"");
+  const isOut   = txn.amount < 0;
+  const canSave = entity.trim() && rawAmt > 0;
+  const lbl     = "mb-1 block text-xs font-medium text-slate-500";
+  const ALL_KINDS = ["Thu tiền","Đặt cọc","Thanh toán","Thu khác","Chi mua hàng","Chi vận chuyển","Chi phí","Hoàn ứng","Chi khác","Chuyển đi","Chuyển về"];
+  const doSave  = () => onSave({...txn, acc, entity, orderId, kind, amount: isOut ? -rawAmt : rawAmt, note});
+  return /*#__PURE__*/React.createElement(Modal, {title:"Sửa giao dịch #"+txn.id, onClose, maxW:"max-w-lg",
+    footer:/*#__PURE__*/React.createElement(React.Fragment, null,
+      /*#__PURE__*/React.createElement("button",{onClick:onClose,className:ghostBtn},"Hủy"),
+      /*#__PURE__*/React.createElement("button",{onClick:doSave,disabled:!canSave,className:blueBtn+(canSave?"":" opacity-50 cursor-not-allowed")},"Lưu thay đổi"))},
+    /*#__PURE__*/React.createElement("div",{className:"grid grid-cols-2 gap-3"},
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Tài khoản"),
+        /*#__PURE__*/React.createElement("select",{value:acc,onChange:e=>setAcc(e.target.value),className:inputF},
+          ACCOUNTS_DEF.map(a=>/*#__PURE__*/React.createElement("option",{key:a.key,value:a.key},a.bank+" ("+a.stk+")")))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Loại GD"),
+        /*#__PURE__*/React.createElement("select",{value:kind,onChange:e=>setKind(e.target.value),className:inputF},
+          ALL_KINDS.map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Đối tượng"),
+        /*#__PURE__*/React.createElement("input",{value:entity,onChange:e=>setEntity(e.target.value),className:inputF})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Mã đơn liên quan"),
+        /*#__PURE__*/React.createElement("input",{value:orderId,onChange:e=>setOrderId(e.target.value),placeholder:"DH...",className:inputF})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Số tiền"),
+        /*#__PURE__*/React.createElement(NumInput,{className:inputF,value:rawAmt,onChange:setRawAmt})),
+      /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Ghi chú"),
+        /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),className:inputF}))));
+}
 function Finance() {
   const notify = useToast();
   const [txns, setTxns]       = useState(TXNS);
@@ -5102,7 +5192,8 @@ function Finance() {
   const addTxn  = t  => { setTxns(p=>[t,...p]); notify("Đã lưu phiếu thu"); setModal(null); };
   const addChi  = t  => { setTxns(p=>[t,...p]); notify("Đã lưu phiếu chi"); setModal(null); };
   const addXfer = ts => { setTxns(p=>[...ts,...p]); notify("Đã chuyển tiền nội bộ"); setModal(null); };
-  const delTxn  = id => { if(window.confirm("Xóa giao dịch này?")){ setTxns(p=>p.filter(t=>t.id!==id)); notify("Đã xóa giao dịch"); }};
+  const delTxn    = id => { if(window.confirm("Xóa giao dịch này?")){ setTxns(p=>p.filter(t=>t.id!==id)); notify("Đã xóa giao dịch"); }};
+  const saveEdit  = t  => { setTxns(p=>p.map(x=>x.id===t.id?t:x)); notify("Đã cập nhật giao dịch"); setEditTxn(null); };
   const resetFilter = () => { setQ(""); setFAcc("Tất cả"); setFKind("Tất cả"); setFAccDetail(null); };
 
   const KIND_COLORS = {
@@ -5146,7 +5237,7 @@ function Finance() {
       /*#__PURE__*/React.createElement("div", {className:"flex items-end gap-2 pb-0.5"},
         /*#__PURE__*/React.createElement("button", {onClick:()=>exportCSV("so-quy",["Mã GD","Ngày","Đối tượng","Mã đơn","Loại GD","Tài khoản","Số tiền","Ghi chú","Người tạo"],visibleTxns.map(t=>[t.id,t.date,t.entity,t.orderId,t.kind,t.acc,t.amount,t.note,t.staff])), className:"inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"},
           /*#__PURE__*/React.createElement(Upload, {className:"h-3.5 w-3.5"}), "Excel"),
-        /*#__PURE__*/React.createElement("button", {onClick:resetFilter, className:"rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50"}, "Hủy lọc"))),
+        )),
 
     /*#__PURE__*/React.createElement(Card, {
       title: "Sổ quỹ",
@@ -5224,7 +5315,8 @@ function Finance() {
 
     modal==="thu"    && /*#__PURE__*/React.createElement(PhieuThuModal,  {onClose:()=>setModal(null), onSave:addTxn,  nextId}),
     modal==="chi"    && /*#__PURE__*/React.createElement(PhieuChiModal,  {onClose:()=>setModal(null), onSave:addChi,  nextId}),
-    modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null), onSave:addXfer, nextId}));
+    modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null), onSave:addXfer, nextId}),
+    editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn, onClose:()=>setEditTxn(null), onSave:saveEdit}));
 }
 
 /* ───────── Reports ───────── */
@@ -5494,7 +5586,9 @@ function Screen({
   openOrderId,
   setOpenOrderId,
   pendingExportSlips,
-  setPendingExportSlips
+  setPendingExportSlips,
+  pendingImportSlip,
+  onImportToWh
 }) {
   switch (active) {
     case "finance":
@@ -5517,9 +5611,9 @@ function Screen({
         onExportKho: slips => { setPendingExportSlips(slips); setActive("wh_out"); }
       });
     case "purchase":
-      return /*#__PURE__*/React.createElement(PurchaseModule, null);
+      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, null);
+      return /*#__PURE__*/React.createElement(WhIn, {pendingImportSlip, onConsumePending: () => setPendingImportSlip(null)});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         pendingExportSlips: pendingExportSlips,
@@ -5593,6 +5687,7 @@ function App() {
   const [orders, setOrders] = useState(INIT_ORDERS);
   const [openOrderId, setOpenOrderId] = useState(null);
   const [pendingExportSlips, setPendingExportSlips] = useState(null);
+  const [pendingImportSlip, setPendingImportSlip] = useState(null);
   const title = LABELS[active] || "";
   return /*#__PURE__*/React.createElement(ToastHost, null, /*#__PURE__*/React.createElement("div", {
     className: "flex min-h-screen bg-slate-100 font-sans text-slate-900",
@@ -5674,7 +5769,9 @@ function App() {
     openOrderId: openOrderId,
     setOpenOrderId: setOpenOrderId,
     pendingExportSlips: pendingExportSlips,
-    setPendingExportSlips: setPendingExportSlips
+    setPendingExportSlips: setPendingExportSlips,
+    pendingImportSlip: pendingImportSlip,
+    onImportToWh: slip => { setPendingImportSlip(slip); setActive("wh_in"); }
   })))));
 }
 export default App
