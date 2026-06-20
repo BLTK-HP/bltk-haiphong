@@ -10,7 +10,7 @@
   --color-sidebar:        #1E293B;
   --color-app-bg:         #F4F6F8;
   --color-card-bg:        #FFFFFF;
-  --color-table-header:   #EEF1F4;
+  --color-table-header:   #E6FFFA;
   --color-row-hover:      #F0F4F8;
   --color-row-selected:   #CCFBF1;
 
@@ -56,7 +56,7 @@ body {
 /*  Bảng danh sách chung (.tbl-list) */
 /* ──────────────────────────────── */
 .tbl-list th {
-  background-color: #EEF1F4;
+  background-color: #E6FFFA;
   font-size: 0.75rem;           /* 12px */
   font-weight: 600;
   text-transform: uppercase;

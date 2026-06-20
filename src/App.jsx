@@ -2151,19 +2151,19 @@ function OrderTable({
     minW: "1360px",
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 96, position: "sticky", left: 0, zIndex: 2, background: "#f8fafc"
+        width: 96, position: "sticky", left: 0, zIndex: 2, background: "#E6FFFA"
       }
     }, "Số ĐH"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 90, position: "sticky", left: 96, zIndex: 2, background: "#f8fafc"
+        width: 90, position: "sticky", left: 96, zIndex: 2, background: "#E6FFFA"
       }
     }, "Ngày"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 130, position: "sticky", left: 186, zIndex: 2, background: "#f8fafc"
+        width: 130, position: "sticky", left: 186, zIndex: 2, background: "#E6FFFA"
       }
     }, "Khách hàng"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 180, position: "sticky", left: 316, zIndex: 2, background: "#f8fafc"
+        width: 180, position: "sticky", left: 316, zIndex: 2, background: "#E6FFFA"
       }
     }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {
       right: true,
@@ -3811,7 +3811,7 @@ function Stock() {
       minWidth: 1100
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#EEF1F4] text-xs font-semibold uppercase tracking-wide text-[#64748B]"
+    className: "bg-[#E6FFFA] text-xs font-semibold uppercase tracking-wide text-[#64748B]"
   }, /*#__PURE__*/React.createElement("th", {
     rowSpan: 2,
     className: "px-3 py-2 text-left"
@@ -3843,7 +3843,7 @@ function Stock() {
     colSpan: 2,
     className: "border-l border-[#DDE3E8] px-3 py-2 text-center"
   }, "Cuối kỳ")), /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#DDE3E8] text-xs font-semibold uppercase tracking-wide text-[#475569]"
+    className: "bg-[#CCFBF1] text-xs font-semibold uppercase tracking-wide text-[#475569]"
   }, ["SL", "Giá trị", "SL", "Giá trị", "SL", "Giá trị", "SL", "Giá trị"].map((h, i) => /*#__PURE__*/React.createElement("th", {
     key: i,
     className: `px-3 py-1.5 text-right ${i % 2 === 0 ? "border-l border-[#DDE3E8]" : ""}`
@@ -4646,7 +4646,7 @@ function DebtCust() {
       minWidth: 820
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#EEF1F4] text-xs font-semibold uppercase tracking-wide text-[#64748B]"
+    className: "bg-[#E6FFFA] text-xs font-semibold uppercase tracking-wide text-[#64748B]"
   }, /*#__PURE__*/React.createElement("th", {
     rowSpan: 2,
     className: "px-3 py-2 text-left"
@@ -4663,7 +4663,7 @@ function DebtCust() {
     rowSpan: 2,
     className: "border-l border-[#DDE3E8] px-3 py-2 text-right"
   }, "Số dư nợ cuối kỳ")), /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#DDE3E8] text-xs font-semibold uppercase tracking-wide text-[#475569]"
+    className: "bg-[#CCFBF1] text-xs font-semibold uppercase tracking-wide text-[#475569]"
   }, /*#__PURE__*/React.createElement("th", {
     className: "border-l border-[#DDE3E8] px-3 py-1.5 text-right"
   }, "Số phát sinh"), /*#__PURE__*/React.createElement("th", {
@@ -4874,7 +4874,7 @@ function DebtNcc() {
       minWidth: 760
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#EEF1F4] text-xs font-semibold uppercase tracking-wide text-[#64748B]"
+    className: "bg-[#E6FFFA] text-xs font-semibold uppercase tracking-wide text-[#64748B]"
   }, /*#__PURE__*/React.createElement("th", {
     rowSpan: 2,
     className: "px-3 py-2 text-left"
@@ -4888,7 +4888,7 @@ function DebtNcc() {
     rowSpan: 2,
     className: "border-l border-[#DDE3E8] px-3 py-2 text-right"
   }, "Số dư nợ cuối kỳ")), /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#DDE3E8] text-xs font-semibold uppercase tracking-wide text-[#475569]"
+    className: "bg-[#CCFBF1] text-xs font-semibold uppercase tracking-wide text-[#475569]"
   }, /*#__PURE__*/React.createElement("th", {
     className: "border-l border-[#DDE3E8] px-3 py-1.5 text-right"
   }, "Số phát sinh"), /*#__PURE__*/React.createElement("th", {
