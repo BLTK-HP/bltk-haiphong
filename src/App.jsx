@@ -1265,7 +1265,7 @@ const IconBtn = ({
 }));
 const blueBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0D9488] px-3.5 py-1.5 text-[14px] font-semibold text-white shadow-sm hover:bg-[#0F766E]";
 const greenBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3 py-1.5 text-[14px] font-semibold text-white hover:bg-[#0D5F58]";
-const addBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#0F766E] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#0F766E] hover:bg-[#E6FFFA]";
+const addBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#0F766E] bg-white px-3 py-1.5 text-[14px] font-semibold text-slate-800 hover:bg-[#E6FFFA]";
 const ghostBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-[14px] text-[#475569] hover:bg-[#F4F6F8]";
 const outlineTealBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#0D9488] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#0D9488] hover:bg-[#E6FFFA]";
 const backBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[14px] text-[#64748B] hover:bg-[#F8FAFC]";
@@ -1991,7 +1991,7 @@ function KhoModal({
               React.createElement("td", { className: "border-l border-amber-100 bg-amber-50/40 px-2 py-3 text-center text-sm font-semibold tabular-nums text-rose-600" }, num(loiNhuan(r))));
           }),
           React.createElement("tr", { className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA] font-semibold" },
-            React.createElement("td", { className: "px-3 py-3 text-[14px] font-bold uppercase text-[#0F766E]", colSpan: 3 }, "TỔNG CỘNG"),
+            React.createElement("td", { className: "px-3 py-3 text-[14px] font-bold uppercase text-slate-800", colSpan: 3 }, "TỔNG CỘNG"),
             React.createElement("td", { colSpan: 4, className: "border-l border-blue-100 bg-blue-50/30" }),
             moneyCell(totalIn, "bg-blue-100/60 text-blue-700"),
             React.createElement("td", { colSpan: 3, className: "border-l border-emerald-100 bg-emerald-50/30" }),
@@ -2328,7 +2328,7 @@ function OrderTable({
     const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
     const sumRemain = rows.reduce((s, o) => s + calc(o).remaining, 0);
     return /*#__PURE__*/React.createElement("tr", {
-      className: "border-t-2 border-[#CCFBF1] bg-[#F0FDFA] font-semibold text-[#0F766E]"
+      className: "border-t-2 border-[#CCFBF1] bg-[#F0FDFA] font-semibold text-slate-800"
     }, /*#__PURE__*/React.createElement("td", {
       colSpan: 4,
       className: "px-3 py-3",
@@ -3066,7 +3066,7 @@ function PurchaseCreate({
                       className: "rounded-md bg-[#FEE2E2] p-1.5 text-[#DC2626] hover:bg-[#FECACA]"
                     }, /*#__PURE__*/React.createElement(Trash2, {className: "h-4 w-4"}))))),
                 /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
-                  /*#__PURE__*/React.createElement("td", {colSpan: 5, className: "px-3 py-2.5 text-right text-[14px] font-bold uppercase text-[#0F766E]"}, "TỔNG CỘNG"),
+                  /*#__PURE__*/React.createElement("td", {colSpan: 5, className: "px-3 py-2.5 text-right text-[14px] font-bold uppercase text-slate-800"}, "TỔNG CỘNG"),
                   /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-right text-base font-bold tabular-nums text-slate-900"}, num(subtotal)),
                   /*#__PURE__*/React.createElement("td", null))),
               /*#__PURE__*/React.createElement("datalist", {id: "pl-pur"},
@@ -3280,7 +3280,7 @@ function WhIn({pendingImportSlip, onConsumePending, orders = []}) {
     className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
   }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
   /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
-    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-[#0F766E]", colSpan: 5}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
+    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 5}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qtyIn,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qtyNow,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3"}),
@@ -3543,7 +3543,7 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
       className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
   /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
-    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-[#0F766E]", colSpan: 7}, "TỔNG CỘNG (", rows.length, " DÒNG)"),
+    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 7}, "TỔNG CỘNG (", rows.length, " DÒNG)"),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qty,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3"}),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(rows.reduce((s,r)=>s+r.sale*r.qty,0))),
@@ -5297,7 +5297,7 @@ function Finance() {
                 /*#__PURE__*/React.createElement("button",{onClick:()=>{ setFAccDetail(fAccDetail===a.key?null:a.key); setFAcc("Tất cả"); },
                   className:`rounded-md px-2 py-1 text-xs font-medium transition ${fAccDetail===a.key?"bg-[#0F766E] text-white":"bg-[#CCFBF1] text-[#0F766E] hover:bg-[#b2f0e8] ring-1 ring-[#0F766E]/20"}`},"Chi tiết")))),
             /*#__PURE__*/React.createElement("tr",{className:"bg-[#E6FFFA]"},
-              /*#__PURE__*/React.createElement("td",{className:tdC+" font-bold text-[#0F766E]",colSpan:3},"TỔNG CỘNG"),
+              /*#__PURE__*/React.createElement("td",{className:tdC+" font-bold text-slate-800",colSpan:3},"TỔNG CỘNG"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-slate-900"},vnd(tot.openBal)),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-emerald-600"},tot.totalIn>0?vnd(tot.totalIn):"0đ"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-rose-600"},tot.totalOut>0?vnd(tot.totalOut):"0đ"),
