@@ -1257,7 +1257,9 @@ const IconBtn = ({
 }) => /*#__PURE__*/React.createElement("button", {
   title: title,
   onClick: onClick,
-  className: `rounded-md p-1.5 transition hover:bg-slate-100 text-${tone}-500`
+  className: tone === "danger"
+    ? "rounded-md p-1.5 transition bg-[#FEE2E2] text-[#DC2626] hover:bg-[#FECACA]"
+    : `rounded-md p-1.5 transition hover:bg-slate-100 text-${tone}-500`
 }, /*#__PURE__*/React.createElement(Icon, {
   className: "h-4 w-4"
 }));
@@ -2467,6 +2469,7 @@ function DraftTable({
       items: o.items
     })
   }), /*#__PURE__*/React.createElement(IconBtn, {
+    tone: "danger",
     icon: Trash2,
     title: "Xoá báo giá",
     onClick: () => onDelete(o.id)
@@ -2720,7 +2723,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                 /*#__PURE__*/React.createElement("option", null, "HG"),
                 /*#__PURE__*/React.createElement("option", null, "SR"))),
             /*#__PURE__*/React.createElement("td", {className: "px-3 py-2 border-b border-slate-100"},
-              /*#__PURE__*/React.createElement("button", {onClick: () => setLines(ls => ls.filter((_,x)=>x!==i)), title: "Xoá", className: "rounded p-1.5 bg-rose-500 text-white hover:bg-rose-600"},
+              /*#__PURE__*/React.createElement("button", {onClick: () => setLines(ls => ls.filter((_,x)=>x!==i)), title: "Xoá", className: "rounded p-1.5 bg-[#FEE2E2] text-[#DC2626] hover:bg-[#FECACA]"},
                 /*#__PURE__*/React.createElement(X, {className: "h-3.5 w-3.5"})))))))),
     /*#__PURE__*/React.createElement("div", {className: "mt-3 flex items-center gap-2"},
       /*#__PURE__*/React.createElement("button", {
@@ -2806,7 +2809,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                   /*#__PURE__*/React.createElement("span", {className:"rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700"}, p.staff||"quanly01")),
                 /*#__PURE__*/React.createElement("div", {className:"mt-2 flex justify-end gap-1"},
                   /*#__PURE__*/React.createElement("button", {onClick:()=>{setEditPayIdx(i);setEditPayModal(true);}, title:"Sửa", className:"rounded p-1.5 bg-amber-400 text-white hover:bg-amber-500"}, /*#__PURE__*/React.createElement(Pencil, {className:"h-3 w-3"})),
-                  /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Đặt cọc"?p.amount:p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1.5 bg-rose-600 text-white hover:bg-rose-700"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"})))))))),
+                  /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Đặt cọc"?p.amount:p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1.5 bg-[#FEE2E2] text-[#DC2626] hover:bg-[#FECACA]"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"})))))))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"p-4"},
         /*#__PURE__*/React.createElement("p", {className:"mb-3 text-[16px] font-semibold text-slate-800"}, "Chi phí phát sinh"),
@@ -3060,7 +3063,7 @@ function PurchaseCreate({
                   /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-center"},
                     /*#__PURE__*/React.createElement("button", {
                       onClick: () => setRows(xs => xs.filter((_, k) => k !== i)),
-                      className: "rounded-md bg-rose-500 p-1.5 text-white hover:bg-rose-600"
+                      className: "rounded-md bg-[#FEE2E2] p-1.5 text-[#DC2626] hover:bg-[#FECACA]"
                     }, /*#__PURE__*/React.createElement(Trash2, {className: "h-4 w-4"}))))),
                 /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
                   /*#__PURE__*/React.createElement("td", {colSpan: 5, className: "px-3 py-2.5 text-right text-sm font-semibold text-slate-700"}, "Tổng cộng"),
@@ -3179,7 +3182,7 @@ function PurchaseList({
             }}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Pencil, title: "Sửa", onClick: () => onEdit(r)}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Printer, title: "In", onClick: () => window.print()}),
-          /*#__PURE__*/React.createElement(IconBtn, {icon: Trash2, title: "Xoá", onClick: () => del(r.lot)})))))),
+          /*#__PURE__*/React.createElement(IconBtn, {icon: Trash2, tone: "danger", title: "Xoá", onClick: () => del(r.lot)})))))),
     doc && /*#__PURE__*/React.createElement(DocModal, {doc: doc, onClose: () => setDoc(null)}));
 }
 
@@ -4243,6 +4246,7 @@ function ProductsTab() {
     title: "Sửa",
     onClick: () => setForm(p)
   }), /*#__PURE__*/React.createElement(IconBtn, {
+    tone: "danger",
     icon: Trash2,
     title: "Xoá",
     onClick: () => del(p.sku)
@@ -4441,6 +4445,7 @@ function CustomersTab() {
     title: "Sửa",
     onClick: () => setForm(c)
   }), /*#__PURE__*/React.createElement(IconBtn, {
+    tone: "danger",
     icon: Trash2,
     title: "Xoá",
     onClick: () => del(c)
@@ -4582,6 +4587,7 @@ function Suppliers() {
     title: "Sửa",
     onClick: () => setForm(s)
   }), /*#__PURE__*/React.createElement(IconBtn, {
+    tone: "danger",
     icon: Trash2,
     title: "Xoá",
     onClick: () => del(s)
@@ -5332,7 +5338,7 @@ function Finance() {
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
               /*#__PURE__*/React.createElement("div",{className:"flex items-center justify-center gap-1"},
                 /*#__PURE__*/React.createElement(IconBtn,{icon:Pencil,title:"Sửa",onClick:()=>setEditTxn(t)}),
-                /*#__PURE__*/React.createElement(IconBtn,{icon:Trash2,title:"Xóa",onClick:()=>delTxn(t.id)})))))))),
+                /*#__PURE__*/React.createElement(IconBtn,{icon: Trash2, tone: "danger", title:"Xóa",onClick:()=>delTxn(t.id)})))))))),
 
     modal==="thu"    && /*#__PURE__*/React.createElement(PhieuThuModal,  {onClose:()=>setModal(null), onSave:addTxn,  nextId}),
     modal==="chi"    && /*#__PURE__*/React.createElement(PhieuChiModal,  {onClose:()=>setModal(null), onSave:addChi,  nextId}),
