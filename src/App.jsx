@@ -1442,7 +1442,7 @@ const DocLink = ({
       Kho: "Kho HH"
     }
   }),
-  className: `text-[14px] font-semibold text-[#0F766E] underline-offset-2 hover:underline ${className}`
+  className: `font-semibold text-[#0F766E] underline-offset-2 hover:underline ${className}`
 }, code);
 
 /* ───────── Dashboard ───────── */
