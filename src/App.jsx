@@ -1680,14 +1680,10 @@ function SalesModule({
       supplier: payload.items[i].supplier
     }))
   } : o));
-  const applyReturn = (id, items) => {
-    const d = new Date().toLocaleDateString("vi-VN");
-    setOrders(os => os.map(o => o.id === id ? {
-      ...o,
-      returned: true,
-      returns: [...(o.returns||[]), ...items.map(it=>({date:d, prod:it.prod, qty:it.qty, amount:it.amount, note:it.note||""}))]
-    } : o));
-  };
+  const applyReturn = id => setOrders(os => os.map(o => o.id === id ? {
+    ...o,
+    returned: true
+  } : o));
   const current = modal && orders.find(o => o.id === modal.id);
   if (view === "create") return /*#__PURE__*/React.createElement(CreateOrder, {
     isDraft: sub === "draft",
@@ -1762,8 +1758,8 @@ function SalesModule({
   }), current && modal.mode === "return" && /*#__PURE__*/React.createElement(ReturnModal, {
     order: current,
     onClose: () => setModal(null),
-    onConfirm: (items) => {
-      applyReturn(current.id, items);
+    onConfirm: () => {
+      applyReturn(current.id);
       setModal(null);
     }
   }));
@@ -2052,7 +2048,7 @@ function ReturnModal({
       onClick: onClose,
       className: "rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50"
     }, "Hủy"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => onConfirm(rows.filter(r=>r.qty>0).map(r=>({prod:r.name,qty:r.qty,amount:r.price*r.qty,note:reason}))),
+      onClick: onConfirm,
       disabled: total === 0,
       className: "rounded-lg bg-[#0F766E] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#0D5F58] disabled:bg-slate-300"
     }, "Xác nhận hoàn hàng"))
@@ -2546,6 +2542,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [custExpenses, setCustExpenses] = useState(editOrder?.custExpenses || []);
   const [compCosts, setCompCosts] = useState(editOrder?.compCosts || []);
   const [shippingFee, setShippingFee] = useState(editOrder?.shippingFee || 0);
+  const [returnFee, setReturnFee] = useState(editOrder?.returnFee || 0);
   const [note, setNote] = useState(editOrder?.note || "");
   const [saveTried, setSaveTried] = useState(false);
   const [addrWarnPending, setAddrWarnPending] = useState(false);
@@ -2561,7 +2558,6 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [ccostAcc, setCcostAcc] = useState("");
   const [payments, setPayments] = useState(editOrder?.payments || []);
   const [returns, setReturns] = useState(editOrder?.returns || []);
-  const returnFee = returns.reduce((s,r) => s + (r.fee||0), 0);
   const [orderStatusManual, setOrderStatusManual] = useState(editOrder?.orderStatus || "Chờ xử lý");
   const [payStatusManual, setPayStatusManual] = useState(editOrder?.payStatusManual || "Chờ thanh toán");
   const [khoStatus, setKhoStatus] = useState(editOrder?.khoStatus || "Nhập-Xuất");
@@ -2671,6 +2667,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     custExpenses,
     compCosts,
     shippingFee,
+    returnFee,
     note,
     delivery,
     orderStatus: orderStatusManual,
@@ -2783,28 +2780,18 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("button", {onClick: () => setAddrWarnPending(false), className: "rounded-md bg-white px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50"}, "Cập nhật địa chỉ"),
           /*#__PURE__*/React.createElement("button", {onClick: () => { setAddrWarnPending(false); setDelivery("Đã giao hàng"); }, className: "rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"}, "Vẫn xác nhận")))) : null,
     /*#__PURE__*/React.createElement("div", {className: "rounded-lg border border-slate-200"},
-      /*#__PURE__*/React.createElement("table", {className: "w-full text-sm border-collapse", style:{tableLayout:"fixed"}},
-        /*#__PURE__*/React.createElement("colgroup", null,
-          /*#__PURE__*/React.createElement("col", {style:{width:220}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:64}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:70}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:120}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:150}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:130}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:120}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:80}}),
-          /*#__PURE__*/React.createElement("col", {style:{width:44}})),
+      /*#__PURE__*/React.createElement("table", {className: "w-full text-sm border-collapse"},
         /*#__PURE__*/React.createElement("thead", null,
           /*#__PURE__*/React.createElement("tr", {className: "bg-slate-50 text-left text-xs font-medium uppercase tracking-wide text-slate-500"},
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200"}, "Tên sản phẩm"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center"}, "ĐVT"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center"}, "SL"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right"}, "Giá niêm yết"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right"}, "Giảm giá"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right"}, "Giá bán"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right"}, "Thành tiền"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center"}, "Kho"),
-            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200"}))),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200", style: {minWidth: 220}}, "Tên sản phẩm"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center", style: {width: 64}}, "ĐVT"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center", style: {width: 70}}, "SL"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right", style: {width: 120}}, "Giá niêm yết"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right", style: {width: 150}}, "Giảm giá"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right", style: {width: 130}}, "Giá bán"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right", style: {width: 120}}, "Thành tiền"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center", style: {width: 80}}, "Kho"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200", style: {width: 44}}))),
         /*#__PURE__*/React.createElement("tbody", null,
           ...lines.map((l, i) => /*#__PURE__*/React.createElement("tr", {key: i, className: "align-middle", style: {backgroundColor: i%2===0?"#ffffff":"#f8fafc"}},
             /*#__PURE__*/React.createElement("td", {className: "px-3 py-2 border-b border-slate-100"},
@@ -2831,30 +2818,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                 /*#__PURE__*/React.createElement("option", null, "SR"))),
             /*#__PURE__*/React.createElement("td", {className: "px-3 py-2 border-b border-slate-100"},
               /*#__PURE__*/React.createElement("button", {onClick: () => setLines(ls => ls.filter((_,x)=>x!==i)), title: "Xoá", className: "rounded p-1.5 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"},
-                /*#__PURE__*/React.createElement(X, {className: "h-3.5 w-3.5"}))))))
-        ,/*#__PURE__*/React.createElement("tbody", null,
-          /*#__PURE__*/React.createElement("tr", null,
-            /*#__PURE__*/React.createElement("td", {colSpan:9, className:"px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 bg-slate-50 border-t-2 border-b border-slate-200"}, "Hàng trả")),
-          /*#__PURE__*/React.createElement("tr", {className:"bg-slate-50/50 text-xs font-medium text-slate-400"},
-            /*#__PURE__*/React.createElement("td", {className:"px-3 py-1.5 border-b border-slate-100"}, "Tên sản phẩm"),
-            /*#__PURE__*/React.createElement("td", {className:"px-3 py-1.5 border-b border-slate-100 text-center"}, "Ngày trả"),
-            /*#__PURE__*/React.createElement("td", {className:"px-3 py-1.5 border-b border-slate-100 text-center"}, "Số lượng"),
-            /*#__PURE__*/React.createElement("td", {colSpan:3, className:"px-3 py-1.5 border-b border-slate-100"}),
-            /*#__PURE__*/React.createElement("td", {className:"px-3 py-1.5 border-b border-slate-100 text-right"}, "Số tiền trả"),
-            /*#__PURE__*/React.createElement("td", {className:"px-3 py-1.5 border-b border-slate-100 text-right"}, "CP đổi trả"),
-            /*#__PURE__*/React.createElement("td", {className:"px-3 py-1.5 border-b border-slate-100"}, "Ghi chú")),
-          returns.length === 0
-            ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {colSpan:9, className:"py-5 text-center text-sm text-slate-400"}, "Chưa có hàng trả"))
-            : /*#__PURE__*/React.createElement(React.Fragment, null,
-                ...returns.map((ret,i) => /*#__PURE__*/React.createElement("tr", {key:i},
-                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100"}, ret.prod),
-                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100 text-center text-xs text-slate-500"}, ret.date||""),
-                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100 text-center"}, ret.qty),
-                  /*#__PURE__*/React.createElement("td", {colSpan:3, className:"px-3 py-2 border-b border-slate-100"}),
-                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100 text-right tabular-nums"}, vnd(ret.amount||0)),
-                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100"},
-                    /*#__PURE__*/React.createElement(NumInput, {value:ret.fee||0, onChange:v=>setReturns(xs=>xs.map((r,j)=>j===i?{...r,fee:v}:r)), className:"w-full border-0 bg-transparent px-0 py-0 text-right text-sm tabular-nums focus:outline-none"})),
-                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100 text-xs text-slate-500"}, ret.note||""))))))),
+                /*#__PURE__*/React.createElement(X, {className: "h-3.5 w-3.5"})))))))),
     /*#__PURE__*/React.createElement("div", {className: "mt-3 flex items-center gap-2"},
       /*#__PURE__*/React.createElement("button", {
         onClick: () => setLines(ls => [...ls, {name:"",price:0,qty:1,disc:0,discType:"đ",cost:0,list:0,kho:"HH",unit:""}]),
@@ -2875,6 +2839,27 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           setNewProdReq(null);
         }
       }))),
+  /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("p", {className: "mb-2 text-sm font-semibold text-slate-700"}, "Hàng trả"),
+    /*#__PURE__*/React.createElement("div", {className: "overflow-hidden rounded-lg border border-slate-200"},
+      /*#__PURE__*/React.createElement("table", {className: "w-full text-sm border-collapse"},
+        /*#__PURE__*/React.createElement("thead", null,
+          /*#__PURE__*/React.createElement("tr", {className: "bg-slate-50 text-left text-xs font-medium text-slate-500"},
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200", style:{width:120}}, "Ngày trả"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200", style:{minWidth:180}}, "Tên sản phẩm"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-center", style:{width:120}}, "Số lượng trả"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200 text-right", style:{width:140}}, "Số tiền trả lại"),
+            /*#__PURE__*/React.createElement("th", {className: "px-3 py-2.5 border-b border-slate-200"}, "Ghi chú"))),
+        /*#__PURE__*/React.createElement("tbody", null,
+          returns.length === 0
+            ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {colSpan:5, className:"py-6 text-center text-sm text-slate-400"}, "Chưa có hàng trả"))
+            : /*#__PURE__*/React.createElement(React.Fragment, null,
+                ...returns.map((ret,i) => /*#__PURE__*/React.createElement("tr", {key:i},
+                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100"}, ret.date||""),
+                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100"}, ret.prod),
+                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100 text-center"}, ret.qty),
+                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100 text-right tabular-nums"}, vnd(ret.amount||0)),
+                  /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 border-b border-slate-100"}, ret.note||""))))))),
   /*#__PURE__*/React.createElement("div", {className: "flex gap-4 items-start"},
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200 p-5"},
       /*#__PURE__*/React.createElement("p", {className:"mb-4 text-[16px] font-semibold text-slate-800"}, "Thông tin đơn hàng"),
@@ -2882,13 +2867,14 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"text-slate-500"}, "Tổng tiền hàng"),
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(subtotal))),
-        /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between gap-2 rounded-md bg-[#E6F7EC] px-2 py-1"},
-          /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-[#1B8A4D] font-medium"}, "CP giao hàng >15km"),
+        /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between gap-2"},
+          /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-slate-500"}, "CP giao hàng >15km"),
           /*#__PURE__*/React.createElement("dd", {className:"w-28"},
             /*#__PURE__*/React.createElement(NumInput, {value:shippingFee, onChange:setShippingFee, className:"w-full border-0 bg-transparent px-0 py-0 text-right text-sm tabular-nums focus:outline-none"}))),
-        returns.length > 0 && /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
+        /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between gap-2"},
           /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-slate-500"}, "CP đổi trả"),
-          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(returnFee))),
+          /*#__PURE__*/React.createElement("dd", {className:"w-28"},
+            /*#__PURE__*/React.createElement(NumInput, {value:returnFee, onChange:setReturnFee, className:"w-full border-0 bg-transparent px-0 py-0 text-right text-sm tabular-nums focus:outline-none"}))),
         /*#__PURE__*/React.createElement("div", {className:"my-2 border-t border-slate-200"}),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Tổng cộng"),
@@ -2939,6 +2925,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                 /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-2"},
                   /*#__PURE__*/React.createElement("span", {className:"font-medium text-slate-800"}, vnd(c.amount)),
                   /*#__PURE__*/React.createElement("button", {onClick:()=>setCompCosts(xs=>xs.filter((_,j)=>j!==i)), className:"text-slate-400 hover:text-[#B91C1C]"}, /*#__PURE__*/React.createElement(X, {className:"h-3.5 w-3.5"})))))))),
+  ),
   /*#__PURE__*/React.createElement("div", {className:"rounded-xl bg-white shadow-sm border border-slate-200"},
     /*#__PURE__*/React.createElement("div", {className:"px-4 py-3 border-b border-slate-200"},
       /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-slate-800"}, "Nhật ký đơn hàng")),
@@ -5468,13 +5455,13 @@ function Finance({setActive, onOpenOrder}) {
         /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
           /*#__PURE__*/React.createElement("thead", null,
             /*#__PURE__*/React.createElement("tr", null,
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Tài khoản"),
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Số TK"),
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Chủ tài khoản"),
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Số dư đầu kỳ"),
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Tổng tiền vào"),
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Tổng tiền ra"),
-              /*#__PURE__*/React.createElement("th",{className:"whitespace-nowrap px-3 py-2.5 text-center"},"Số dư cuối kỳ"),
+              /*#__PURE__*/React.createElement("th",{className:thC},"Tài khoản"),
+              /*#__PURE__*/React.createElement("th",{className:thC},"Số TK"),
+              /*#__PURE__*/React.createElement("th",{className:thC},"Chủ tài khoản"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư đầu kỳ"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Tổng tiền vào"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Tổng tiền ra"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư cuối kỳ"),
               /*#__PURE__*/React.createElement("th",{className:"px-3 py-2.5 text-center"},""))),
           /*#__PURE__*/React.createElement("tbody", null,
             accSummary.map(a=>/*#__PURE__*/React.createElement("tr",{key:a.key},
@@ -5511,15 +5498,15 @@ function Finance({setActive, onOpenOrder}) {
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
         /*#__PURE__*/React.createElement(TableShell, {minW:"1100px",
           head:/*#__PURE__*/React.createElement(React.Fragment,null,
-            /*#__PURE__*/React.createElement(Th,{center:true},"Mã GD"),
+            /*#__PURE__*/React.createElement(Th,null,"Mã GD"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Ngày"),
-            /*#__PURE__*/React.createElement(Th,{center:true},"Đối tượng"),
-            /*#__PURE__*/React.createElement(Th,{center:true},"Số đơn hàng"),
+            /*#__PURE__*/React.createElement(Th,null,"Đối tượng"),
+            /*#__PURE__*/React.createElement(Th,null,"Số đơn hàng"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Loại giao dịch"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Tài khoản"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Số tiền"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Nội dung"),
-            /*#__PURE__*/React.createElement(Th,{center:true},"Người tạo"),
+            /*#__PURE__*/React.createElement(Th,null,"Người tạo"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Thao tác"))},
           visibleTxns.map(t=>/*#__PURE__*/React.createElement("tr",{key:t.id},
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-500 tabular-nums"},t.id),
