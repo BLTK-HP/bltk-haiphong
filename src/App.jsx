@@ -4694,7 +4694,7 @@ function DebtCust() {
       className: `border-l border-slate-100 px-3 py-3 text-right font-semibold tabular-nums ${close < 0 ? "text-blue-600" : "text-rose-600"}`
     }, num(close)));
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#CCFBF1] font-bold"
+    className: "bg-[#E6FFFA] font-bold"
   }, /*#__PURE__*/React.createElement("td", {
     colSpan: 2,
     className: "px-3 py-3 text-center font-semibold text-[#0F766E]"
@@ -4917,7 +4917,7 @@ function DebtNcc() {
       className: "border-l border-slate-100 px-3 py-3 text-right font-semibold tabular-nums text-rose-600"
     }, num(close)));
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#CCFBF1] font-bold"
+    className: "bg-[#E6FFFA] font-bold"
   }, /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-center font-semibold text-[#0F766E]"
   }, "TỔNG CỘNG"), /*#__PURE__*/React.createElement("td", {
@@ -5294,7 +5294,7 @@ function Finance() {
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2 text-center"},
                 /*#__PURE__*/React.createElement("button",{onClick:()=>{ setFAccDetail(fAccDetail===a.key?null:a.key); setFAcc("Tất cả"); },
                   className:`rounded-md px-2 py-1 text-xs font-medium transition ${fAccDetail===a.key?"bg-[#0F766E] text-white":"bg-[#CCFBF1] text-[#0F766E] hover:bg-[#b2f0e8] ring-1 ring-[#0F766E]/20"}`},"Chi tiết")))),
-            /*#__PURE__*/React.createElement("tr",{className:"bg-[#CCFBF1]"},
+            /*#__PURE__*/React.createElement("tr",{className:"bg-[#E6FFFA]"},
               /*#__PURE__*/React.createElement("td",{className:tdC+" font-bold text-[#0F766E]",colSpan:3},"TỔNG CỘNG"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-slate-900"},vnd(tot.openBal)),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-emerald-600"},tot.totalIn>0?vnd(tot.totalIn):"0đ"),
