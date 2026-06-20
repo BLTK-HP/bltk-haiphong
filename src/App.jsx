@@ -5256,7 +5256,7 @@ function Finance() {
         /*#__PURE__*/React.createElement("select", {value:fKind, onChange:e=>setFKind(e.target.value), className:field},
           allKinds.map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
       /*#__PURE__*/React.createElement("div", {className:"flex items-end gap-2 pb-0.5"},
-        /*#__PURE__*/React.createElement("button", {onClick:()=>exportCSV("so-quy",["Mã GD","Ngày","Đối tượng","Mã đơn","Loại GD","Tài khoản","Số tiền","Ghi chú","Người tạo"],visibleTxns.map(t=>[t.id,t.date,t.entity,t.orderId,t.kind,t.acc,t.amount,t.note,t.staff])), className:"inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"},
+        /*#__PURE__*/React.createElement("button", {onClick:()=>exportCSV("so-quy",["Mã GD","Ngày","Đối tượng","Mã đơn","Loại GD","Tài khoản","Số tiền","Ghi chú","Người tạo"],visibleTxns.map(t=>[t.id,t.date,t.entity,t.orderId,t.kind,t.acc,t.amount,t.note,t.staff])), className:"inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#0D5F58]"},
           /*#__PURE__*/React.createElement(Upload, {className:"h-3.5 w-3.5"}), "Excel"),
         )),
 
