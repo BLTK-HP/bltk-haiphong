@@ -4214,7 +4214,7 @@ function ProductsTab() {
     ? /*#__PURE__*/React.createElement("img", {src: p.img, alt: p.name, className: "mx-auto h-12 w-12 rounded-lg border border-slate-200 object-cover"})
     : /*#__PURE__*/React.createElement("div", {className: "mx-auto flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-300"},
         /*#__PURE__*/React.createElement(ImageIcon, {className: "h-5 w-5"}))), /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3 text-xs text-slate-500"
+    className: "px-3 py-3 text-[13px] font-medium text-slate-700"
   }, /*#__PURE__*/React.createElement(Sku, {
     value: p.sku
   })), /*#__PURE__*/React.createElement("td", {
