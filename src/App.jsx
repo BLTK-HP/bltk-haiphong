@@ -2224,7 +2224,7 @@ function OrderTable({
   }, /*#__PURE__*/React.createElement(React.Fragment, null, rows.map((o, ri) => {
     const c = calc(o);
     const isCancel = o.orderStatus === "Huỷ";
-    const rowBg = isCancel ? "#f1f5f9" : (ri % 2 ? "#f1f5f9" : "#ffffff");
+    const rowBg = isCancel ? "#f1f5f9" : (ri % 2 === 0 ? "#FFFFFF" : "#F8FAFC");
     return /*#__PURE__*/React.createElement("tr", {
       key: o.id,
       className: `align-top hover:brightness-95 ${isCancel ? "opacity-60 grayscale text-slate-400" : ""}`,
@@ -2255,9 +2255,9 @@ function OrderTable({
     }, o.addr || "—"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-slate-800"
     }, num(c.total)), /*#__PURE__*/React.createElement("td", {
-      className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-emerald-600"
-    }, num(o.paid)), /*#__PURE__*/React.createElement("td", {
-      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${c.remaining > 0 ? "text-rose-600" : "text-slate-300"}`
+      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${o.paid > 0 ? "text-[#047857]" : "text-[#94A3B8]"}`
+    }, o.paid > 0 ? num(o.paid) : "–"), /*#__PURE__*/React.createElement("td", {
+      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${c.remaining > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`
     }, c.remaining > 0 ? num(c.remaining) : "—"), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-center"
     }, /*#__PURE__*/React.createElement(Pill, {
@@ -2336,10 +2336,10 @@ function OrderTable({
     }, "TỔNG CỘNG (", rows.length, " ĐƠN)"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-slate-800"
     }, num(sumTotal)), /*#__PURE__*/React.createElement("td", {
-      className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-emerald-600"
-    }, num(sumPaid)), /*#__PURE__*/React.createElement("td", {
-      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${sumRemain > 0 ? "text-rose-600" : "text-slate-400"}`
-    }, num(sumRemain)), /*#__PURE__*/React.createElement("td", {
+      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${sumPaid > 0 ? "text-[#047857]" : "text-[#94A3B8]"}`
+    }, sumPaid > 0 ? num(sumPaid) : "–"), /*#__PURE__*/React.createElement("td", {
+      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums font-semibold ${sumRemain > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`
+    }, sumRemain > 0 ? num(sumRemain) : "–"), /*#__PURE__*/React.createElement("td", {
       colSpan: 7
     }));
   })())), doc && /*#__PURE__*/React.createElement(DocModal, {
