@@ -1265,7 +1265,7 @@ const IconBtn = ({
 }));
 const blueBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-1.5 text-[14px] font-semibold text-white shadow-sm hover:bg-[#0D5F58]";
 const greenBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3 py-1.5 text-[14px] font-semibold text-white hover:bg-[#0D5F58]";
-const addBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0D9488] px-3 py-1.5 text-[14px] font-semibold text-white hover:bg-[#0F766E]";
+const addBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#CCFBF1] px-3 py-1.5 text-[14px] font-semibold text-[#0F766E] hover:bg-[#99F6E4]";
 const ghostBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-sm text-[#404040] hover:bg-[#F4F6F8]";
 
 /* ── tách ngày & giờ xuống 2 dòng (F1) ── */
