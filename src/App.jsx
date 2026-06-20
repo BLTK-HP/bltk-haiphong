@@ -5762,7 +5762,7 @@ function App() {
   }, /*#__PURE__*/React.createElement("header", {
     className: "flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3.5"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "text-sm font-semibold text-slate-800"
+    className: "flex-1 text-center text-sm font-semibold text-slate-800"
   }, title), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 text-sm"
   })), /*#__PURE__*/React.createElement("main", {
