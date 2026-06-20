@@ -55,8 +55,8 @@ body {
 /* ──────────────────────────────── */
 .tbl-list th {
   background-color: #EEF1F4;
-  font-size: 0.8125rem;
-  font-weight: 500;
+  font-size: 0.75rem;       /* 12px */
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: #64748B;
@@ -65,9 +65,20 @@ body {
 }
 
 .tbl-list td {
+  font-size: 0.8125rem;     /* 13px */
+  font-weight: 400;
   border-bottom: 1px solid #DDE3E8;
   border-right: 1px solid #E8ECEF;
   min-height: 36px;
+}
+
+/* Số liệu tiền/tồn kho trong bảng: 14px/500/mono */
+.tbl-list td.col-money,
+.tbl-list td.col-num {
+  font-size: 0.875rem;      /* 14px */
+  font-weight: 500;
+  font-family: ui-monospace, 'Roboto Mono', monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 .tbl-list td:last-child {
