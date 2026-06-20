@@ -2401,7 +2401,7 @@ function DraftTable({
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(Toolbar, null), /*#__PURE__*/React.createElement(TableShell, {
-    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Mã Báo giá"), /*#__PURE__*/React.createElement(Th, {
+    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Số Báo giá"), /*#__PURE__*/React.createElement(Th, {
       style: {
         width: 90
       }
@@ -2426,7 +2426,7 @@ function DraftTable({
     className: "whitespace-nowrap px-4 py-3"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => onEdit(o),
-    className: "font-medium text-amber-600 underline-offset-2 hover:underline"
+    className: "font-semibold text-[#0F766E] underline-offset-2 hover:underline"
   }, o.id)), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
