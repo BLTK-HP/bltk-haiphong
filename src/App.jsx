@@ -1175,7 +1175,7 @@ function StatCard({
 }) {
   const c = {
     default: "text-slate-900",
-    pos: "text-emerald-600",
+    pos: "text-[#047857]",
     neg: "text-[#B91C1C]",
     accent: "text-blue-700",
     warn: "text-amber-600"
@@ -1556,7 +1556,7 @@ function Dashboard() {
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-slate-500"
   }, "— Đã thu"), /*#__PURE__*/React.createElement("span", {
-    className: "font-medium tabular-nums text-emerald-600"
+    className: "font-medium tabular-nums text-[#047857]"
   }, vnd(72946000))), /*#__PURE__*/React.createElement("li", {
     className: "flex justify-between border-t border-slate-100 pt-3"
   }, /*#__PURE__*/React.createElement("span", {
@@ -2791,7 +2791,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-[#B91C1C]"}, vnd(returns.reduce((s,r)=>s+(r.amount||0),0)))),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Còn lại"),
-          /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-[#B91C1C]":"text-emerald-600"}`}, vnd(remaining)))),
+          /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-[#B91C1C]":"text-[#047857]"}`}, vnd(remaining)))),
       /*#__PURE__*/React.createElement("div", {className:"mt-5 flex gap-3"},
         /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal(true), className:"flex-1 rounded-xl bg-[#0F766E] py-2 text-sm font-medium text-white hover:bg-[#0D5F58]"}, "Thanh toán"))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
@@ -3363,7 +3363,7 @@ function WhIn({pendingImportSlip, onConsumePending, orders = []}) {
           /*#__PURE__*/React.createElement("span", {className: "font-semibold text-slate-800"}, vnd(orderModal.paid || 0))),
         /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between rounded-lg bg-slate-50 px-4 py-2 text-xs"},
           /*#__PURE__*/React.createElement("span", {className: "font-semibold text-slate-700"}, "Còn lại"),
-          /*#__PURE__*/React.createElement("span", {className: `font-bold tabular-nums ${(orderModal.total||0)-(orderModal.paid||0)>0?"text-[#B91C1C]":"text-emerald-600"}`},
+          /*#__PURE__*/React.createElement("span", {className: `font-bold tabular-nums ${(orderModal.total||0)-(orderModal.paid||0)>0?"text-[#B91C1C]":"text-[#047857]"}`},
             vnd((orderModal.total||0)-(orderModal.paid||0))))))));
 }
 function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
@@ -3741,7 +3741,7 @@ function StockDetailModal({
   }, /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-2.5"
   }, /*#__PURE__*/React.createElement("span", {
-    className: `rounded px-1.5 py-0.5 text-xs font-medium ${m.type === "Xuất" ? "bg-rose-50 text-[#B91C1C]" : m.type === "Nhập" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"}`
+    className: `rounded px-1.5 py-0.5 text-xs font-medium ${m.type === "Xuất" ? "bg-rose-50 text-[#B91C1C]" : m.type === "Nhập" ? "bg-emerald-50 text-[#047857]" : "bg-slate-100 text-slate-500"}`
   }, m.type)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-2.5 text-slate-500"
   }, m.date), /*#__PURE__*/React.createElement("td", {
@@ -3870,17 +3870,17 @@ function Stock() {
       className: cell + " text-slate-700"
     }, num(r.price)), /*#__PURE__*/React.createElement("td", {
       className: cell + " border-l border-slate-100 text-slate-600"
-    }, r.o), /*#__PURE__*/React.createElement("td", {
+    }, r.o || "–"), /*#__PURE__*/React.createElement("td", {
       className: cell + " text-slate-600"
-    }, num(r.o * r.price)), /*#__PURE__*/React.createElement("td", {
-      className: cell + " border-l border-slate-100 text-emerald-600"
-    }, r.in || 0), /*#__PURE__*/React.createElement("td", {
-      className: cell + " text-emerald-600"
-    }, r.in ? num(r.in * r.price) : 0), /*#__PURE__*/React.createElement("td", {
-      className: cell + " border-l border-slate-100 text-[#B91C1C]"
-    }, r.out || 0), /*#__PURE__*/React.createElement("td", {
-      className: cell + " text-[#B91C1C]"
-    }, r.out ? num(r.out * r.price) : 0), /*#__PURE__*/React.createElement("td", {
+    }, r.o ? num(r.o * r.price) : "–"), /*#__PURE__*/React.createElement("td", {
+      className: cell + ` border-l border-slate-100 ${r.in ? "text-[#047857]" : "text-[#94A3B8]"}`
+    }, r.in || "–"), /*#__PURE__*/React.createElement("td", {
+      className: cell + ` ${r.in ? "text-[#047857]" : "text-[#94A3B8]"}`
+    }, r.in ? num(r.in * r.price) : "–"), /*#__PURE__*/React.createElement("td", {
+      className: cell + ` border-l border-slate-100 ${r.out ? "text-[#B91C1C]" : "text-[#94A3B8]"}`
+    }, r.out || "–"), /*#__PURE__*/React.createElement("td", {
+      className: cell + ` ${r.out ? "text-[#B91C1C]" : "text-[#94A3B8]"}`
+    }, r.out ? num(r.out * r.price) : "–"), /*#__PURE__*/React.createElement("td", {
       className: cell + " border-l border-slate-100 font-semibold text-slate-800"
     }, end), /*#__PURE__*/React.createElement("td", {
       className: cell + " font-semibold text-slate-800"
@@ -4106,7 +4106,7 @@ function ProductsTab() {
     if (q && !`${p.name} ${p.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }), [items, q, brand, sf]);
-  const tag = n => n === 0 ? "bg-rose-50 text-[#B91C1C]" : n <= 5 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600";
+  const tag = n => n === 0 ? "bg-rose-50 text-[#B91C1C]" : n <= 5 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-[#047857]";
   const save = f => {
     setItems(xs => xs.some(p => p.sku === f.sku && form && form.sku === f.sku) ? xs.map(p => p.sku === form.sku ? {
       ...p,
@@ -4810,7 +4810,7 @@ function CustDebtDetail({
       className: "px-3 py-3 text-right align-middle tabular-nums text-slate-700"
     }, num(o.payable)), k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
-      className: "px-3 py-3 text-right align-middle tabular-nums text-emerald-600"
+      className: "px-3 py-3 text-right align-middle tabular-nums text-[#047857]"
     }, num(o.paid)), k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
       className: "px-3 py-3 text-right align-middle font-semibold tabular-nums text-[#B91C1C]"
@@ -5025,7 +5025,7 @@ function NccDebtDetail({
     }, num(l.cost)), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-right font-medium tabular-nums text-slate-800"
     }, num(tot)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-emerald-600"
+      className: "px-3 py-3 text-right tabular-nums text-[#047857]"
     }, num(l.paid)), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-right font-semibold tabular-nums text-[#B91C1C]"
     }, num(tot - l.paid)), /*#__PURE__*/React.createElement("td", {
@@ -5290,7 +5290,7 @@ function Finance() {
               /*#__PURE__*/React.createElement("td",{className:tdC},a.stk),
               /*#__PURE__*/React.createElement("td",{className:tdC},a.owner),
               /*#__PURE__*/React.createElement("td",{className:tdR+" text-slate-800"},vnd(a.openBal)),
-              /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalIn>0?" text-emerald-600":" text-slate-400")},a.totalIn>0?vnd(a.totalIn):"0đ"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalIn>0?" text-[#047857]":" text-slate-400")},a.totalIn>0?vnd(a.totalIn):"0đ"),
               /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalOut>0?" text-[#B91C1C]":" text-slate-400")},a.totalOut>0?vnd(a.totalOut):"0đ"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" text-slate-900 font-semibold"},vnd(a.closeBal)),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2 text-center"},
@@ -5299,7 +5299,7 @@ function Finance() {
             /*#__PURE__*/React.createElement("tr",{className:"bg-[#E6FFFA]"},
               /*#__PURE__*/React.createElement("td",{className:tdC+" font-bold text-slate-800",colSpan:3},"TỔNG CỘNG"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-slate-900"},vnd(tot.openBal)),
-              /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-emerald-600"},tot.totalIn>0?vnd(tot.totalIn):"0đ"),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-[#047857]"},tot.totalIn>0?vnd(tot.totalIn):"0đ"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-[#B91C1C]"},tot.totalOut>0?vnd(tot.totalOut):"0đ"),
               /*#__PURE__*/React.createElement("td",{className:tdR+" font-bold text-slate-900"},vnd(tot.closeBal)),
               /*#__PURE__*/React.createElement("td",null)))))),
@@ -5327,7 +5327,7 @@ function Finance() {
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
               /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS[t.kind]||"bg-slate-100 text-slate-600 ring-1 ring-slate-200"}`},t.kind)),
             /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-slate-600"},t.acc),
-            /*#__PURE__*/React.createElement("td",{className:`px-3 py-2.5 text-right tabular-nums font-semibold ${t.amount>=0?"text-emerald-600":"text-[#B91C1C]"}`},
+            /*#__PURE__*/React.createElement("td",{className:`px-3 py-2.5 text-right tabular-nums font-semibold ${t.amount>=0?"text-[#047857]":"text-[#B91C1C]"}`},
               (t.amount>=0?"+":"")+vnd(t.amount)),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-500 text-xs"},t.note||"—"),
             /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-xs text-slate-500"},t.staff),
@@ -5426,7 +5426,7 @@ function ReportSales() {
     }, vnd(r.rev)), /*#__PURE__*/React.createElement("td", {
       className: "px-4 py-3 text-right tabular-nums text-slate-500"
     }, vnd(cost)), /*#__PURE__*/React.createElement("td", {
-      className: "px-4 py-3 text-right font-medium tabular-nums text-emerald-600"
+      className: "px-4 py-3 text-right font-medium tabular-nums text-[#047857]"
     }, vnd(r.rev - cost)), /*#__PURE__*/React.createElement("td", {
       className: "px-4 py-3 text-right tabular-nums text-[#B91C1C]"
     }, vnd(r.rev - r.paid)));
@@ -5596,7 +5596,7 @@ function ReportStaff() {
   }, vnd(s.rev)), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-right tabular-nums text-amber-600"
   }, vnd(s.returned)), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-right tabular-nums text-emerald-600"
+    className: "px-4 py-3 text-right tabular-nums text-[#047857]"
   }, vnd(s.collected)), /*#__PURE__*/React.createElement("td", {
     className: `px-4 py-3 text-right tabular-nums ${s.remain > 0 ? "text-[#B91C1C]" : "text-slate-300"}`
   }, s.remain > 0 ? vnd(s.remain) : "—")))));
