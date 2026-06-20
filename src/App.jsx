@@ -1991,7 +1991,7 @@ function KhoModal({
               React.createElement("td", { className: "border-l border-amber-100 bg-amber-50/40 px-2 py-3 text-center text-sm font-semibold tabular-nums text-rose-600" }, num(loiNhuan(r))));
           }),
           React.createElement("tr", { className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA] font-semibold" },
-            React.createElement("td", { className: "px-3 py-3 text-slate-700", colSpan: 3 }, "Tổng cộng"),
+            React.createElement("td", { className: "px-3 py-3 text-[14px] font-bold uppercase text-[#0F766E]", colSpan: 3 }, "TỔNG CỘNG"),
             React.createElement("td", { colSpan: 4, className: "border-l border-blue-100 bg-blue-50/30" }),
             moneyCell(totalIn, "bg-blue-100/60 text-blue-700"),
             React.createElement("td", { colSpan: 3, className: "border-l border-emerald-100 bg-emerald-50/30" }),
@@ -2333,7 +2333,7 @@ function OrderTable({
       colSpan: 4,
       className: "px-3 py-3",
       style: { position: "sticky", left: 0, zIndex: 1, background: "#F0FDFA" }
-    }, "Tổng cộng (", rows.length, " đơn)"), /*#__PURE__*/React.createElement("td", {
+    }, "TỔNG CỘNG (", rows.length, " ĐƠN)"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-slate-800"
     }, num(sumTotal)), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-emerald-600"
@@ -3069,7 +3069,7 @@ function PurchaseCreate({
                       className: "rounded-md bg-[#FEE2E2] p-1.5 text-[#DC2626] hover:bg-[#FECACA]"
                     }, /*#__PURE__*/React.createElement(Trash2, {className: "h-4 w-4"}))))),
                 /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
-                  /*#__PURE__*/React.createElement("td", {colSpan: 5, className: "px-3 py-2.5 text-right text-sm font-semibold text-slate-700"}, "Tổng cộng"),
+                  /*#__PURE__*/React.createElement("td", {colSpan: 5, className: "px-3 py-2.5 text-right text-[14px] font-bold uppercase text-[#0F766E]"}, "TỔNG CỘNG"),
                   /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-right text-base font-bold tabular-nums text-slate-900"}, num(subtotal)),
                   /*#__PURE__*/React.createElement("td", null))),
               /*#__PURE__*/React.createElement("datalist", {id: "pl-pur"},
@@ -3283,7 +3283,7 @@ function WhIn({pendingImportSlip, onConsumePending, orders = []}) {
     className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
   }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
   /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
-    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-[#0F766E]", colSpan: 5}, "Tổng cộng (",rows.length," phiếu)"),
+    /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-[#0F766E]", colSpan: 5}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qtyIn,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qtyNow,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3"}),
@@ -3546,7 +3546,7 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
       className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
   /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA]"},
-    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-[#0F766E]", colSpan: 7}, "Tổng cộng (", rows.length, " dòng)"),
+    /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-[#0F766E]", colSpan: 7}, "TỔNG CỘNG (", rows.length, " DÒNG)"),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums font-bold text-slate-800"}, rows.reduce((s,r)=>s+r.qty,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3"}),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(rows.reduce((s,r)=>s+r.sale*r.qty,0))),
