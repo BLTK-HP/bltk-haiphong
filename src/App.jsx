@@ -1824,7 +1824,7 @@ function PaymentModal({
     className: inp,
     value: kind,
     onChange: e => setKind(e.target.value)
-  }, ["Đặt cọc", "Thanh toán", "Hoàn tiền", "Giảm giá thêm"].map(s => /*#__PURE__*/React.createElement("option", {
+  }, ["Đặt cọc", "Thanh toán", "Tiền hàng trả lại", "Giảm giá thêm"].map(s => /*#__PURE__*/React.createElement("option", {
     key: s
   }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: lbl
@@ -2506,6 +2506,7 @@ function CreateOrder({
   onExportKho
 }) {
   const notify = useToast();
+  const {bankAccounts} = useBankAccounts();
   const isEdit = !!editOrder;
   const [prods, setProds] = useState(PRODUCTS);
   const [cust, setCust] = useState({
@@ -2561,7 +2562,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(editOrder?.deliveryConfirmed || false);
   const [showDeliveryConfirm, setShowDeliveryConfirm] = useState(false);
   const [bottomTab, setBottomTab] = useState("payment");
-  const ACCOUNTS = ["Tiền mặt", "Vietcombank", "Techcombank", "MB Bank", "Momo"];
+  const ACCOUNTS = bankAccounts.filter(a=>a.status==="Hoạt động").map(a=>a.bank);
   const [newProdReq, setNewProdReq] = useState(null); // { name, lineIdx }
   const setLine = (i, p) => setLines(ls => ls.map((l, x) => x === i ? {
     ...l,
@@ -2573,9 +2574,11 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const custExpTotal = custExpenses.reduce((s,e) => s+e.amount, 0) + shippingFee;
   const total = subtotal + custExpTotal;
   const deposit = payments.filter(p=>p.kind==="Đặt cọc").reduce((s,p)=>s+p.amount,0);
-  const paidOnly = payments.filter(p=>p.kind!=="Đặt cọc"&&p.kind!=="Hoàn tiền"&&p.kind!=="Giảm giá thêm").reduce((s,p)=>s+p.amount,0);
-  const remaining = total - paid;
-  const payStatus = total > 0 && remaining <= 0 ? "Đã thanh toán" : paid > 0 ? "Đặt cọc" : "Chưa thanh toán";
+  const returnPaid = payments.filter(p=>p.kind==="Tiền hàng trả lại").reduce((s,p)=>s+p.amount,0);
+  const paidOnly = payments.filter(p=>p.kind==="Thanh toán").reduce((s,p)=>s+p.amount,0);
+  const discountExtra = payments.filter(p=>p.kind==="Giảm giá thêm").reduce((s,p)=>s+p.amount,0);
+  const remaining = total - deposit - paidOnly - returnPaid - discountExtra;
+  const payStatus = total > 0 && remaining <= 0 ? "Đã thanh toán" : (deposit+paidOnly) > 0 ? "Đặt cọc" : "Chưa thanh toán";
   const khoXong = !!(editOrder?.imported && editOrder?.exported);
   const orderStatus = delivery === "Đã giao hàng" && payStatus === "Đã thanh toán" && khoXong
     ? "Hoàn thành"
@@ -2810,15 +2813,18 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Tổng cộng"),
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums font-bold text-slate-900"}, vnd(total))),
-        deposit > 0 && /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
+        /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"text-slate-500"}, "Đã đặt cọc"),
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(deposit))),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"text-slate-500"}, "Đã thanh toán"),
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(paidOnly))),
+        discountExtra > 0 && /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
+          /*#__PURE__*/React.createElement("dt", {className:"text-slate-500"}, "Giảm giá thêm"),
+          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(discountExtra))),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"text-[#B91C1C]"}, "Tiền hàng trả lại"),
-          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-[#B91C1C]"}, vnd(returns.reduce((s,r)=>s+(r.amount||0),0)))),
+          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-[#B91C1C]"}, vnd(returns.reduce((s,r)=>s+(r.amount||0),0)+returnPaid))),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Còn lại"),
           /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-[#B91C1C]":"text-[#047857]"}`}, vnd(remaining)))),
@@ -2831,15 +2837,17 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         payments.length === 0
           ? /*#__PURE__*/React.createElement("p", {className:"text-center text-sm italic text-slate-400"}, "Chưa có thanh toán")
           : /*#__PURE__*/React.createElement("div", {className:"space-y-2"},
-              ...payments.map((p,i) => /*#__PURE__*/React.createElement("div", {key:i, className:"rounded-2xl border border-[#0F766E] bg-[#F0FDFA]/60 p-3 text-xs"},
-                /*#__PURE__*/React.createElement("div", {className:"flex items-start justify-between gap-2"},
-                  /*#__PURE__*/React.createElement("div", null,
-                    /*#__PURE__*/React.createElement("div", {className:"font-semibold text-slate-800"}, (p.kind||"Thanh toán"), " : ", vnd(p.amount), "đ"),
-                    /*#__PURE__*/React.createElement("div", {className:"mt-0.5 text-slate-500"}, p.datetime||p.date||"")),
-                  /*#__PURE__*/React.createElement("span", {className:"rounded-full bg-[#0F766E] px-2 py-0.5 text-[11px] font-medium text-white"}, p.staff||"quanly01")),
-                /*#__PURE__*/React.createElement("div", {className:"mt-2 flex justify-end gap-1"},
-                  /*#__PURE__*/React.createElement("button", {onClick:()=>{setEditPayIdx(i);setEditPayModal(true);}, title:"Sửa", className:"rounded p-1.5 bg-[#0F766E] text-white hover:bg-[#0D5F58]"}, /*#__PURE__*/React.createElement(Pencil, {className:"h-3 w-3"})),
-                  /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Đặt cọc"?p.amount:p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1.5 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"})))))))),
+              ...payments.map((p,i) => /*#__PURE__*/React.createElement("div", {key:i, className:"rounded-xl border border-[#0F766E] bg-[#F0FDFA]/60 px-3 py-2 text-xs"},
+                /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between gap-2"},
+                  /*#__PURE__*/React.createElement("div", {className:"min-w-0 flex-1"},
+                    /*#__PURE__*/React.createElement("span", {className:"font-semibold text-slate-800"}, (p.kind||"Thanh toán"), " : ", vnd(p.amount), "đ"),
+                    /*#__PURE__*/React.createElement("span", {className:"mx-1.5 text-slate-300"}, "·"),
+                    /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, p.datetime||p.date||""),
+                    p.account && [/*#__PURE__*/React.createElement("span", {key:"dot", className:"mx-1.5 text-slate-300"}, "·"), /*#__PURE__*/React.createElement("span", {key:"acc", className:"font-medium text-[#0F766E]"}, p.account)]),
+                  /*#__PURE__*/React.createElement("div", {className:"flex shrink-0 items-center gap-1"},
+                    /*#__PURE__*/React.createElement("span", {className:"rounded-full bg-[#0F766E] px-2 py-0.5 text-[11px] font-medium text-white"}, p.staff||"quanly01"),
+                    /*#__PURE__*/React.createElement("button", {onClick:()=>{setEditPayIdx(i);setEditPayModal(true);}, title:"Sửa", className:"rounded p-1 bg-[#0F766E] text-white hover:bg-[#0D5F58]"}, /*#__PURE__*/React.createElement(Pencil, {className:"h-3 w-3"})),
+                    /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Tiền hàng trả lại"||p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"}))))))))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"p-4"},
         /*#__PURE__*/React.createElement("p", {className:"mb-3 text-[16px] font-semibold text-slate-800"}, "Chi phí phát sinh"),
@@ -2879,7 +2887,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     onClose: () => setPayModal(false),
     onConfirm: p => {
       setPayments(xs => [...xs, p]);
-      const delta = p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;
+      const delta = p.kind==="Tiền hàng trả lại"||p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;
       setPaid(v => Math.max(0, v+delta));
       setPayModal(false);
     }
