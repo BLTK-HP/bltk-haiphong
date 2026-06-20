@@ -2625,7 +2625,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo đơn hàng"),
         /*#__PURE__*/React.createElement("div", {className: "relative"},
           /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: blueBtn},
-            /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In đơn hàng ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
+            /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
           showPrintMenu && /*#__PURE__*/React.createElement("div", {className: "absolute right-0 top-full z-20 mt-1 min-w-[140px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
             /*#__PURE__*/React.createElement("button", {onClick: () => { window.print(); setShowPrintMenu(false); }, className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "In đơn hàng"),
             /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(false), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Xuất PDF"))),
