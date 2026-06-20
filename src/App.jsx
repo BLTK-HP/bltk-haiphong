@@ -1263,10 +1263,12 @@ const IconBtn = ({
 }, /*#__PURE__*/React.createElement(Icon, {
   className: "h-4 w-4"
 }));
-const blueBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-1.5 text-[14px] font-semibold text-white shadow-sm hover:bg-[#0D5F58]";
+const blueBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0D9488] px-3.5 py-1.5 text-[14px] font-semibold text-white shadow-sm hover:bg-[#0F766E]";
 const greenBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3 py-1.5 text-[14px] font-semibold text-white hover:bg-[#0D5F58]";
 const addBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#0F766E] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#0F766E] hover:bg-[#E6FFFA]";
-const ghostBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-sm text-[#404040] hover:bg-[#F4F6F8]";
+const ghostBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-[14px] text-[#475569] hover:bg-[#F4F6F8]";
+const outlineTealBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#0D9488] bg-white px-3 py-1.5 text-[14px] font-semibold text-[#0D9488] hover:bg-[#E6FFFA]";
+const backBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[14px] text-[#64748B] hover:bg-[#F8FAFC]";
 
 /* ── tách ngày & giờ xuống 2 dòng (F1) ── */
 function DateTime({
@@ -2616,7 +2618,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("button", {
           onClick: onSaveClick,
           disabled: subtotal === 0,
-          className: greenBtn + " disabled:cursor-not-allowed disabled:bg-slate-300"
+          className: outlineTealBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(Save, {className: "h-4 w-4"}), saveLabel),
         (!isEdit || editOrder?.draft) && /*#__PURE__*/React.createElement("button", {
           onClick: () => { setSaveTried(true); if (!custValid) return; onSave(build(), false); notify("✅ Đã tạo đơn hàng"); setTimeout(onBack, 800); },
@@ -2624,12 +2626,12 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           className: blueBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo đơn hàng"),
         /*#__PURE__*/React.createElement("div", {className: "relative"},
-          /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: blueBtn},
+          /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: ghostBtn},
             /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
           showPrintMenu && /*#__PURE__*/React.createElement("div", {className: "absolute right-0 top-full z-20 mt-1 min-w-[140px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
             /*#__PURE__*/React.createElement("button", {onClick: () => { window.print(); setShowPrintMenu(false); }, className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "In đơn hàng"),
             /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(false), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Xuất PDF"))),
-        /*#__PURE__*/React.createElement("button", {onClick: onBack, className: ghostBtn},
+        /*#__PURE__*/React.createElement("button", {onClick: onBack, className: backBtn},
           /*#__PURE__*/React.createElement(ArrowLeft, {className: "h-4 w-4"}), " Quay lại")),
       /*#__PURE__*/React.createElement("input", {type: "datetime-local", value: dt, onChange: e => setDt(e.target.value), className: field}))),
   /*#__PURE__*/React.createElement("div", null,
@@ -2973,7 +2975,7 @@ function PurchaseCreate({
     /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between"},
       /*#__PURE__*/React.createElement("h2", {className: "flex items-center gap-2 text-[22px] font-bold text-slate-800"},
         /*#__PURE__*/React.createElement(FileText, {className: "h-6 w-6 text-slate-400"}), " Tạo phiếu mua hàng"),
-      /*#__PURE__*/React.createElement("button", {onClick: onBack, className: ghostBtn},
+      /*#__PURE__*/React.createElement("button", {onClick: onBack, className: backBtn},
         /*#__PURE__*/React.createElement(ArrowLeft, {className: "h-4 w-4"}), " Quay lại")),
     /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"},
       /*#__PURE__*/React.createElement("div", null,
@@ -3288,11 +3290,7 @@ function WhIn({pendingImportSlip, onConsumePending, orders = []}) {
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3"}),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3"}),
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(rows.reduce((s,r)=>s+(r.costNcc+(r.fee||0))*r.qtyIn,0))),
-    /*#__PURE__*/React.createElement("td", {colSpan: 3}))), /*#__PURE__*/React.createElement("div", {className: "flex justify-end pt-1"},
-    /*#__PURE__*/React.createElement("button", {
-      onClick: () => window.print(),
-      className: "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-    }, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In danh sách")),
+    /*#__PURE__*/React.createElement("td", {colSpan: 3}))),
   doc && /*#__PURE__*/React.createElement(DocModal, {doc: doc, onClose: () => setDoc(null)}),
   slipModal && /*#__PURE__*/React.createElement(Modal, {
     title: `Phiếu nhập kho — ${impCode(slipModal.lot)}`,
@@ -4285,7 +4283,7 @@ function CustomerForm({
     onClose: onClose,
     footer: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
       onClick: onClose,
-      className: ghostBtn
+      className: backBtn
     }, "Quay lại"), /*#__PURE__*/React.createElement("button", {
       onClick: () => can && onSave(f),
       disabled: !can,
@@ -4483,7 +4481,7 @@ function SupplierForm({
     onClose: onClose,
     footer: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
       onClick: onClose,
-      className: ghostBtn
+      className: backBtn
     }, "Quay lại"), /*#__PURE__*/React.createElement("button", {
       onClick: () => can && onSave(f),
       disabled: !can,
