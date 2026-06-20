@@ -2323,11 +2323,11 @@ function OrderTable({
     const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
     const sumRemain = rows.reduce((s, o) => s + calc(o).remaining, 0);
     return /*#__PURE__*/React.createElement("tr", {
-      className: "border-t-2 border-[#CCFBF1] bg-[#E6FFFA] font-semibold text-[#0F766E]"
+      className: "border-t-2 border-[#CCFBF1] bg-[#F0FDFA] font-semibold text-[#0F766E]"
     }, /*#__PURE__*/React.createElement("td", {
       colSpan: 4,
       className: "px-3 py-3",
-      style: { position: "sticky", left: 0, zIndex: 1, background: "#E6FFFA" }
+      style: { position: "sticky", left: 0, zIndex: 1, background: "#F0FDFA" }
     }, "Tổng cộng (", rows.length, " đơn)"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-slate-800"
     }, num(sumTotal)), /*#__PURE__*/React.createElement("td", {
