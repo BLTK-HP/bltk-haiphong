@@ -2793,13 +2793,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Còn lại"),
           /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-rose-600":"text-emerald-600"}`}, vnd(remaining)))),
       /*#__PURE__*/React.createElement("div", {className:"mt-5 flex gap-3"},
-        /*#__PURE__*/React.createElement("button", {onClick:()=>setCustExpModal(true), className:"flex-1 rounded-xl border border-slate-300 bg-white py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"}, "Chi phí"),
         /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal(true), className:"flex-1 rounded-xl bg-[#0F766E] py-2 text-sm font-medium text-white hover:bg-[#0D5F58]"}, "Thanh toán"))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-start justify-between p-4"},
-        /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-slate-800"}, "Lịch sử thanh toán"),
-        /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal(true), className:"inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"},
-          /*#__PURE__*/React.createElement(Plus, {className:"h-4 w-4"}), " Thêm")),
+        /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-slate-800"}, "Lịch sử thanh toán")),
       /*#__PURE__*/React.createElement("div", {className:"border-t border-slate-200 p-4"},
         payments.length === 0
           ? /*#__PURE__*/React.createElement("p", {className:"text-center text-sm italic text-slate-400"}, "Chưa có thanh toán")
