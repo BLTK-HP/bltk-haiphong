@@ -1,51 +1,122 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary:       #EE3D24;
-  --color-primary-hover: #C92E18;
-  --color-primary-light: #FDEAE6;
-  --color-sidebar:       #161616;
-  --color-app-bg:        #F8F8F8;
-  --color-border:        #E5E5E5;
-  --color-text:          #1A1A1A;
-  --color-text-muted:    #6B6B6B;
-  --color-text-disabled: #B0B0B0;
+  /* === Màu chính (Teal) === */
+  --color-primary:        #0F766E;
+  --color-primary-hover:  #0D5F58;
+  --color-primary-light:  #CCFBF1;
+
+  /* === Nền & cấu trúc === */
+  --color-sidebar:        #1E293B;
+  --color-app-bg:         #F4F6F8;
+  --color-card-bg:        #FFFFFF;
+  --color-table-header:   #EEF1F4;
+  --color-row-hover:      #F0F4F8;
+  --color-row-selected:   #CCFBF1;
+
+  /* === Border === */
+  --color-border:         #DDE3E8;
+
+  /* === Chữ === */
+  --color-text:           #1E293B;
+  --color-text-muted:     #64748B;
+  --color-text-disabled:  #9CA3AF;
+
+  /* === Trạng thái === */
+  --color-status-pending-bg:    #FEF3C7;
+  --color-status-pending-text:  #B45309;
+  --color-status-proc-bg:       #DBEAFE;
+  --color-status-proc-text:     #1D4ED8;
+  --color-status-done-bg:       #D1FAE5;
+  --color-status-done-text:     #047857;
+  --color-status-cancel-bg:     #FEE2E2;
+  --color-status-cancel-text:   #B91C1C;
+  --color-status-overdue-bg:    #FFE4E6;
+  --color-status-overdue-text:  #BE123C;
+
+  /* === Nút nguy hiểm === */
+  --color-danger:         #DC2626;
+  --color-danger-hover:   #B91C1C;
 }
 
+/* ──────────────────────────────── */
+/*  Global base styles              */
+/* ──────────────────────────────── */
 body {
-  font-family: 'Be Vietnam Pro', Inter, ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
-  background-color: #F8F8F8;
-  color: #1A1A1A;
+  font-family: Inter, 'Be Vietnam Pro', ui-sans-serif, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+  background-color: #F4F6F8;
+  color: #1E293B;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-/* ── Bảng danh sách chung ── */
+/* ──────────────────────────────── */
+/*  Bảng danh sách chung (.tbl-list) */
+/* ──────────────────────────────── */
 .tbl-list th {
-  background-color: #f8fafc;
-  font-size: 0.7rem;
-  font-weight: 600;
+  background-color: #EEF1F4;
+  font-size: 0.8125rem;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
-  border-bottom: 1px solid #e2e8f0;
+  color: #64748B;
+  border-bottom: 1px solid #DDE3E8;
 }
 
 .tbl-list td {
-  border-right: 1px solid #e2e8f0;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #DDE3E8;
+  min-height: 36px;
 }
+
 .tbl-list td:last-child {
   border-right: none;
 }
-.tbl-list th {
-  border-right: 1px solid #e2e8f0;
-}
+
 .tbl-list th:last-child {
   border-right: none;
 }
 
 .tbl-list tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: #F0F4F8;
 }
+
 .tbl-list tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* ──────────────────────────────── */
+/*  Nút chính (override Tailwind)   */
+/* ──────────────────────────────── */
+.btn-primary {
+  background-color: #0F766E;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.btn-primary:hover { background-color: #0D5F58; }
+
+.btn-secondary {
+  background-color: transparent;
+  color: #475569;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid #CBD5E1;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.btn-secondary:hover { background-color: #F4F6F8; }
+
+/* ──────────────────────────────── */
+/*  Số liệu — font mono thẳng hàng */
+/* ──────────────────────────────── */
+.col-money, .col-stock {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
