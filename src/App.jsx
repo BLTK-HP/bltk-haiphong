@@ -1265,6 +1265,7 @@ const IconBtn = ({
 }));
 const blueBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3.5 py-1.5 text-[14px] font-semibold text-white shadow-sm hover:bg-[#0D5F58]";
 const greenBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3 py-1.5 text-[14px] font-semibold text-white hover:bg-[#0D5F58]";
+const addBtn = "inline-flex items-center gap-1.5 rounded-lg bg-[#0D9488] px-3 py-1.5 text-[14px] font-semibold text-white hover:bg-[#0F766E]";
 const ghostBtn = "inline-flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-sm text-[#404040] hover:bg-[#F4F6F8]";
 
 /* ── tách ngày & giờ xuống 2 dòng (F1) ── */
@@ -2728,11 +2729,11 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     /*#__PURE__*/React.createElement("div", {className: "mt-3 flex items-center gap-2"},
       /*#__PURE__*/React.createElement("button", {
         onClick: () => setLines(ls => [...ls, {name:"",price:0,qty:1,disc:0,discType:"đ",cost:0,list:0,kho:"HH",unit:""}]),
-        className: ghostBtn
+        className: addBtn
       }, /*#__PURE__*/React.createElement(Plus, {className: "h-4 w-4"}), " Thêm dòng"),
       /*#__PURE__*/React.createElement("button", {
         onClick: () => setNewProdReq({name:"", lineIdx: lines.length}),
-        className: greenBtn
+        className: addBtn
       }, /*#__PURE__*/React.createElement(Plus, {className: "h-4 w-4"}), " Thêm sản phẩm mới"),
       newProdReq !== null && /*#__PURE__*/React.createElement(ProductForm, {
         presetName: newProdReq.name,
@@ -4161,7 +4162,7 @@ function ProductsTab() {
     onClick: onExport
   }), /*#__PURE__*/React.createElement("button", {
     onClick: () => setForm({}),
-    className: blueBtn
+    className: addBtn
   }, /*#__PURE__*/React.createElement(Plus, {
     className: "h-4 w-4"
   }), " Thêm sản phẩm mới"))), /*#__PURE__*/React.createElement(TableShell, {
