@@ -61,10 +61,12 @@ body {
   letter-spacing: 0.06em;
   color: #64748B;
   border-bottom: 1px solid #DDE3E8;
+  border-right: 1px solid #E8ECEF;
 }
 
 .tbl-list td {
   border-bottom: 1px solid #DDE3E8;
+  border-right: 1px solid #E8ECEF;
   min-height: 36px;
 }
 
