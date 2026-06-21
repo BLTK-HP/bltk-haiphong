@@ -1701,7 +1701,8 @@ function SalesModule({
   if (view === "create") return /*#__PURE__*/React.createElement(CreateOrder, {
     isDraft: sub === "draft",
     onBack: () => setView("list"),
-    onSave: addOrder
+    onSave: addOrder,
+    orders
   });
   if (view && view.edit) {
     const eo = orders.find(o => o.id === view.edit);
@@ -1714,7 +1715,8 @@ function SalesModule({
         ? id => setOrders(os => os.map(o => o.id === eo.id ? {...o, draftStatus: "Đã tạo đơn hàng"} : o))
         : undefined,
       onExportKho,
-      onImportKho
+      onImportKho,
+      orders
     });
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -2521,7 +2523,8 @@ function CreateOrder({
   isDraft,
   onConvertDraft,
   onExportKho,
-  onImportKho
+  onImportKho,
+  orders = []
 }) {
   const notify = useToast();
   const {bankAccounts} = useBankAccounts();
@@ -2691,8 +2694,14 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   };
   const addrDetailed = cust.addr.trim() && !addrIsVague(cust.addr);
   const custValidFull = custValid && addrDetailed;
-  const dupCust = cust.phone.trim() && cust.phone.trim() !== (editOrder?.phone || "")
-    ? (CUSTOMERS.find(cu => cu.phone && cu.phone.trim() === cust.phone.trim()) || null)
+  const phoneQuery = cust.phone.trim();
+  const dupCust = phoneQuery && phoneQuery !== (editOrder?.phone || "")
+    ? (() => {
+        const fromCust = CUSTOMERS.find(cu => cu.phone && cu.phone.trim() === phoneQuery);
+        if (fromCust) return fromCust;
+        const fromOrder = orders.find(o => o.id !== (editOrder?.id || "") && o.phone && o.phone.trim() === phoneQuery);
+        return fromOrder ? {name: fromOrder.name, addr: fromOrder.addr, _orderId: fromOrder.id, _isDraft: !!fromOrder.draft} : null;
+      })()
     : null;
   const build = () => ({
     id: effectiveOrderId,
@@ -2774,9 +2783,12 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Số điện thoại ",/*#__PURE__*/React.createElement("span",{className:"text-[#B91C1C]"},"(*)")),
         /*#__PURE__*/React.createElement("input", {className: `${inputF}${saveTried && !cust.phone.trim() ? " border-rose-400" : ""}`, value: cust.phone, onChange: e => { setCust({...cust, phone: e.target.value}); setDupDismissed(false); }}),
         saveTried && !cust.phone.trim() ? /*#__PURE__*/React.createElement("p", {className: "mt-1 text-xs text-[#B91C1C]"}, "Vui lòng nhập SĐT") : null,
-        dupCust && !dupDismissed ? /*#__PURE__*/React.createElement("div", {className: "mt-2 rounded-lg border border-[#B91C1C] bg-[#FEF2F2] p-2 text-xs"},
-          /*#__PURE__*/React.createElement("div", {className: "font-semibold text-[#B91C1C]"}, "Trùng KH: ", dupCust.name),
-          /*#__PURE__*/React.createElement("button", {onClick: () => { setCust({...cust, name: dupCust.name||cust.name, addr: dupCust.addr||cust.addr}); setDupDismissed(true); }, className: "mt-1 text-[#B91C1C] underline"}, "Dùng thông tin này")) : null),
+        dupCust && !dupDismissed ? /*#__PURE__*/React.createElement("div", {className: "mt-2 rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs"},
+          /*#__PURE__*/React.createElement("div", {className: "font-semibold text-amber-800"},
+            "⚠️ Trùng SĐT: ", dupCust.name,
+            dupCust._orderId ? /*#__PURE__*/React.createElement("span", {className: "ml-1 font-normal text-amber-700"},
+              "(", dupCust._isDraft ? "Báo giá" : "Đơn", " ", dupCust._orderId, ")") : null),
+          /*#__PURE__*/React.createElement("button", {onClick: () => { setCust({...cust, name: dupCust.name||cust.name, addr: dupCust.addr||cust.addr}); setDupDismissed(true); }, className: "mt-1 text-amber-700 underline"}, "Dùng thông tin này")) : null),
       /*#__PURE__*/React.createElement("div", null,
         /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Tên khách hàng ",/*#__PURE__*/React.createElement("span",{className:"text-[#B91C1C]"},"(*)")),
         /*#__PURE__*/React.createElement("input", {className: `${inputF}${saveTried && !cust.name.trim() ? " border-rose-400" : ""}`, value: cust.name, onChange: e => setCust({...cust, name: e.target.value})}),
