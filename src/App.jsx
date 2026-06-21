@@ -2468,8 +2468,9 @@ function DraftTable({
   }, /*#__PURE__*/React.createElement(DateTime, {
     value: o.dt
   })), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-slate-800"
-  }, o.name), /*#__PURE__*/React.createElement("td", {
+    className: "px-4 py-3"
+  }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800"}, o.name),
+    o.phone ? /*#__PURE__*/React.createElement("div", {className: "mt-0.5 text-xs text-slate-400"}, /*#__PURE__*/React.createElement(Phone, {value: o.phone})) : null), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-xs text-slate-500",
     style: {
       maxWidth: 180
