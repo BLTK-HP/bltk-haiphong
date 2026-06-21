@@ -2322,7 +2322,7 @@ function OrderTable({
       return /*#__PURE__*/React.createElement("button", {
         onClick: () => onKho(o),
         title: "Mở màn hình xử lý kho (nhập → xuất)",
-        className: `inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset transition hover:opacity-80 ${cls}`
+        className: `inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset transition hover:opacity-70 ${cls}`
       }, label === "Đã xử lý kho" ? /*#__PURE__*/React.createElement(Check, {
         className: "h-3 w-3"
       }) : /*#__PURE__*/React.createElement(ArrowDownToLine, {
@@ -2814,7 +2814,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   /*#__PURE__*/React.createElement("div", null,
     /*#__PURE__*/React.createElement("div", {className: "mb-2 flex items-center justify-between"},
       /*#__PURE__*/React.createElement("p", {className: "text-sm font-semibold text-slate-700"}, "Danh sách sản phẩm"),
-      /*#__PURE__*/React.createElement("div", {className: "relative"},
+      !isDraft && !(isEdit && editOrder?.draft) && /*#__PURE__*/React.createElement("div", {className: "relative"},
         deliveryConfirmed
           ? /*#__PURE__*/React.createElement("button", {className: "inline-flex items-center gap-1.5 rounded-lg bg-[#0F766E] px-3 py-1.5 text-sm font-bold text-white"},
               /*#__PURE__*/React.createElement(Check, {className: "h-4 w-4"}), " Đã giao hàng")
@@ -3533,19 +3533,27 @@ function WhIn({pendingImportSlip, pendingImportSlips, onConsumePending, orders =
     }
   }, [pendingImportSlip, pendingImportSlips]);
   const [fSup, setFSup] = useState("Tất cả");
+  const [fProd, setFProd] = useState("Tất cả");
   const setKho = (lot, kho) => setItems(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
   const supNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.supplier).filter(Boolean)))];
+  const prodNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.prod).filter(Boolean)))];
   const rows = items.filter(r =>
     (fSup === "Tất cả" || r.supplier === fSup) &&
+    (fProd === "Tất cả" || r.prod === fProd) &&
     (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
   );
   const findOrder = id => orders.find(o => o.id === id || o.id.replace(/^Đ/i,"D") === id.replace(/^Đ/i,"D"));
   const openOrderDetail = id => { const o = findOrder(id); setOrderModal(o || {id, _notFound: true}); };
   const onExport = () => exportCSV("danh-sach-phieu-nhap-kho", ["Kho", "Số phiếu nhập", "Số đơn hàng", "Ngày nhập", "Sản phẩm", "SL nhập", "SL còn", "Đơn giá", "CPMH", "Giá vốn", "Thành tiền", "Nhà cung cấp", "Người tạo"], rows.map(r => [r.store, impCode(r.lot), r.order || "", r.date, r.prod, r.qtyIn, r.qtyNow, r.costNcc, r.fee || 0, r.costNcc + (r.fee || 0), (r.costNcc + (r.fee || 0)) * r.qtyIn, r.supplier, r.staff]));
-  const nccExtra = /*#__PURE__*/React.createElement("div", null,
-    /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
-    /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: field},
-      supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s))));
+  const nccExtra = /*#__PURE__*/React.createElement(React.Fragment, null,
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Sản phẩm"),
+      /*#__PURE__*/React.createElement("select", {value: fProd, onChange: e => setFProd(e.target.value), className: `${field} max-w-[200px]`},
+        prodNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
+      /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: field},
+        supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(RangeBar, {
@@ -3716,7 +3724,6 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
   const [slipModal, setSlipModal] = useState(null);
   const [fProd, setFProd] = useState("Tất cả");
   const [fSup, setFSup] = useState("Tất cả");
-  const [fStore, setFStore] = useState("Tất cả");
   const [list, setList] = useState(() => pendingExportSlips?.length ? [...pendingExportSlips, ...EXPORTS] : EXPORTS);
   React.useEffect(() => { if (pendingExportSlips?.length && onConsumePending) onConsumePending(); }, []);
   const prodList = ["Tất cả", ...new Set(list.map(r => r.prod))];
@@ -3724,20 +3731,13 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
   const rows = list.filter(r => {
     if (fProd !== "Tất cả" && r.prod !== fProd) return false;
     if (fSup !== "Tất cả" && r.supplier !== fSup) return false;
-    if (fStore !== "Tất cả" && r.store !== fStore) return false;
     if (q && !`${r.order} ${r.prod} ${r.cust} ${r.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
   const onExport = () => exportCSV("danh-sach-phieu-xuat-kho", ["Thời gian", "Đơn hàng", "Khách hàng", "Địa chỉ", "Mã SP", "Tên sản phẩm", "Nhà cung cấp", "Kho", "SL xuất", "Giá bán", "Thành tiền", "TT Đơn", "TT Giao", "Người xuất"], rows.map(r => [r.dt, r.order, r.cust, r.addr, r.sku, r.prod, r.supplier, r.store, r.qty, r.sale, r.sale * r.qty, r.orderStatus, r.delivery, r.staff]));
-  const storeList = ["Tất cả", ...new Set(list.map(r => r.store))];
-  const storeShort = s => (s||"").replace(/^Kho\s+/, "") || s;
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-wrap items-center justify-end gap-2"
-  }, /*#__PURE__*/React.createElement(PrintBtn, null), /*#__PURE__*/React.createElement(ExportBtn, {
-    onClick: onExport
-  })), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -3767,15 +3767,7 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
     className: `${field} max-w-[170px]`
   }, supList.map(s => /*#__PURE__*/React.createElement("option", {
     key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-[13px] font-medium text-slate-500"
-  }, "Kho"), /*#__PURE__*/React.createElement("select", {
-    value: fStore,
-    onChange: e => setFStore(e.target.value),
-    className: field
-  }, storeList.map(s => /*#__PURE__*/React.createElement("option", {
-    key: s, value: s
-  }, s === "Tất cả" ? "Tất cả" : storeShort(s))))), /*#__PURE__*/React.createElement("div", {
+  }, s)))), /*#__PURE__*/React.createElement("div", {
     className: "relative min-w-[200px] flex-1"
   }, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -3786,7 +3778,9 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
     onChange: e => setQ(e.target.value),
     placeholder: "Đơn hàng, sản phẩm, khách hàng…",
     className: `${field} w-full pl-8`
-  }))), /*#__PURE__*/React.createElement("p", {
+  })), /*#__PURE__*/React.createElement("div", {className: "flex items-end gap-2 pb-0.5"},
+    /*#__PURE__*/React.createElement(PrintBtn, null),
+    /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExport}))), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-slate-400"
   }, rows.length, " phiếu · cuộn ngang để xem hết các cột →"), /*#__PURE__*/React.createElement(TableShell, {
     minW: "1400px",
