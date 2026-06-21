@@ -1373,7 +1373,7 @@ function RangeBar({
     onChange: e => setQ(e.target.value),
     placeholder: placeholder,
     className: `${field} w-full`
-  })), extra, /*#__PURE__*/React.createElement("button", {
+  })), extra, onFilter !== undefined && /*#__PURE__*/React.createElement("button", {
     onClick: onFilter,
     className: blueBtn + " py-2"
   }, /*#__PURE__*/React.createElement(Search, {
@@ -1648,7 +1648,8 @@ function SalesModule({
   setActive,
   openOrderId,
   setOpenOrderId,
-  onExportKho
+  onExportKho,
+  onImportKho
 }) {
   const [view, setView] = useState(openOrderId ? {edit: openOrderId} : "list");
   React.useEffect(() => { if (openOrderId) { setOpenOrderId && setOpenOrderId(null); } }, []);
@@ -1712,7 +1713,8 @@ function SalesModule({
       onConvertDraft: eo.draft
         ? id => setOrders(os => os.map(o => o.id === eo.id ? {...o, draftStatus: "Đã tạo đơn hàng"} : o))
         : undefined,
-      onExportKho
+      onExportKho,
+      onImportKho
     });
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -1744,11 +1746,30 @@ function SalesModule({
     onConfirm: p => {
       const ord = current;
       applyKho(ord.id, p);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("vi-VN");
+      const dt = dateStr + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
+      const base = now.toISOString().slice(0,10).replace(/-/g,"");
+      if (!p.allExported && onImportKho) {
+        const inSlips = ord.items.map((it, i) => ({
+          lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ord.items.length > 1 ? "_" + i : ""),
+          date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
+          prod: it.name,
+          store: ord.store || "Kho HH",
+          qtyIn: it.qty,
+          qtyNow: it.qty,
+          costNcc: p.items[i]?.cost || it.cost || 0,
+          fee: 0,
+          supplier: p.items[i]?.supplier || it.supplier || "",
+          order: ord.id,
+          staff: "NGOC HA",
+          pay: "Chưa thanh toán"
+        }));
+        onImportKho(inSlips);
+      }
       if (p.allExported && onExportKho) {
-        const now = new Date();
-        const dt = now.toLocaleDateString("vi-VN") + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
         const slips = ord.items.map((it, i) => ({
-          slip: "PX" + now.toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now() + i).slice(-4),
+          slip: "PX" + base + "_" + String(Date.now() + i).slice(-4),
           dt,
           order: ord.id,
           sku: it.sku || "",
@@ -2495,7 +2516,8 @@ function CreateOrder({
   editOrder,
   isDraft,
   onConvertDraft,
-  onExportKho
+  onExportKho,
+  onImportKho
 }) {
   const notify = useToast();
   const {bankAccounts} = useBankAccounts();
@@ -2781,11 +2803,11 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       /*#__PURE__*/React.createElement("div", {className: "flex gap-2"},
         (khoActiveIdx === 2
           ? [["Đã xử lý kho", 2, null]]
-          : [["Nhập kho", 0, () => setShowKhoModal(true)], ["Xuất kho", 1, () => setShowKhoModal(true)], ["Đã xử lý kho", 2, null]]
+          : [["Nhập kho", 0, () => setShowKhoModal(true)], ["Xuất kho", 1, () => setShowKhoModal(true)], ["Đã xử lý kho", 2, () => setShowKhoModal(true)]]
         ).map(([lbl, colIdx, onClick]) => {
           const cls = badgeCls(colIdx, khoActiveIdx);
           const isActive = colIdx === khoActiveIdx;
-          return onClick && isActive
+          return isActive
             ? /*#__PURE__*/React.createElement("button", {key: lbl, type: "button", onClick, className: `inline-flex flex-1 items-center justify-center rounded py-1.5 text-sm font-semibold ring-1 ring-inset ${cls} transition hover:brightness-95`}, lbl)
             : /*#__PURE__*/React.createElement("span", {key: lbl, className: `inline-flex flex-1 items-center justify-center whitespace-nowrap rounded px-2 py-1.5 text-sm font-semibold ring-1 ring-inset ${cls}`}, lbl);
         })))),
@@ -3082,7 +3104,50 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   isEdit && !editOrder?.draft && showKhoModal && /*#__PURE__*/React.createElement(KhoModal, {
     order: {...editOrder, imported, exported, items: lines.filter(l => l.name).map(l => ({name: l.name, qty: l.qty, price: l.price, cost: l.cost || 0, kho: l.kho || "HH", supplier: l.supplier || ""}))},
     onClose: () => setShowKhoModal(false),
-    onConfirm: p => { setImported(true); if (p.allExported) setExported(true); }
+    onConfirm: p => {
+      setImported(true);
+      if (p.allExported) setExported(true);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("vi-VN");
+      const base = now.toISOString().slice(0,10).replace(/-/g,"");
+      const ordItems = lines.filter(l => l.name);
+      if (!p.allExported && onImportKho) {
+        onImportKho(ordItems.map((it, i) => ({
+          lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ordItems.length > 1 ? "_" + i : ""),
+          date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
+          prod: it.name,
+          store: it.kho || "Kho HH",
+          qtyIn: it.qty,
+          qtyNow: it.qty,
+          costNcc: p.items[i]?.cost || it.cost || 0,
+          fee: 0,
+          supplier: p.items[i]?.supplier || it.supplier || "",
+          order: effectiveOrderId,
+          staff: "NGOC HA",
+          pay: "Chưa thanh toán"
+        })));
+      }
+      if (p.allExported && onExportKho) {
+        const dt = dateStr + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
+        onExportKho(ordItems.map((it, i) => ({
+          slip: "PX" + base + "_" + String(Date.now() + i).slice(-4),
+          dt,
+          order: effectiveOrderId,
+          sku: it.sku || "",
+          prod: it.name,
+          supplier: p.items[i]?.supplier || it.supplier || "",
+          store: it.kho || "Kho HH",
+          lot: "",
+          qty: it.qty,
+          sale: it.price,
+          cust: cust.name,
+          addr: cust.addr || "",
+          orderStatus: "Chờ xử lý",
+          delivery: delivery || "Chưa giao hàng",
+          staff: "NGOC HA"
+        })));
+      }
+    }
   })
   ),
   showReturnModal && /*#__PURE__*/React.createElement(ReturnModal, {
@@ -3445,22 +3510,42 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn({pendingImportSlip, onConsumePending, orders = []}) {
+function WhIn({pendingImportSlip, pendingImportSlips, onConsumePending, orders = []}) {
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
   const toKho = s => (s||"HH").replace(/^Kho\s+/, "") || "HH";
   const addKho = r => ({...r, kho: r.kho || toKho(r.store)});
-  const [items, setItems] = useState(() => (pendingImportSlip ? [pendingImportSlip, ...IMPORTS] : IMPORTS).map(addKho));
+  const initSlips = pendingImportSlips?.length ? [...pendingImportSlips, ...IMPORTS] : pendingImportSlip ? [pendingImportSlip, ...IMPORTS] : IMPORTS;
+  const [items, setItems] = useState(() => initSlips.map(addKho));
   React.useEffect(() => {
-    if (pendingImportSlip) { setItems(xs => xs.some(r => r.lot === pendingImportSlip.lot) ? xs : [addKho(pendingImportSlip), ...xs]); if (onConsumePending) onConsumePending(); }
-  }, [pendingImportSlip]);
+    if (pendingImportSlips?.length) {
+      setItems(xs => {
+        const existing = new Set(xs.map(r => r.lot));
+        const newOnes = pendingImportSlips.filter(s => !existing.has(s.lot)).map(addKho);
+        return newOnes.length ? [...newOnes, ...xs] : xs;
+      });
+      if (onConsumePending) onConsumePending();
+    } else if (pendingImportSlip) {
+      setItems(xs => xs.some(r => r.lot === pendingImportSlip.lot) ? xs : [addKho(pendingImportSlip), ...xs]);
+      if (onConsumePending) onConsumePending();
+    }
+  }, [pendingImportSlip, pendingImportSlips]);
+  const [fSup, setFSup] = useState("Tất cả");
   const setKho = (lot, kho) => setItems(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
-  const rows = items.filter(r => !q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()));
+  const supNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.supplier).filter(Boolean)))];
+  const rows = items.filter(r =>
+    (fSup === "Tất cả" || r.supplier === fSup) &&
+    (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
+  );
   const findOrder = id => orders.find(o => o.id === id || o.id.replace(/^Đ/i,"D") === id.replace(/^Đ/i,"D"));
   const openOrderDetail = id => { const o = findOrder(id); setOrderModal(o || {id, _notFound: true}); };
   const onExport = () => exportCSV("danh-sach-phieu-nhap-kho", ["Kho", "Số phiếu nhập", "Số đơn hàng", "Ngày nhập", "Sản phẩm", "SL nhập", "SL còn", "Đơn giá", "CPMH", "Giá vốn", "Thành tiền", "Nhà cung cấp", "Người tạo"], rows.map(r => [r.store, impCode(r.lot), r.order || "", r.date, r.prod, r.qtyIn, r.qtyNow, r.costNcc, r.fee || 0, r.costNcc + (r.fee || 0), (r.costNcc + (r.fee || 0)) * r.qtyIn, r.supplier, r.staff]));
+  const nccExtra = /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
+    /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: field},
+      supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s))));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(RangeBar, {
@@ -3468,6 +3553,7 @@ function WhIn({pendingImportSlip, onConsumePending, orders = []}) {
     setQ: setQ,
     placeholder: "Tìm theo mã phiếu, sản phẩm, NCC…",
     onExport: onExport,
+    extra: nccExtra,
   }), /*#__PURE__*/React.createElement(TableShell, {
     minW: "1500px",
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
@@ -5875,6 +5961,8 @@ function Screen({
   pendingExportSlips,
   setPendingExportSlips,
   pendingImportSlip,
+  pendingImportSlips,
+  setPendingImportSlips,
   onImportToWh
 }) {
   switch (active) {
@@ -5895,12 +5983,13 @@ function Screen({
         setActive: setActive,
         openOrderId: openOrderId,
         setOpenOrderId: setOpenOrderId,
-        onExportKho: slips => { setPendingExportSlips(slips); }
+        onExportKho: slips => { setPendingExportSlips(slips); },
+        onImportKho: slips => { setPendingImportSlips(slips); }
       });
     case "purchase":
       return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, onGoToWh: () => setActive("wh_in")});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {pendingImportSlip, onConsumePending: () => setPendingImportSlip(null), orders});
+      return /*#__PURE__*/React.createElement(WhIn, {pendingImportSlip, pendingImportSlips, onConsumePending: () => { setPendingImportSlip && setPendingImportSlip(null); setPendingImportSlips && setPendingImportSlips(null); }, orders});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         pendingExportSlips: pendingExportSlips,
@@ -5968,6 +6057,7 @@ function App() {
   const [openOrderId, setOpenOrderId] = useState(null);
   const [pendingExportSlips, setPendingExportSlips] = useState(null);
   const [pendingImportSlip, setPendingImportSlip] = useState(null);
+  const [pendingImportSlips, setPendingImportSlips] = useState(null);
   const [bankAccounts, setBankAccounts] = useState(() => {
     try { return JSON.parse(localStorage.getItem('bltk_banks')) || INIT_BANK_ACCOUNTS; }
     catch { return INIT_BANK_ACCOUNTS; }
@@ -6055,6 +6145,8 @@ function App() {
     pendingExportSlips: pendingExportSlips,
     setPendingExportSlips: setPendingExportSlips,
     pendingImportSlip: pendingImportSlip,
+    pendingImportSlips: pendingImportSlips,
+    setPendingImportSlips: setPendingImportSlips,
     onImportToWh: slip => { setPendingImportSlip(slip); setActive("wh_in"); }
   })))))));
 }
