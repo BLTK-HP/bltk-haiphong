@@ -1967,10 +1967,14 @@ function KhoModal({
       }, "↓ Nhập kho"),
       React.createElement("button", {
         onClick: doExport,
-        disabled: (!imported && !editing) || (exported && !editing),
-        className: "rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:bg-slate-300"
+        disabled: (!imported && !editing) || (exported && !editing) || !order.deliveryConfirmed,
+        title: !order.deliveryConfirmed ? "Cần xác nhận giao hàng trước khi xuất kho" : undefined,
+        className: "rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
       }, "↑ Xuất kho"))
   },
+    !order.deliveryConfirmed && React.createElement("div", { className: "mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3" },
+      React.createElement("span", { className: "mt-0.5 shrink-0 text-amber-500" }, "⚠️"),
+      React.createElement("p", { className: "text-sm text-amber-800" }, "Đơn hàng chưa được xác nhận giao hàng. Vui lòng xác nhận giao hàng trước khi thực hiện xuất kho.")),
     React.createElement("div", { className: "mb-4 flex justify-end" },
       React.createElement("span", { className: `inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${statusCls}` }, "⏳ ", statusLabel)),
     React.createElement("div", { className: "mb-5 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:grid-cols-2 lg:grid-cols-4" },
@@ -3102,7 +3106,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       /*#__PURE__*/React.createElement(NumInput, {value:ccostAmt, onChange:setCcostAmt, className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#0F766E]"}))))
   ,
   isEdit && !editOrder?.draft && showKhoModal && /*#__PURE__*/React.createElement(KhoModal, {
-    order: {...editOrder, imported, exported, items: lines.filter(l => l.name).map(l => ({name: l.name, qty: l.qty, price: l.price, cost: l.cost || 0, kho: l.kho || "HH", supplier: l.supplier || ""}))},
+    order: {...editOrder, imported, exported, deliveryConfirmed, items: lines.filter(l => l.name).map(l => ({name: l.name, qty: l.qty, price: l.price, cost: l.cost || 0, kho: l.kho || "HH", supplier: l.supplier || ""}))},
     onClose: () => setShowKhoModal(false),
     onConfirm: p => {
       setImported(true);
