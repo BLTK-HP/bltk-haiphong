@@ -5989,7 +5989,7 @@ function Screen({
     case "purchase":
       return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, onGoToWh: () => setActive("wh_in")});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {pendingImportSlip, pendingImportSlips, onConsumePending: () => { setPendingImportSlip && setPendingImportSlip(null); setPendingImportSlips && setPendingImportSlips(null); }, orders});
+      return /*#__PURE__*/React.createElement(WhIn, {pendingImportSlip, pendingImportSlips, onConsumePending: () => { if (setPendingImportSlips) setPendingImportSlips(null); }, orders});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         pendingExportSlips: pendingExportSlips,
