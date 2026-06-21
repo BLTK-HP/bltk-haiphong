@@ -50,10 +50,10 @@ const PAY_STATUS = {
 const KHO_STATUS = {
   "Cần nhập":      "bg-slate-100 text-slate-500 ring-slate-200",
   "Cần xuất":      "bg-slate-100 text-slate-500 ring-slate-200",
-  "Đã xử lý kho": "bg-emerald-50 text-emerald-700 ring-emerald-200"
+  "Đã xử lý kho": "bg-[#F0FDFA] text-[#0F766E] ring-[#0D9488]"
 };
 const DELIVERY = {
-  "Đã giao hàng":   "bg-[#E6F7EC] text-[#1B8A4D] ring-[#A5D9BB]",
+  "Đã giao hàng":   "bg-[#F0FDFA] text-[#0F766E] ring-[#0D9488]",
   "Chưa giao hàng": "bg-slate-100 text-slate-500 ring-slate-200"
 };
 const TIERS = {
@@ -327,6 +327,7 @@ const INIT_ORDERS = [mkOrder({
   draft: true,
   desc: "Báo giá lò nướng cho khách xem",
   draftStatus: "Đã tạo đơn hàng",
+  linkedOrderId: "DH260241",
   items: [{
     name: "BOSCH - Lò nướng âm tủ HBG7341B1 Serie 8",
     price: 28900000,
@@ -1712,7 +1713,7 @@ function SalesModule({
       onSaveEdit: o => saveEdit(eo.id, o),
       onSave: addOrder,
       onConvertDraft: eo.draft
-        ? id => setOrders(os => os.map(o => o.id === eo.id ? {...o, draftStatus: "Đã tạo đơn hàng"} : o))
+        ? dhId => setOrders(os => os.map(o => o.id === eo.id ? {...o, draftStatus: "Đã tạo đơn hàng", linkedOrderId: dhId} : o))
         : undefined,
       onExportKho,
       onImportKho,
@@ -2324,16 +2325,12 @@ function OrderTable({
       className: "px-3 py-3 text-center"
     }, (() => {
       const label = !o.imported ? "Cần nhập" : !o.exported ? "Cần xuất" : "Đã xử lý kho";
-      const cls = !o.imported ? "bg-slate-100 text-slate-500 ring-slate-200" : !o.exported ? "bg-slate-100 text-slate-500 ring-slate-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200";
+      const cls = !o.imported ? "bg-slate-100 text-slate-500 ring-slate-200" : !o.exported ? "bg-slate-100 text-slate-500 ring-slate-200" : "bg-[#F0FDFA] text-[#0F766E] ring-[#0D9488]";
       return /*#__PURE__*/React.createElement("button", {
         onClick: () => onKho(o),
         title: "Mở màn hình xử lý kho (nhập → xuất)",
         className: `inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset transition hover:opacity-70 ${cls}`
-      }, label === "Đã xử lý kho" ? /*#__PURE__*/React.createElement(Check, {
-        className: "h-3 w-3"
-      }) : /*#__PURE__*/React.createElement(ArrowDownToLine, {
-        className: "h-3 w-3"
-      }), " ", label);
+      }, label);
     })()), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-center text-xs text-slate-500"
     }, o.staff || "—"), /*#__PURE__*/React.createElement("td", {
@@ -2437,19 +2434,23 @@ function DraftTable({
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(Toolbar, null), /*#__PURE__*/React.createElement(TableShell, {
-    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Số Báo giá"), /*#__PURE__*/React.createElement(Th, {
+    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Số Báo giá"), /*#__PURE__*/React.createElement(Th, null, "Số ĐH"), /*#__PURE__*/React.createElement(Th, {
       style: {
         width: 90
       }
     }, "Ngày"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        minWidth: 200
+        minWidth: 130
       }
     }, "Tên khách hàng"), /*#__PURE__*/React.createElement(Th, {
       style: {
+        minWidth: 120
+      }
+    }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {
+      style: {
         minWidth: 180
       }
-    }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {right: true}, "Tổng đơn"), /*#__PURE__*/React.createElement(Th, null, "Ghi chú"), /*#__PURE__*/React.createElement(Th, null, "Trạng thái"), /*#__PURE__*/React.createElement(Th, null, "Nhân viên"), /*#__PURE__*/React.createElement(Th, {
+    }, "Ghi chú"), /*#__PURE__*/React.createElement(Th, {right: true}, "Tổng đơn"), /*#__PURE__*/React.createElement(Th, null, "Trạng thái"), /*#__PURE__*/React.createElement(Th, null, "Nhân viên"), /*#__PURE__*/React.createElement(Th, {
       center: true,
       style: {
         width: 110
@@ -2464,23 +2465,25 @@ function DraftTable({
     onClick: () => onEdit(o),
     className: "text-[#2563EB] underline-offset-2 hover:underline"
   }, o.id)), /*#__PURE__*/React.createElement("td", {
+    className: "whitespace-nowrap px-4 py-3"
+  }, o.linkedOrderId
+    ? /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-full bg-[#F0FDFA] px-2.5 py-1 text-xs font-semibold text-[#0F766E] ring-1 ring-inset ring-[#0D9488]"}, o.linkedOrderId)
+    : /*#__PURE__*/React.createElement("span", {className: "text-slate-300 text-xs"}, "—")), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
     value: o.dt
   })), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3"
-  }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800"}, o.name),
+    className: "px-4 py-3",
+    style: {maxWidth: 130}
+  }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800 truncate"}, o.name),
     o.phone ? /*#__PURE__*/React.createElement("div", {className: "mt-0.5 text-xs text-slate-400"}, /*#__PURE__*/React.createElement(Phone, {value: o.phone})) : null), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-xs text-slate-500",
-    style: {
-      maxWidth: 180
-    }
+    className: "px-4 py-3 text-xs text-slate-500 truncate",
+    style: {maxWidth: 120}
   }, o.addr || "—"), /*#__PURE__*/React.createElement("td", {
+    className: "px-4 py-3 text-xs text-slate-500"
+  }, o.note || "—"), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-right tabular-nums font-medium text-[#B91C1C]"
   }, vnd((o.items||[]).reduce((s,i)=>s+i.price*i.qty*(1-(i.disc||0)/100),0))), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-xs text-slate-500",
-    style: {maxWidth: 160}
-  }, o.note || "—"), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(Pill, {
     map: DSTATUS,
@@ -2762,7 +2765,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
             ? /*#__PURE__*/React.createElement("button", {type: "button", onClick: () => { setCancelled(true); const obj = build(); onSaveEdit({...obj, orderStatus: "Huỷ"}); notify("✅ Đã huỷ đơn"); setTimeout(onBack, 800); }, className: "inline-flex items-center rounded bg-slate-400 px-2.5 py-1.5 text-sm font-medium text-white hover:bg-slate-500"}, "Huỷ đơn")
             : /*#__PURE__*/React.createElement("button", {type: "button", onClick: () => { setCancelled(false); const obj = build(); onSaveEdit({...obj, orderStatus: ""}); notify("✅ Đã bỏ huỷ"); setTimeout(onBack, 800); }, className: "inline-flex items-center rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm font-medium text-slate-400 hover:bg-slate-50"}, "Bỏ huỷ")),
         (!isEdit || editOrder?.draft) && /*#__PURE__*/React.createElement("button", {
-          onClick: () => { setSaveTried(true); if (!custValidFull) { notify("⚠️ Vui lòng điền đầy đủ thông tin và địa chỉ chi tiết"); return; } onSave(build(), false); notify("✅ Đã tạo đơn hàng"); setTimeout(onBack, 800); },
+          onClick: () => { setSaveTried(true); if (!custValidFull) { notify("⚠️ Vui lòng điền đầy đủ thông tin và địa chỉ chi tiết"); return; } const dhId = editOrder?.draft ? pendingOrderId : null; onSave(dhId ? {...build(), id: dhId} : build(), false); if (dhId && onConvertDraft) onConvertDraft(dhId); notify("✅ Đã tạo đơn hàng"); setTimeout(onBack, 800); },
           disabled: subtotal === 0,
           className: blueBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo đơn hàng"),
@@ -2819,7 +2822,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       /*#__PURE__*/React.createElement("label", {className: "mb-2 block text-sm font-semibold text-slate-600"}, "Trạng thái kho"),
       /*#__PURE__*/React.createElement("div", {className: "flex gap-2"},
         (khoActiveIdx === 2
-          ? [["Đã xử lý kho", 2, null]]
+          ? [["Đã xử lý kho", 2, () => setShowKhoModal(true)]]
           : [["Nhập kho", 0, () => setShowKhoModal(true)], ["Xuất kho", 1, () => setShowKhoModal(true)], ["Đã xử lý kho", 2, () => setShowKhoModal(true)]]
         ).map(([lbl, colIdx, onClick]) => {
           const cls = badgeCls(colIdx, khoActiveIdx);
@@ -3230,21 +3233,25 @@ function Returns() {
 }
 
 /* ───────── Purchase Module (list + create) ───────── */
-function PurchaseModule({onImportToWh, onGoToWh}) {
+function PurchaseModule({onImportToWh, onGoToWh, purchaseList: list, setPurchaseList: setList}) {
   const [view, setView] = React.useState("list"); // "list" | "create" | {edit: record}
-  if (view === "create") return /*#__PURE__*/React.createElement(PurchaseCreate, {onBack: () => setView("list"), onGoToWh});
-  if (view && view.edit) return /*#__PURE__*/React.createElement(PurchaseCreate, {editRecord: view.edit, onBack: () => setView("list"), onGoToWh});
+  const onSave = recs => setList(xs => [...recs, ...xs]);
+  if (view === "create") return /*#__PURE__*/React.createElement(PurchaseCreate, {onBack: () => setView("list"), onSave, onImportToWh});
+  if (view && view.edit) return /*#__PURE__*/React.createElement(PurchaseCreate, {editRecord: view.edit, onBack: () => setView("list"), onSave, onImportToWh});
   return /*#__PURE__*/React.createElement(PurchaseList, {
     onNew: () => setView("create"),
     onEdit: r => setView({edit: r}),
-    onImportToWh
+    onImportToWh,
+    list,
+    setList
   });
 }
 
 /* ───────── Purchase create — bố cục theo Ảnh 1 (B1) ───────── */
 function PurchaseCreate({
   onBack,
-  onGoToWh,
+  onSave,
+  onImportToWh,
   editRecord
 }) {
   const notify = useToast();
@@ -3275,18 +3282,39 @@ function PurchaseCreate({
     }];
   });
   const addLog = (action, detail) => setLogs(xs => [...xs, { dt: nowStr(), staff: "QUẢN LÝ", action, detail }]);
+  const pad2 = n => String(n).padStart(2, "0");
+  const buildRecords = () => {
+    const d = new Date();
+    const dateStr = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+    const base = Date.now();
+    return rows.filter(l => l.name).map((l, i) => ({
+      lot: `PM${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${String(base + i).slice(-4)}`,
+      date: dateStr,
+      prod: l.name,
+      store: "Kho HH",
+      qtyIn: l.qty,
+      qtyNow: 0,
+      costNcc: l.price,
+      fee: l.cpmh || 0,
+      supplier: supText || "—",
+      order: "",
+      staff: "QUẢN LÝ",
+      pay: "Chờ thanh toán",
+      kho: "HH"
+    }));
+  };
   return /*#__PURE__*/React.createElement("div", {className: "space-y-5"},
     /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between"},
       /*#__PURE__*/React.createElement("h2", {className: "flex items-center gap-2 text-[22px] font-bold text-slate-800"},
         /*#__PURE__*/React.createElement(FileText, {className: "h-6 w-6 text-slate-400"}), " Tạo phiếu mua hàng"),
       /*#__PURE__*/React.createElement("div", {className: "flex items-center gap-2"},
         /*#__PURE__*/React.createElement("button", {
-          onClick: () => { notify("Đã lưu phiếu nhập"); onBack(); },
+          onClick: () => { const recs = buildRecords(); if (onSave) onSave(recs); notify("Đã lưu phiếu mua hàng"); onBack(); },
           disabled: subtotal === 0,
           className: outlineTealBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(Save, {className: "h-4 w-4"}), " Lưu"),
         /*#__PURE__*/React.createElement("button", {
-          onClick: () => { addLog("Tạo phiếu nhập", `${supText||"—"} — ${rows.filter(l=>l.name).length} sản phẩm — Tổng tiền: ${vnd(subtotal)}đ`); notify("Đã tạo phiếu nhập"); if (onGoToWh) onGoToWh(); else onBack(); },
+          onClick: () => { addLog("Tạo phiếu nhập", `${supText||"—"} — ${rows.filter(l=>l.name).length} sản phẩm — Tổng tiền: ${vnd(subtotal)}đ`); const recs = buildRecords(); if (onSave) onSave(recs); const slips = recs.map((r, i) => ({...r, lot: "PN" + r.lot.slice(2) + String(i), qtyNow: r.qtyIn, order: r.lot})); notify("Đã tạo phiếu nhập"); if (onImportToWh) onImportToWh(slips.length === 1 ? slips[0] : slips); else onBack(); },
           disabled: subtotal === 0,
           className: blueBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo phiếu nhập"),
@@ -3429,13 +3457,14 @@ function PurchaseCreate({
 function PurchaseList({
   onNew,
   onEdit,
-  onImportToWh
+  onImportToWh,
+  list,
+  setList
 }) {
   const notify = useToast();
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [fSup, setFSup] = useState("Tất cả");
-  const [list, setList] = useState(IMPORTS.map(r => ({...r, kho: r.store === "Kho HH" ? "HH" : r.store === "Kho HG" ? "HG" : "SR"})));
   const supNames = ["Tất cả", ...new Set(list.map(r => r.supplier))];
   const rows = list.filter(r => (fSup === "Tất cả" || r.supplier === fSup) && (!q || `${purCode(r.lot)} ${r.supplier} ${r.prod}`.toLowerCase().includes(q.toLowerCase())));
   const setKho = (lot, kho) => setList(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
@@ -3527,28 +3556,11 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn({pendingImportSlip, pendingImportSlips, onConsumePending, orders = []}) {
+function WhIn({whInItems: items, setWhInItems: setItems, orders = []}) {
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
-  const toKho = s => (s||"HH").replace(/^Kho\s+/, "") || "HH";
-  const addKho = r => ({...r, kho: r.kho || toKho(r.store)});
-  const initSlips = pendingImportSlips?.length ? [...pendingImportSlips, ...IMPORTS] : pendingImportSlip ? [pendingImportSlip, ...IMPORTS] : IMPORTS;
-  const [items, setItems] = useState(() => initSlips.map(addKho));
-  React.useEffect(() => {
-    if (pendingImportSlips?.length) {
-      setItems(xs => {
-        const existing = new Set(xs.map(r => r.lot));
-        const newOnes = pendingImportSlips.filter(s => !existing.has(s.lot)).map(addKho);
-        return newOnes.length ? [...newOnes, ...xs] : xs;
-      });
-      if (onConsumePending) onConsumePending();
-    } else if (pendingImportSlip) {
-      setItems(xs => xs.some(r => r.lot === pendingImportSlip.lot) ? xs : [addKho(pendingImportSlip), ...xs]);
-      if (onConsumePending) onConsumePending();
-    }
-  }, [pendingImportSlip, pendingImportSlips]);
   const [fSup, setFSup] = useState("Tất cả");
   const [fProd, setFProd] = useState("Tất cả");
   const setKho = (lot, kho) => setItems(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
@@ -3736,6 +3748,7 @@ function WhIn({pendingImportSlip, pendingImportSlips, onConsumePending, orders =
             vnd((orderModal.total||0)-(orderModal.paid||0))))))));
 }
 function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
+  const storeShort = s => (s || "").replace(/^Kho\s+/, "") || s || "—";
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
@@ -3751,7 +3764,7 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
     if (q && !`${r.order} ${r.prod} ${r.cust} ${r.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   });
-  const onExport = () => exportCSV("danh-sach-phieu-xuat-kho", ["Thời gian", "Đơn hàng", "Khách hàng", "Địa chỉ", "Mã SP", "Tên sản phẩm", "Nhà cung cấp", "Kho", "SL xuất", "Giá bán", "Thành tiền", "TT Đơn", "TT Giao", "Người xuất"], rows.map(r => [r.dt, r.order, r.cust, r.addr, r.sku, r.prod, r.supplier, r.store, r.qty, r.sale, r.sale * r.qty, r.orderStatus, r.delivery, r.staff]));
+  const onExport = () => exportCSV("danh-sach-phieu-xuat-kho", ["Thời gian", "Đơn hàng", "Khách hàng", "Địa chỉ", "Tên sản phẩm", "Nhà cung cấp", "Kho", "SL xuất", "Giá bán", "Thành tiền", "TT Đơn", "TT Giao", "Người xuất"], rows.map(r => [r.dt, r.order, r.cust, r.addr, r.prod, r.supplier, r.store, r.qty, r.sale, r.sale * r.qty, r.orderStatus, r.delivery, r.staff]));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3823,10 +3836,6 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
       }
     }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 110
-      }
-    }, "Mã SP"), /*#__PURE__*/React.createElement(Th, {
-      style: {
         minWidth: 220
       }
     }, "Tên sản phẩm"), /*#__PURE__*/React.createElement(Th, {
@@ -3876,8 +3885,6 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
   }, r.cust), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-xs text-slate-500"
   }, r.addr), /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3 text-slate-600"
-  }, r.sku), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-slate-800"
   }, r.prod), /*#__PURE__*/React.createElement("td", {
     className: `px-3 py-3 text-right tabular-nums ${r.qty < 0 ? "text-[#B91C1C]" : "text-slate-600"}`
@@ -3929,7 +3936,6 @@ function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
           /*#__PURE__*/React.createElement("th", {className: "py-2 px-3 text-right font-semibold text-slate-600"}, "Thành tiền"))),
       /*#__PURE__*/React.createElement("tbody", null,
         /*#__PURE__*/React.createElement("tr", {className: "border-b border-slate-100"},
-          /*#__PURE__*/React.createElement("td", {className: "py-2 px-3 text-slate-500"}, slipModal.sku || "—"),
           /*#__PURE__*/React.createElement("td", {className: "py-2 px-3 text-slate-800"}, slipModal.prod),
           /*#__PURE__*/React.createElement("td", {className: "py-2 px-3 text-right tabular-nums"}, slipModal.qty),
           /*#__PURE__*/React.createElement("td", {className: "py-2 px-3 text-right tabular-nums"}, vnd(slipModal.sale)),
@@ -5972,8 +5978,13 @@ function Screen({
   pendingExportSlips,
   setPendingExportSlips,
   pendingImportSlip,
+  setPendingImportSlip,
   pendingImportSlips,
   setPendingImportSlips,
+  purchaseList,
+  setPurchaseList,
+  whInItems,
+  setWhInItems,
   onImportToWh
 }) {
   switch (active) {
@@ -5995,12 +6006,12 @@ function Screen({
         openOrderId: openOrderId,
         setOpenOrderId: setOpenOrderId,
         onExportKho: slips => { setPendingExportSlips(slips); },
-        onImportKho: slips => { setPendingImportSlips(slips); }
+        onImportKho: slips => { setWhInItems(prev => mergeWhIn(prev, slips)); }
       });
     case "purchase":
-      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, onGoToWh: () => setActive("wh_in")});
+      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, onGoToWh: () => setActive("wh_in"), purchaseList, setPurchaseList});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {pendingImportSlip, pendingImportSlips, onConsumePending: () => { if (setPendingImportSlips) setPendingImportSlips(null); }, orders});
+      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         pendingExportSlips: pendingExportSlips,
@@ -6069,6 +6080,15 @@ function App() {
   const [pendingExportSlips, setPendingExportSlips] = useState(null);
   const [pendingImportSlip, setPendingImportSlip] = useState(null);
   const [pendingImportSlips, setPendingImportSlips] = useState(null);
+  const [purchaseList, setPurchaseList] = useState(() => IMPORTS.map(r => ({...r, kho: r.store === "Kho HH" ? "HH" : r.store === "Kho HG" ? "HG" : "SR"})));
+  const toKhoGlobal = s => (s||"HH").replace(/^Kho\s+/, "") || "HH";
+  const addKhoGlobal = r => ({...r, kho: r.kho || toKhoGlobal(r.store)});
+  const mergeWhIn = (prev, newSlips) => {
+    const existing = new Set(prev.map(r => r.lot));
+    const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(s.lot)).map(addKhoGlobal);
+    return fresh.length ? [...fresh, ...prev] : prev;
+  };
+  const [whInItems, setWhInItems] = useState(() => IMPORTS.map(addKhoGlobal));
   const [bankAccounts, setBankAccounts] = useState(() => {
     try { return JSON.parse(localStorage.getItem('bltk_banks')) || INIT_BANK_ACCOUNTS; }
     catch { return INIT_BANK_ACCOUNTS; }
@@ -6156,9 +6176,14 @@ function App() {
     pendingExportSlips: pendingExportSlips,
     setPendingExportSlips: setPendingExportSlips,
     pendingImportSlip: pendingImportSlip,
+    setPendingImportSlip: setPendingImportSlip,
     pendingImportSlips: pendingImportSlips,
     setPendingImportSlips: setPendingImportSlips,
-    onImportToWh: slip => { setPendingImportSlip(slip); setActive("wh_in"); }
+    purchaseList: purchaseList,
+    setPurchaseList: setPurchaseList,
+    whInItems: whInItems,
+    setWhInItems: setWhInItems,
+    onImportToWh: slipOrSlips => { setWhInItems(prev => mergeWhIn(prev, slipOrSlips)); setActive("wh_in"); }
   })))))));
 }
 
