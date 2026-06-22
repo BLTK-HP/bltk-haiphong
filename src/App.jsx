@@ -5923,7 +5923,7 @@ function LoginScreen() {
           ),
           React.createElement("button", { type: "submit", disabled: loading,
             className: "w-full text-white font-semibold rounded-xl py-3 text-sm transition disabled:opacity-60 mt-2",
-            style: { background: loading ? "#7a2200" : "linear-gradient(to top,#6b1a00,#d45510)" } },
+            style: { background: loading ? "#5a1200" : "linear-gradient(to top,#4a0e00,#a83800)" } },
             loading ? "Đang đăng nhập..." : "Đăng nhập →")
         )
       )
