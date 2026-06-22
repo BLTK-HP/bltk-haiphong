@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
+import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
@@ -1824,9 +1825,8 @@ function CreateOrder({
   const notify = useToast();
   const {bankAccounts} = useBankAccounts();
   const isEdit = !!editOrder;
-  const [prods, setProds] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem('bltk_prods')); return s?.length ? s : PRODUCTS; } catch { return PRODUCTS; }
-  });
+  const [prodsFS] = useCollection("products");
+  const prods = prodsFS.length ? prodsFS : PRODUCTS;
   const [cust, setCust] = useState({
     phone: editOrder?.phone || "",
     name: editOrder?.name || "",
@@ -3718,12 +3718,23 @@ function ProductForm({
 }
 function ProductsTab() {
   const notify = useToast();
-  const [items, setItems] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem('bltk_prods')); return s?.length ? s : PRODUCTS; } catch { return PRODUCTS; }
-  });
-  React.useEffect(() => {
-    try { localStorage.setItem('bltk_prods', JSON.stringify(items)); } catch {}
-  }, [items]);
+  const [itemsFS, prodsLoaded] = useCollection("products");
+  const items = itemsFS;
+  // Seed Firestore lần đầu nếu còn trống
+  useEffect(() => {
+    if (prodsLoaded && itemsFS.length === 0) {
+      batchSave("products", PRODUCTS, p => p.sku).catch(console.error);
+    }
+  }, [prodsLoaded]);
+  const setItems = (updater) => {
+    const next = typeof updater === 'function' ? updater(items) : updater;
+    const prevMap = Object.fromEntries(items.map(p => [p.sku, p]));
+    const nextMap = Object.fromEntries(next.map(p => [p.sku, p]));
+    Object.entries(nextMap).forEach(([id, p]) => {
+      if (JSON.stringify(prevMap[id]) !== JSON.stringify(p)) saveDoc("products", id, p).catch(console.error);
+    });
+    Object.keys(prevMap).forEach(id => { if (!nextMap[id]) deleteDocument("products", id).catch(console.error); });
+  };
   const [q, setQ] = useState("");
   const [form, setForm] = useState(null); // {} new | product edit
   const [perPage, setPerPage] = useState(50);
@@ -4000,29 +4011,28 @@ function CustomerForm({
 }
 function CustomersTab() {
   const notify = useToast();
-  const [items, setItems] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem('bltk_custs')); return s?.length ? s : CUSTOMERS; } catch { return CUSTOMERS; }
-  });
-  React.useEffect(() => {
-    try { localStorage.setItem('bltk_custs', JSON.stringify(items)); } catch {}
-  }, [items]);
+  const [itemsFS, custsLoaded] = useCollection("customers");
+  const items = itemsFS;
+  // Seed Firestore lần đầu nếu còn trống
+  useEffect(() => {
+    if (custsLoaded && itemsFS.length === 0) {
+      batchSave("customers", CUSTOMERS, c => c.id).catch(console.error);
+    }
+  }, [custsLoaded]);
   const [src, setSrc] = useState("Tất cả");
   const [tier, setTier] = useState("Tất cả");
   const [form, setForm] = useState(null);
   const rows = items.filter(c => (src === "Tất cả" || c.src === src) && (tier === "Tất cả" || c.tier === tier));
   const save = f => {
-    setItems(xs => form && form.name ? xs.map(c => c === form ? {
-      ...c,
-      ...f
-    } : c) : [{
-      ...f
-    }, ...xs]);
-    notify(form && form.name ? "Đã cập nhật khách hàng" : "Đã thêm khách hàng");
+    const isEdit = form && form.id;
+    const id = isEdit ? form.id : ("KH" + String(Date.now()).slice(-6));
+    saveDoc("customers", id, isEdit ? {...form, ...f} : {...f, id}).catch(console.error);
+    notify(isEdit ? "Đã cập nhật khách hàng" : "Đã thêm khách hàng");
     setForm(null);
   };
   const del = c => {
     if (window.confirm("Xoá khách hàng này?")) {
-      setItems(xs => xs.filter(x => x !== c));
+      deleteDocument("customers", c.id).catch(console.error);
       notify("Đã xoá khách hàng");
     }
   };
@@ -5357,9 +5367,10 @@ function App() {
   const [open, setOpen] = useState({
     sales: true
   });
-  const [orders, setOrders] = useState(INIT_ORDERS);
+  // Firestore-backed state
+  const [orders] = useCollection("orders");
   const [openOrderId, setOpenOrderId] = useState(null);
-  const [purchaseList, setPurchaseList] = useState(() => IMPORTS.map(r => ({...r, kho: r.store === "Kho HH" ? "HH" : r.store === "Kho HG" ? "HG" : "SR"})));
+  const [purchaseList] = useCollection("purchases");
   const toKhoGlobal = s => (s||"HH").replace(/^Kho\s+/, "") || "HH";
   const addKhoGlobal = r => ({
     ...r,
@@ -5372,14 +5383,29 @@ function App() {
     const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(s.lot)).map(addKhoGlobal);
     return fresh.length ? [...fresh, ...prev] : prev;
   };
-  const [whInItems, setWhInItems] = useState(() => IMPORTS.map(addKhoGlobal));
+  const [whInItems] = useCollection("wh_in");
   const addUnitCostOut = r => ({...r, unitCost: r.unitCost ?? 0});
   const mergeWhOut = (prev, newSlips) => {
     const existing = new Set(prev.map(r => r.slip));
     const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(s.slip));
     return fresh.length ? [...fresh, ...prev] : prev;
   };
-  const [whOutItems, setWhOutItems] = useState(() => EXPORTS.map(addUnitCostOut));
+  const [whOutItems] = useCollection("wh_out");
+
+  // Firestore write helpers (thay thế setState)
+  const syncFS = (colName, getId) => (current, updater) => {
+    const next = typeof updater === 'function' ? updater(current) : updater;
+    const prevMap = Object.fromEntries(current.map(o => [getId(o), o]));
+    const nextMap = Object.fromEntries(next.map(o => [getId(o), o]));
+    Object.entries(nextMap).forEach(([id, o]) => {
+      if (JSON.stringify(prevMap[id]) !== JSON.stringify(o)) saveDoc(colName, id, o).catch(console.error);
+    });
+    Object.keys(prevMap).forEach(id => { if (!nextMap[id]) deleteDocument(colName, id).catch(console.error); });
+  };
+  const setOrders = u => syncFS("orders", o => o.id)(orders, u);
+  const setPurchaseList = u => syncFS("purchases", r => r.lot)(purchaseList, u);
+  const setWhInItems = u => syncFS("wh_in", r => r.lot)(whInItems, u);
+  const setWhOutItems = u => syncFS("wh_out", r => r.slip)(whOutItems, u);
   const BANKS_VER = "v3";
   const [bankAccounts, setBankAccounts] = useState(() => {
     try {
