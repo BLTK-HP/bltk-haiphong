@@ -1374,7 +1374,7 @@ function KhoModal({
               moneyCell(ttXuat(r), "bg-emerald-100/40 text-emerald-700"),
               React.createElement("td", { className: "border-l border-amber-100 bg-amber-50/40 px-2 py-3 text-center text-sm font-semibold tabular-nums text-[#B91C1C]" }, num(loiNhuan(r))));
           }),
-          React.createElement("tr", { className: "border-t-2 border-[#fdba74] bg-[#fed7aa] font-semibold" },
+          React.createElement("tr", { className: "border-t border-slate-200 bg-slate-50 font-semibold" },
             React.createElement("td", { className: "px-3 py-3 text-[14px] font-bold uppercase text-slate-800", colSpan: 3 }, "TỔNG CỘNG"),
             React.createElement("td", { colSpan: 4, className: "border-l border-blue-100 bg-blue-50/30" }),
             moneyCell(totalIn, "bg-blue-100/60 text-blue-700"),
