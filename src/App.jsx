@@ -1356,7 +1356,7 @@ function KhoModal({
               moneyCell(ttXuat(r), "bg-emerald-100/40 text-emerald-700"),
               React.createElement("td", { className: "border-l border-amber-100 bg-amber-50/40 px-2 py-3 text-center text-sm font-semibold tabular-nums text-[#B91C1C]" }, num(loiNhuan(r))));
           }),
-          React.createElement("tr", { className: "border-t-2 border-[#fde68a] bg-[#fef3c7] font-semibold" },
+          React.createElement("tr", { className: "border-t-2 border-[#fdba74] bg-[#fed7aa] font-semibold" },
             React.createElement("td", { className: "px-3 py-3 text-[14px] font-bold uppercase text-slate-800", colSpan: 3 }, "TỔNG CỘNG"),
             React.createElement("td", { colSpan: 4, className: "border-l border-blue-100 bg-blue-50/30" }),
             moneyCell(totalIn, "bg-blue-100/60 text-blue-700"),
@@ -1665,7 +1665,7 @@ function OrderTable({
     const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
     const sumRemain = rows.reduce((s, o) => s + calc(o).remaining, 0);
     return /*#__PURE__*/React.createElement("tr", {
-      className: "border-t-2 border-[#fde68a] bg-[#fef9f0] font-semibold text-slate-800"
+      className: "border-t-2 border-[#fdba74] bg-[#fed7aa] font-semibold text-slate-800"
     }, /*#__PURE__*/React.createElement("td", {
       colSpan: 4,
       className: "px-3 py-3",
@@ -2997,7 +2997,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     title: "In phiếu nhập",
     className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
   }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
-  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#fde68a] bg-[#fef3c7]"},
+  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#fdba74] bg-[#fed7aa]"},
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 6}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-3 text-right tabular-nums ${rows.reduce((s,r)=>s+r.qtyIn,0)<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qtyIn,0)),
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-3 text-right tabular-nums ${rows.reduce((s,r)=>s+r.qtyNow,0)<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qtyNow,0)),
@@ -3244,7 +3244,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
       title: "In phiếu xuất",
       className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
     }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
-  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#fde68a] bg-[#fef3c7]"},
+  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#fdba74] bg-[#fed7aa]"},
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 6}, "TỔNG CỘNG (", rows.length, " PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums text-slate-800", style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qty,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3"}),
@@ -3514,7 +3514,7 @@ function Stock() {
     const tOutVal=rows.reduce((s,r)=>s+(r.out||0)*r.price,0);
     const tEnd  = rows.reduce((s,r)=>s+(r.o+r.in-r.out),0);
     const tEndVal=rows.reduce((s,r)=>s+(r.o+r.in-r.out)*r.price,0);
-    return /*#__PURE__*/React.createElement("tr", {className:"border-t-2 border-[#fde68a] bg-[#fef3c7]"},
+    return /*#__PURE__*/React.createElement("tr", {className:"border-t-2 border-[#fdba74] bg-[#fed7aa]"},
       /*#__PURE__*/React.createElement("td", {className:"border border-[#DDE3E8] px-3 py-2.5 text-center text-xs uppercase text-slate-800", style:{fontWeight:700}, colSpan:5}, "TỔNG CỘNG"),
       /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-slate-800", style:{fontWeight:700}}, tO||"–"),
       /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-slate-800", style:{fontWeight:700}}, tOVal?num(tOVal):"–"),
@@ -4381,7 +4381,7 @@ function DebtCust() {
       className: `border-l border-slate-100 px-3 py-3 text-right tabular-nums ${close < 0 ? "text-[#B91C1C]" : "text-slate-700"}`
     }, num(close)));
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#fef3c7] font-bold"
+    className: "bg-[#fed7aa] font-bold"
   }, /*#__PURE__*/React.createElement("td", {
     colSpan: 2,
     className: "px-3 py-3 text-center text-slate-800", style: {fontWeight:700}
@@ -4604,7 +4604,7 @@ function DebtNcc() {
       className: `border-l border-slate-100 px-3 py-3 text-right tabular-nums ${close < 0 ? "text-[#B91C1C]" : "text-slate-700"}`
     }, num(close)));
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-[#fef3c7]"
+    className: "bg-[#fed7aa]"
   }, /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-center text-slate-800", style: {fontWeight:700}
   }, "TỔNG CỘNG"), /*#__PURE__*/React.createElement("td", {
@@ -4970,7 +4970,7 @@ function Finance({setActive, onOpenOrder}) {
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2 text-center"},
                 /*#__PURE__*/React.createElement("button",{onClick:()=>{ setFAccDetail(fAccDetail===a.key?null:a.key); setFAcc("Tất cả"); },
                   className:`rounded-md px-2 py-1 text-xs font-medium transition ${fAccDetail===a.key?"bg-[#92400e] text-white":"bg-[#fde68a] text-[#92400e] hover:bg-[#b2f0e8] ring-1 ring-[#92400e]/20"}`},"Chi tiết")))),
-            /*#__PURE__*/React.createElement("tr",{className:"bg-[#fef3c7]"},
+            /*#__PURE__*/React.createElement("tr",{className:"bg-[#fed7aa]"},
               /*#__PURE__*/React.createElement("td",{className:tdC+" font-bold text-slate-800",colSpan:3},"TỔNG CỘNG"),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-right tabular-nums text-slate-900",style:{fontWeight:700}},vnd(tot.openBal)),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-right tabular-nums text-[#92400e]",style:{fontWeight:700}},tot.totalIn>0?vnd(tot.totalIn):"—"),
