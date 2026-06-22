@@ -5851,15 +5851,13 @@ function LoginScreen() {
     catch { setErr("Email hoặc mật khẩu không đúng."); }
     finally { setLoading(false); }
   };
-  return React.createElement("div", { className: "min-h-screen flex bg-[#f5efe6]" },
-    /* Panel trái — ảnh bìa */
-    React.createElement("div", { className: "hidden lg:flex w-1/2 relative overflow-hidden",
+  return React.createElement("div", { className: "min-h-screen flex relative overflow-hidden",
       style: { backgroundImage: "url('/banner.jpg')", backgroundSize: "cover", backgroundPosition: "center" }
     },
-      React.createElement("div", { className: "absolute inset-0", style: { background: "rgba(0,0,0,0.15)" } })
-    ),
-    /* Panel phải — form */
-    React.createElement("div", { className: "flex flex-1 items-center justify-center p-6 bg-[#f5efe6]" },
+    /* overlay mờ toàn màn hình */
+    React.createElement("div", { className: "absolute inset-0", style: { background: "rgba(0,0,0,0.18)" } }),
+    /* Panel phải — form nổi trên ảnh */
+    React.createElement("div", { className: "relative z-10 flex flex-1 items-center justify-center p-6" },
       React.createElement("div", { className: "bg-white rounded-3xl shadow-2xl w-full max-w-md p-10" },
         /* Header */
         React.createElement("div", { className: "mb-8" },
