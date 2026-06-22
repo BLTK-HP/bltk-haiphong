@@ -2365,7 +2365,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
         /*#__PURE__*/React.createElement("p", {className:"text-[13px] font-semibold text-[#92400e]"}, "Chi phí công ty thanh toán"),
-        /*#__PURE__*/React.createElement("button", {onClick:()=>setCompCostModal(true), className:"flex items-center gap-1.5 rounded-lg border border-[#92400e] bg-white px-3 py-1.5 text-sm font-semibold text-[#92400e] hover:bg-[#fef3c7]"},
+        /*#__PURE__*/React.createElement("button", {onClick:()=>{ setCcostType("Hoàn tiền hàng"); const rt=returns.reduce((s,r)=>s+(r.amount||0),0); setCcostAmt(rt||0); setCompCostModal(true); }, className:"flex items-center gap-1.5 rounded-lg border border-[#92400e] bg-white px-3 py-1.5 text-sm font-semibold text-[#92400e] hover:bg-[#fef3c7]"},
           /*#__PURE__*/React.createElement(Plus, {className:"h-4 w-4"}), "Thêm")),
       /*#__PURE__*/React.createElement("div", {className:"p-4"},
         compCosts.length === 0
@@ -2445,7 +2445,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   }, /*#__PURE__*/React.createElement("div", {className:"space-y-3"},
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Loại chi phí"),
-      /*#__PURE__*/React.createElement("select", {value:ccostType, onChange:e=>setCcostType(e.target.value), className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none"},
+      /*#__PURE__*/React.createElement("select", {value:ccostType, onChange:e=>{ const t=e.target.value; setCcostType(t); if(t==="Hoàn tiền hàng"){ const rt=returns.reduce((s,r)=>s+(r.amount||0),0); setCcostAmt(rt||0); } else { setCcostAmt(0); }}, className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none"},
         /*#__PURE__*/React.createElement("option", null, "Hoàn tiền hàng"),
         /*#__PURE__*/React.createElement("option", null, "Chi phí Ship hàng"),
         /*#__PURE__*/React.createElement("option", null, "Chi phí hoa hồng"))),
