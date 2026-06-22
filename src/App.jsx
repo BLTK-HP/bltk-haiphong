@@ -2175,7 +2175,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           ? /*#__PURE__*/React.createElement("button", {className: "inline-flex items-center gap-1.5 rounded-lg bg-[#92400e] px-3 py-1.5 text-sm font-bold text-white"},
               /*#__PURE__*/React.createElement(Check, {className: "h-4 w-4"}), " Đã giao hàng")
           : /*#__PURE__*/React.createElement("button", {
-              onClick: () => { setDeliveryConfirmed(true); },
+              onClick: () => { setDeliveryConfirmed(true); setDelivery("Đã giao hàng"); },
               className: "inline-flex items-center gap-1.5 rounded-lg bg-[#92400e] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#78350f]"
             }, /*#__PURE__*/React.createElement(Truck, {className: "h-4 w-4"}), " Xác nhận giao hàng"))),
     addrWarnPending ? /*#__PURE__*/React.createElement("div", {className: "mb-3 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3"},
@@ -2184,7 +2184,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("p", {className: "font-medium text-amber-800"}, "Địa chỉ giao hàng chưa đủ chi tiết"),
         /*#__PURE__*/React.createElement("div", {className: "mt-2 flex gap-2"},
           /*#__PURE__*/React.createElement("button", {onClick: () => setAddrWarnPending(false), className: "rounded-md bg-white px-3 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-300 hover:bg-slate-50"}, "Cập nhật địa chỉ"),
-          /*#__PURE__*/React.createElement("button", {onClick: () => { setAddrWarnPending(false); setDelivery("Đã giao hàng"); }, className: "rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"}, "Vẫn xác nhận")))) : null,
+          /*#__PURE__*/React.createElement("button", {onClick: () => { setAddrWarnPending(false); setDelivery("Đã giao hàng"); setDeliveryConfirmed(true); }, className: "rounded-md bg-amber-600 px-3 py-1 text-xs font-medium text-white hover:bg-amber-700"}, "Vẫn xác nhận")))) : null,
     /*#__PURE__*/React.createElement("div", {className: "rounded-lg border border-slate-200"},
       /*#__PURE__*/React.createElement("table", {className: "w-full text-sm border-collapse", style:{tableLayout:"fixed"}},
         /*#__PURE__*/React.createElement("colgroup", null,
