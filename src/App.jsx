@@ -1134,10 +1134,15 @@ function PaymentModal({
   accounts,
   onClose,
   onConfirm,
-  initial
+  initial,
+  remaining
 }) {
   const [kind, setKind] = useState(initial?.kind || "Đặt cọc");
   const [amount, setAmount] = useState(initial?.amount || 0);
+  const handleKind = s => {
+    setKind(s);
+    if (s === "Thanh toán" && remaining > 0) setAmount(remaining);
+  };
   const [account, setAccount] = useState(initial?.account || accounts[0]);
   const [note, setNote] = useState(initial?.note || "");
   const lbl = "mb-1 block text-[13px] font-medium text-slate-500";
@@ -1162,7 +1167,7 @@ function PaymentModal({
   }, "Loại"), /*#__PURE__*/React.createElement("div", {className: "flex gap-2"},
     ["Đặt cọc", "Thanh toán", "Giảm giá thêm"].map(s => /*#__PURE__*/React.createElement("button", {
       key: s, type: "button",
-      onClick: () => setKind(s),
+      onClick: () => handleKind(s),
       className: `flex-1 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition ${kind === s ? "border-[#fcd34d] bg-[#fef3c7] text-[#b45309]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`
     }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: lbl
@@ -2398,6 +2403,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   }),
   payModal && /*#__PURE__*/React.createElement(PaymentModal, {
     accounts: ACCOUNTS,
+    remaining: remaining,
     onClose: () => setPayModal(false),
     onConfirm: p => {
       setPayments(xs => [...xs, p]);
