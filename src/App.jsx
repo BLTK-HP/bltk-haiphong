@@ -4932,7 +4932,7 @@ function Finance({setActive, onOpenOrder}) {
   const resetFilter = () => { setQ(""); setFAcc("Tất cả"); setFKind("Tất cả"); setFAccDetail(null); };
 
   const THU = "bg-[#fef3c7] text-[#b45309] ring-1 ring-[#fcd34d]";
-  const CHI = "bg-[#FEF2F2] text-[#B91C1C] ring-1 ring-[#FECACA]";
+  const CHI = "bg-[#ffedd5] text-[#9a3412] ring-1 ring-[#fdba74]";
   const KIND_COLORS = {
     "Thu tiền":      THU,
     "Đặt cọc":       THU,
