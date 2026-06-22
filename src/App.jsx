@@ -487,10 +487,10 @@ function StatCard({
   icon: Icon
 }) {
   const c = {
-    default: "text-slate-900",
+    default: "text-[#92400e]",
     pos: "text-[#92400e]",
     neg: "text-[#B91C1C]",
-    accent: "text-blue-700",
+    accent: "text-[#92400e]",
     warn: "text-amber-600"
   }[tone];
   return /*#__PURE__*/React.createElement("div", {
@@ -785,24 +785,24 @@ function Dashboard() {
     className: "grid grid-cols-2 gap-4 lg:grid-cols-4"
   }, /*#__PURE__*/React.createElement(StatCard, {
     label: "Tài sản",
-    value: vndShort(1633126508),
+    value: vnd(1633126508),
     sub: "Tiền + tồn kho",
     tone: "accent",
     icon: Wallet
   }), /*#__PURE__*/React.createElement(StatCard, {
     label: "Thu tiền hàng",
-    value: "+" + vndShort(72946000),
+    value: "+" + vnd(72946000),
     sub: "Tháng 06/2026",
     tone: "pos",
     icon: TrendingUp
   }), /*#__PURE__*/React.createElement(StatCard, {
     label: "Giá trị tồn kho",
-    value: vndShort(374829177),
+    value: vnd(374829177),
     sub: "Kho HH + TB",
     icon: Package
   }), /*#__PURE__*/React.createElement(StatCard, {
     label: "Lợi nhuận",
-    value: vndShort(242456000),
+    value: vnd(242456000),
     sub: "Tháng 06/2026",
     tone: "pos",
     icon: TrendingUp
