@@ -590,7 +590,7 @@ function DateTime({
     className: "text-slate-400"
   }, "—");
   const parts = String(value).split(" ");
-  const time = parts[0];
+  const time = parts[0].split(":").slice(0, 2).join(":");
   const date = parts.slice(1).join(" ");
   return /*#__PURE__*/React.createElement("span", {
     className: "text-xs text-slate-500"
@@ -1786,9 +1786,9 @@ function DraftTable({
     style: {maxWidth: 130}
   }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800 truncate"}, o.name),
     o.phone ? /*#__PURE__*/React.createElement("div", {className: "mt-0.5 text-xs text-slate-400"}, /*#__PURE__*/React.createElement(Phone, {value: o.phone})) : null), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-xs text-slate-500",
-    style: {maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}
-  }, o.addr || "—"), /*#__PURE__*/React.createElement("td", {
+    className: "px-4 py-3",
+    style: {maxWidth: 120, width: 120}
+  }, /*#__PURE__*/React.createElement("div", {className: "text-xs text-slate-500 truncate"}, o.addr || "—")), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-xs text-slate-500"
   }, o.note || "—"), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-right tabular-nums font-medium text-[#B91C1C]"
