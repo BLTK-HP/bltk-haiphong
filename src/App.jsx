@@ -5835,25 +5835,25 @@ function LoginScreen() {
     catch { setErr("Email hoặc mật khẩu không đúng."); }
     finally { setLoading(false); }
   };
-  return React.createElement("div", { className: "min-h-screen flex", style: { background: "linear-gradient(135deg, #4a0e1a 0%, #7f1d1d 50%, #991b1b 100%)" } },
+  return React.createElement("div", { className: "min-h-screen flex", style: { background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" } },
     /* Panel trái — brand */
     React.createElement("div", { className: "hidden lg:flex flex-col justify-between w-1/2 p-12 text-white" },
       React.createElement("div", null,
         React.createElement("div", { className: "text-3xl font-extrabold tracking-wide" }, "BLTK"),
-        React.createElement("div", { className: "text-red-200 text-sm mt-1" }, "Hải Phòng")
+        React.createElement("div", { className: "text-slate-300 text-sm mt-1" }, "Hải Phòng")
       ),
       React.createElement("div", null,
         React.createElement("div", { className: "text-4xl font-bold leading-snug mb-4" }, "Quản lý bán lẻ\ntại kho"),
-        React.createElement("div", { className: "text-red-200 text-base" }, "Đơn hàng · Kho · Tài chính · Báo cáo")
+        React.createElement("div", { className: "text-slate-300 text-base" }, "Đơn hàng · Kho · Tài chính · Báo cáo")
       ),
-      React.createElement("div", { className: "text-red-300 text-xs" }, "© 2026 BLTK Hải Phòng")
+      React.createElement("div", { className: "text-slate-400 text-xs" }, "© 2026 BLTK Hải Phòng")
     ),
     /* Panel phải — form */
     React.createElement("div", { className: "flex flex-1 items-center justify-center p-6" },
       React.createElement("div", { className: "bg-white rounded-3xl shadow-2xl w-full max-w-md p-10" },
         /* Header */
         React.createElement("div", { className: "mb-8" },
-          React.createElement("div", { className: "w-12 h-12 rounded-2xl flex items-center justify-center mb-4", style: { background: "linear-gradient(135deg,#7f1d1d,#4a0e1a)" } },
+          React.createElement("div", { className: "w-12 h-12 rounded-2xl flex items-center justify-center mb-4", style: { background: "linear-gradient(135deg,#1e293b,#0f172a)" } },
             React.createElement(Store, { className: "h-6 w-6 text-white" })
           ),
           React.createElement("h1", { className: "text-2xl font-bold text-slate-800" }, "Đăng nhập"),
@@ -5865,20 +5865,20 @@ function LoginScreen() {
             React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1.5" }, "Email"),
             React.createElement("input", { type: "email", value: email, onChange: e => setEmail(e.target.value), required: true, autoFocus: true,
               placeholder: "ten@email.com",
-              className: "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent bg-slate-50" })
+              className: "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-transparent bg-slate-50" })
           ),
           React.createElement("div", null,
             React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1.5" }, "Mật khẩu"),
             React.createElement("input", { type: "password", value: pass, onChange: e => setPass(e.target.value), required: true,
               placeholder: "••••••••",
-              className: "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-800 focus:border-transparent bg-slate-50" })
+              className: "w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-slate-600 focus:border-transparent bg-slate-50" })
           ),
           err && React.createElement("div", { className: "flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5" },
             React.createElement(AlertTriangle, { className: "h-4 w-4 flex-shrink-0" }), err
           ),
           React.createElement("button", { type: "submit", disabled: loading,
             className: "w-full text-white font-semibold rounded-xl py-3 text-sm transition disabled:opacity-60 mt-2",
-            style: { background: loading ? "#7f1d1d" : "linear-gradient(135deg,#7f1d1d,#4a0e1a)" } },
+            style: { background: loading ? "#1e293b" : "linear-gradient(135deg,#1e293b,#0f172a)" } },
             loading ? "Đang đăng nhập..." : "Đăng nhập →")
         )
       )
