@@ -1523,21 +1523,13 @@ function OrderTable({
     className: "text-xs text-slate-400"
   }), /*#__PURE__*/React.createElement(TableShell, {
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
-      style: {
-        width: 90, position: "sticky", left: 0, zIndex: 2, background: "#fef3c7"
-      }
+      style: { width: 90 }
     }, "Ngày"), /*#__PURE__*/React.createElement(Th, {
-      style: {
-        width: 96, position: "sticky", left: 90, zIndex: 2, background: "#fef3c7"
-      }
+      style: { width: 96 }
     }, "Số ĐH"), /*#__PURE__*/React.createElement(Th, {
-      style: {
-        width: 130, position: "sticky", left: 186, zIndex: 2, background: "#fef3c7"
-      }
+      style: { width: 130 }
     }, "Khách hàng"), /*#__PURE__*/React.createElement(Th, {
-      style: {
-        width: 180, position: "sticky", left: 316, zIndex: 2, background: "#fef3c7"
-      }
+      style: { width: 180 }
     }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {
       right: true,
       style: {
@@ -1593,28 +1585,26 @@ function OrderTable({
       className: `align-top hover:brightness-95 ${isCancel ? "opacity-60 grayscale text-slate-400" : ""}`,
       style: { background: rowBg, borderBottom: "1px solid #e2e8f0" }
     }, /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3",
-      style: { position: "sticky", left: 0, zIndex: 1, background: rowBg }
+      className: "px-3 py-3"
     }, /*#__PURE__*/React.createElement(DateTime, {
       value: o.dt
     })), /*#__PURE__*/React.createElement("td", {
-      className: "whitespace-nowrap px-3 py-3",
-      style: { position: "sticky", left: 90, zIndex: 1, background: rowBg }
+      className: "whitespace-nowrap px-3 py-3"
     }, /*#__PURE__*/React.createElement("button", {
       onClick: () => onEdit(o),
       className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
     }, o.id)), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3",
-      style: { position: "sticky", left: 186, zIndex: 1, minWidth: 130, maxWidth: 130, background: rowBg }
+      style: { minWidth: 130, maxWidth: 130 }
     }, /*#__PURE__*/React.createElement("div", {
-      className: "text-slate-800"
+      className: "text-slate-800 truncate"
     }, o.name), /*#__PURE__*/React.createElement("div", {
       className: "text-xs text-slate-400"
     }, /*#__PURE__*/React.createElement(Phone, {
       value: o.phone
     }))), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-xs text-slate-500",
-      style: { position: "sticky", left: 316, zIndex: 1, minWidth: 180, maxWidth: 180, background: rowBg }
+      style: { minWidth: 150, maxWidth: 150 }
     }, o.addr || "—"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-[#92400e]"
     }, num(c.total)), /*#__PURE__*/React.createElement("td", {
@@ -1679,7 +1669,7 @@ function OrderTable({
     }, /*#__PURE__*/React.createElement("td", {
       colSpan: 4,
       className: "px-3 py-3",
-      style: { position: "sticky", left: 0, zIndex: 1, background: "#fef9f0" }
+      style: { background: "#fef9f0" }
     }, "TỔNG CỘNG (", rows.length, " ĐƠN)"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-[#92400e]", style: {fontWeight:700}
     }, num(sumTotal)), /*#__PURE__*/React.createElement("td", {
