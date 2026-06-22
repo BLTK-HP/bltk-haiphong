@@ -5853,7 +5853,7 @@ function LoginScreen() {
         ),
         err && React.createElement("p", { className: "text-sm text-red-500" }, err),
         React.createElement("button", { type: "submit", disabled: loading,
-          className: "w-full bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 font-semibold rounded-lg py-2.5 text-sm transition disabled:opacity-50" },
+          className: "w-full bg-white border-2 border-green-800 text-green-800 hover:bg-green-50 font-semibold rounded-lg py-2.5 text-sm transition disabled:opacity-50" },
           loading ? "Đang đăng nhập..." : "Đăng nhập")
       )
     )
