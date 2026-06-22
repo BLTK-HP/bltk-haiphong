@@ -1263,7 +1263,14 @@ function KhoModal({
   });
   const lockIn = imported && !editing;
   const lockOut = exported && !editing;
-  const doImport = () => { setImported(true); setEditing(false); onConfirm(payload(exported)); };
+  const missingNcc = rows.filter(r => r.slNhap > 0 && (stockOf(r.name) || 0) === 0 && !r.nccIn.trim());
+  const doImport = () => {
+    if (missingNcc.length > 0) {
+      alert(`Vui lòng nhập tên NCC cho: ${missingNcc.map(r => r.name).join(", ")}`);
+      return;
+    }
+    setImported(true); setEditing(false); onConfirm(payload(exported));
+  };
   const doExport = () => { setExported(true); setEditing(false); onConfirm(payload(true)); onClose(); };
   const doEdit = () => setEditing(true);
   const th = (txt, extra) => React.createElement("th", { className: `px-3 py-2 font-medium ${extra || ""}` }, txt);
@@ -1281,8 +1288,9 @@ function KhoModal({
       }, "✎ Sửa"),
       React.createElement("button", {
         onClick: doImport,
-        disabled: imported && !editing,
-        className: "rounded-lg bg-[#92400e] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:bg-slate-300"
+        disabled: (imported && !editing) || missingNcc.length > 0,
+        title: missingNcc.length > 0 ? "Cần nhập tên NCC cho sản phẩm tồn kho = 0" : undefined,
+        className: "rounded-lg bg-[#92400e] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:bg-slate-300 disabled:cursor-not-allowed"
       }, "↓ Nhập kho"),
       React.createElement("button", {
         onClick: doExport,
