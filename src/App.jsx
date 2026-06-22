@@ -2233,7 +2233,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                 /*#__PURE__*/React.createElement("option", null, "HG"),
                 /*#__PURE__*/React.createElement("option", null, "SR"))),
             /*#__PURE__*/React.createElement("td", {className: "px-3 py-2 border-b border-slate-100"},
-              /*#__PURE__*/React.createElement("button", {onClick: () => setLines(ls => ls.filter((_,x)=>x!==i)), title: "Xoá", className: "rounded p-1.5 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"},
+              /*#__PURE__*/React.createElement("button", {onClick: () => setLines(ls => ls.filter((_,x)=>x!==i)), title: "Xoá", className: "rounded p-1.5 bg-amber-100 text-[#92400e] hover:bg-amber-200"},
                 /*#__PURE__*/React.createElement(X, {className: "h-3.5 w-3.5"})))))))),
     /*#__PURE__*/React.createElement("div", {className: "mt-3 flex items-center gap-2"},
       /*#__PURE__*/React.createElement("button", {
