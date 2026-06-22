@@ -5984,7 +5984,7 @@ function UsersTab() {
     notify("Đã cập nhật quyền");
   };
 
-  const roleColors = { manager: "bg-purple-100 text-purple-700", sales: "bg-blue-100 text-blue-700", warehouse: "bg-green-100 text-green-700" };
+  const roleColors = { manager: "bg-[#fef9f0] text-[#92400e] ring-1 ring-[#b45309]", sales: "bg-[#ffedd5] text-[#c2410c] ring-1 ring-[#fdba74]", warehouse: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" };
 
   return React.createElement("div", { className: "space-y-4" },
     React.createElement("div", { className: "flex justify-between items-center" },
