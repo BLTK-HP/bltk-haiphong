@@ -5838,8 +5838,7 @@ function LoginScreen() {
   return React.createElement("div", { className: "min-h-screen flex items-center justify-center bg-[#F4F6F8]" },
     React.createElement("div", { className: "bg-white rounded-2xl shadow-lg p-10 w-full max-w-sm" },
       React.createElement("div", { className: "text-center mb-8" },
-        React.createElement("div", { className: "text-2xl font-bold text-[#1e293b]" }, "BÁN LẺ TẠI KHO"),
-        React.createElement("div", { className: "text-sm text-slate-400 mt-1" }, "Hải Phòng")
+        React.createElement("div", { className: "text-2xl font-bold text-[#1e293b]" }, "BLTK Hải Phòng"),
       ),
       React.createElement("form", { onSubmit: submit, className: "space-y-4" },
         React.createElement("div", null,
@@ -5854,7 +5853,7 @@ function LoginScreen() {
         ),
         err && React.createElement("p", { className: "text-sm text-red-500" }, err),
         React.createElement("button", { type: "submit", disabled: loading,
-          className: "w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg py-2.5 text-sm transition disabled:opacity-50" },
+          className: "w-full bg-white border-2 border-blue-900 text-blue-900 hover:bg-blue-50 font-semibold rounded-lg py-2.5 text-sm transition disabled:opacity-50" },
           loading ? "Đang đăng nhập..." : "Đăng nhập")
       )
     )
