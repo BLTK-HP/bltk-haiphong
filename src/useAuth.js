@@ -9,9 +9,9 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 
 // role: "manager" | "sales" | "warehouse"
 export const ROLES = {
-  manager:   { label: "Quản lý / Kế toán", color: "bg-purple-100 text-purple-700" },
-  sales:     { label: "Nhân viên bán hàng", color: "bg-blue-100 text-blue-700" },
-  warehouse: { label: "Nhân viên kho",      color: "bg-green-100 text-green-700" },
+  manager:   { label: "Quản lý / Kế toán", color: "bg-[#fef9f0] text-[#92400e] ring-1 ring-[#b45309]" },
+  sales:     { label: "Nhân viên bán hàng", color: "bg-[#ffedd5] text-[#c2410c] ring-1 ring-[#fdba74]" },
+  warehouse: { label: "Nhân viên kho",      color: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
 };
 
 // Màn hình nào role nào được xem
