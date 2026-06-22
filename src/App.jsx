@@ -1511,8 +1511,7 @@ function OrderTable({
     className: `${field} w-full pl-8`
   }))), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-slate-400"
-  }, rows.length, " đơn · cuộn ngang để xem hết các cột →"), /*#__PURE__*/React.createElement(TableShell, {
-    minW: "1360px",
+  }), /*#__PURE__*/React.createElement(TableShell, {
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
       style: {
         width: 90, position: "sticky", left: 0, zIndex: 2, background: "#fef3c7"
