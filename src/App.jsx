@@ -541,7 +541,7 @@ const TableShell = ({
     minWidth: minW
   } : undefined
 }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-  className: "border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"
+  className: "border-b border-slate-100 bg-amber-50 text-left text-xs uppercase tracking-wide text-amber-900/60"
 }, head)), /*#__PURE__*/React.createElement("tbody", {
   className: "divide-y divide-slate-50"
 }, children)));
@@ -1308,7 +1308,7 @@ function KhoModal({
             React.createElement("th", { colSpan: 5, className: "border-b border-l border-blue-200 bg-blue-50 px-3 py-2 text-center font-semibold text-blue-700" }, "↓ Nhập kho"),
             React.createElement("th", { colSpan: 4, className: "border-b border-l border-emerald-200 bg-emerald-50 px-3 py-2 text-center font-semibold text-emerald-700" }, "↑ Xuất kho"),
             React.createElement("th", { rowSpan: 2, className: "border-b border-l border-amber-200 bg-amber-100/60 px-2 py-2 text-center font-semibold text-[#B91C1C]" }, "Lợi nhuận")),
-          React.createElement("tr", { className: "border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500" },
+          React.createElement("tr", { className: "border-b border-slate-200 bg-amber-50 text-left text-xs uppercase tracking-wide text-amber-900/60" },
             th("Tồn kho", "text-center"),
             th("Kho", "text-center"),
             th("Sản phẩm"),
@@ -3342,7 +3342,7 @@ function StockDetailModal({
   }, /*#__PURE__*/React.createElement("table", {
     className: "w-full text-sm"
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"
+    className: "border-b border-slate-100 bg-amber-50 text-left text-xs uppercase tracking-wide text-amber-900/60"
   }, /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2"
   }, "Loại"), /*#__PURE__*/React.createElement("th", {
@@ -4445,7 +4445,7 @@ function CustDebtDetail({
       minWidth: 900
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"
+    className: "border-b border-slate-100 bg-amber-50 text-left text-xs uppercase tracking-wide text-amber-900/60"
   }, /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5"
   }, "Mã đơn"), /*#__PURE__*/React.createElement("th", {
@@ -4664,7 +4664,7 @@ function NccDebtDetail({
       minWidth: 1000
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
-    className: "border-b border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"
+    className: "border-b border-slate-100 bg-amber-50 text-left text-xs uppercase tracking-wide text-amber-900/60"
   }, /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5"
   }, "Ngày nhập"), /*#__PURE__*/React.createElement("th", {
@@ -5858,26 +5858,28 @@ function LoginScreen() {
     React.createElement("div", { className: "absolute inset-0", style: { background: "rgba(0,0,0,0.18)" } }),
     /* Panel phải — form nổi trên ảnh */
     React.createElement("div", { className: "relative z-10 flex flex-1 items-center justify-center p-6" },
-      React.createElement("div", { className: "bg-white rounded-3xl shadow-2xl w-full max-w-md p-10" },
+      React.createElement("div", { className: "rounded-3xl shadow-2xl w-full max-w-md p-10", style: { background: "rgba(255,255,255,0.18)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.35)" } },
         /* Header */
         React.createElement("div", { className: "mb-8" },
           React.createElement("img", { src: "/banner.jpg", alt: "BLTK", className: "w-20 h-20 rounded-2xl object-cover mb-4 shadow" }),
-          React.createElement("h1", { className: "text-2xl font-bold text-[#7a5c3a]" }, "Đăng nhập"),
-          React.createElement("p", { className: "text-slate-400 text-sm mt-1" }, "Nhập thông tin tài khoản của bạn")
+          React.createElement("h1", { className: "text-2xl font-bold text-white" }, "Đăng nhập"),
+          React.createElement("p", { className: "text-white/70 text-sm mt-1" }, "Nhập thông tin tài khoản của bạn")
         ),
         /* Form */
         React.createElement("form", { onSubmit: submit, className: "space-y-5" },
           React.createElement("div", null,
-            React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1.5" }, "Email"),
+            React.createElement("label", { className: "block text-sm font-medium text-white/90 mb-1.5" }, "Email"),
             React.createElement("input", { type: "email", value: email, onChange: e => setEmail(e.target.value), required: true, autoFocus: true,
               placeholder: "ten@email.com",
-              className: "w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-transparent bg-stone-50" })
+              className: "w-full border border-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-transparent text-white placeholder-white/40",
+              style: { background: "rgba(255,255,255,0.15)" } })
           ),
           React.createElement("div", null,
-            React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1.5" }, "Mật khẩu"),
+            React.createElement("label", { className: "block text-sm font-medium text-white/90 mb-1.5" }, "Mật khẩu"),
             React.createElement("input", { type: "password", value: pass, onChange: e => setPass(e.target.value), required: true,
               placeholder: "••••••••",
-              className: "w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-700 focus:border-transparent bg-stone-50" })
+              className: "w-full border border-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-transparent text-white placeholder-white/40",
+              style: { background: "rgba(255,255,255,0.15)" } })
           ),
           err && React.createElement("div", { className: "flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5" },
             React.createElement(AlertTriangle, { className: "h-4 w-4 flex-shrink-0" }), err
