@@ -68,11 +68,11 @@ const TIERS = {
   "Kim cương": "bg-cyan-50 text-cyan-700 ring-cyan-200"
 };
 const PAY_NCC = {
-  "Đã thanh toán": "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  "Đã thanh toán": "bg-amber-50 text-[#92400e] ring-amber-200",
   "Chưa thanh toán": "bg-amber-50 text-amber-700 ring-amber-200"
 };
 const APPROVE = {
-  "Đã duyệt": "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  "Đã duyệt": "bg-amber-50 text-[#92400e] ring-amber-200",
   "Đã từ chối": "bg-rose-50 text-rose-700 ring-rose-200"
 };
 
@@ -570,7 +570,7 @@ const IconBtn = ({
   title: title,
   onClick: onClick,
   className: tone === "danger"
-    ? "rounded-md p-1.5 transition bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"
+    ? "rounded-md p-1.5 transition bg-amber-100 text-[#92400e] hover:bg-amber-200"
     : `rounded-md p-1.5 transition hover:bg-slate-100 text-${tone}-500`
 }, /*#__PURE__*/React.createElement(Icon, {
   className: "h-4 w-4"
@@ -1238,7 +1238,7 @@ function KhoModal({
   const totalOut = rows.reduce((s, r) => s + ttXuat(r), 0);
   const cpmhTotal = rows.reduce((s, r) => s + (r.cpmh || 0), 0);
   const statusLabel = exported ? "Đã xuất kho" : imported ? "Đã nhập kho" : "Đang xử lý";
-  const statusCls = exported ? "bg-emerald-50 text-emerald-700 ring-emerald-200" : imported ? "bg-sky-50 text-sky-700 ring-sky-200" : "bg-amber-50 text-amber-700 ring-amber-200";
+  const statusCls = exported ? "bg-amber-50 text-[#92400e] ring-amber-200" : imported ? "bg-sky-50 text-sky-700 ring-sky-200" : "bg-amber-50 text-amber-700 ring-amber-200";
   const inp = "w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-center focus:border-[#92400e] focus:outline-none";
   const inpSL = "w-12 rounded-lg border border-slate-200 px-1 py-1.5 text-sm text-center focus:border-[#92400e] focus:outline-none";
   const inpCP = "w-20 rounded-lg border border-slate-200 px-1 py-1.5 text-sm text-center focus:border-[#92400e] focus:outline-none";
@@ -1695,7 +1695,7 @@ function DraftTable({
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const DSTATUS = {
-    "Đã lên đơn": "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    "Đã lên đơn": "bg-amber-50 text-[#92400e] ring-amber-200",
     "Chưa tạo đơn hàng": "bg-slate-100 text-slate-600 ring-slate-200",
   "Đã tạo đơn hàng": "bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   };
@@ -2293,7 +2293,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                     /*#__PURE__*/React.createElement("input", {value:ret.note||"", onChange:e=>setReturns(xs=>xs.map((r,j)=>j===i?{...r,note:e.target.value}:r)), placeholder:"Nhập lý do...", className:"w-full border-0 bg-transparent px-0 py-0 text-xs text-slate-500 focus:outline-none placeholder:text-slate-300"})),
                   /*#__PURE__*/React.createElement("td", {className:"px-3 py-2"}),
                   /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 text-right"},
-                    /*#__PURE__*/React.createElement("button", {onClick:()=>setReturns(xs=>xs.filter((_,j)=>j!==i)), title:"Xoá", className:"rounded p-1 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"},
+                    /*#__PURE__*/React.createElement("button", {onClick:()=>setReturns(xs=>xs.filter((_,j)=>j!==i)), title:"Xoá", className:"rounded p-1 bg-amber-100 text-[#92400e] hover:bg-amber-200"},
                       /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"})))))),
                 /*#__PURE__*/React.createElement("tr", {className:"bg-slate-50 font-semibold text-sm"},
                   /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 text-slate-600", colSpan:2}, "Tổng cộng"),
@@ -2353,7 +2353,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                   /*#__PURE__*/React.createElement("div", {className:"flex shrink-0 items-center gap-1"},
                     /*#__PURE__*/React.createElement("span", {className:"rounded-full bg-[#92400e] px-2 py-0.5 text-[11px] font-medium text-white"}, p.staff||"quanly01"),
                     /*#__PURE__*/React.createElement("button", {onClick:()=>{setEditPayIdx(i);setEditPayModal(true);}, title:"Sửa", className:"rounded p-1 bg-[#92400e] text-white hover:bg-[#78350f]"}, /*#__PURE__*/React.createElement(Pencil, {className:"h-3 w-3"})),
-                    /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Tiền hàng trả lại"||p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"}))))))))),
+                    /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Tiền hàng trả lại"||p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1 bg-amber-100 text-[#92400e] hover:bg-amber-200"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"}))))))))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
         /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-[#92400e]"}, "Chi phí công ty thanh toán"),
@@ -2739,7 +2739,7 @@ function PurchaseCreate({
               /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-center"},
                 /*#__PURE__*/React.createElement("button", {
                   onClick: () => setRows(xs => xs.filter((_, k) => k !== i)),
-                  className: "rounded-md bg-[#FEE2E2] p-1.5 text-[#B91C1C] hover:bg-[#FECACA]"
+                  className: "rounded-md bg-amber-100 p-1.5 text-[#92400e] hover:bg-amber-200"
                 }, /*#__PURE__*/React.createElement(Trash2, {className: "h-3.5 w-3.5"}))))),
             /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-slate-200"},
               /*#__PURE__*/React.createElement("td", {colSpan: 4, className: "px-3 py-2.5 text-right text-sm uppercase text-slate-800", style: {fontWeight:700}}, "TỔNG CỘNG"),
@@ -2852,7 +2852,7 @@ function PurchaseList({
         /*#__PURE__*/React.createElement("button", {onClick: () => onEdit(r), className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"}, purCode(r.lot))),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"},
         /*#__PURE__*/React.createElement(Pill, {
-          map: {"Đã nhập đủ": "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200", "Nhập một phần": "bg-amber-50 text-amber-700 ring-1 ring-amber-200", "Chờ nhập": "bg-slate-100 text-slate-500 ring-1 ring-slate-200"},
+          map: {"Đã nhập đủ": "bg-amber-50 text-[#92400e] ring-1 ring-amber-200", "Nhập một phần": "bg-amber-50 text-amber-700 ring-1 ring-amber-200", "Chờ nhập": "bg-slate-100 text-slate-500 ring-1 ring-slate-200"},
           value: r.qtyNow >= r.qtyIn ? "Đã nhập đủ" : r.qtyNow > 0 ? "Nhập một phần" : "Chờ nhập"
         })),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-slate-700"}, r.supplier),
@@ -5558,10 +5558,10 @@ function SettingsPayment() {
   const inf = "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#2563EB] focus:outline-none";
   const addBtnBlue = addBtn;
   const badge = s => s === "Hoạt động"
-    ? "inline-flex items-center rounded-full bg-[#DCFCE7] px-2.5 py-0.5 text-xs font-semibold text-[#15803D]"
+    ? "inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-[#92400e]"
     : "inline-flex items-center rounded-full bg-[#F1F5F9] px-2.5 py-0.5 text-xs font-semibold text-slate-500";
-  const editBtn = "rounded p-1.5 bg-[#E0F2FE] text-[#0284C7] hover:bg-[#BAE6FD]";
-  const delBtn = "rounded p-1.5 bg-[#FEE2E2] text-[#B91C1C] hover:bg-[#FECACA]";
+  const editBtn = "rounded p-1.5 bg-amber-100 text-[#92400e] hover:bg-amber-200";
+  const delBtn = "rounded p-1.5 bg-amber-100 text-[#92400e] hover:bg-amber-200";
   const th = "px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide";
   const td = "px-4 py-3 text-sm text-slate-700";
 
