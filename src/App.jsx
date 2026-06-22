@@ -82,7 +82,7 @@ const PRODUCTS = [{
   list: 6800000,
   sale: 4790000,
   cost: 4760000,
-  stock: 4
+  stock: 0
 }, {
   sku: "LFV-1402S-R",
   name: "INAX - Vòi Lavabo LFV-1402S-R",
@@ -104,7 +104,7 @@ const PRODUCTS = [{
   list: 11620000,
   sale: 8150000,
   cost: 7100000,
-  stock: 2
+  stock: 0
 }, {
   sku: "MS625CDW25",
   name: "TOTO - Bàn cầu 1 khối nắp điện tử S5",
@@ -115,7 +115,7 @@ const PRODUCTS = [{
   list: 40294000,
   sale: 26191100,
   cost: 21000000,
-  stock: 1
+  stock: 0
 }, {
   sku: "PIE875DC1E",
   name: "BOSCH - Bếp từ PIE875DC1E Serie 8",
@@ -126,7 +126,7 @@ const PRODUCTS = [{
   list: 33000000,
   sale: 24500000,
   cost: 19800000,
-  stock: 3
+  stock: 0
 }, {
   sku: "HBG7341B1",
   name: "BOSCH - Lò nướng âm tủ HBG7341B1 Serie 8",
@@ -137,7 +137,7 @@ const PRODUCTS = [{
   list: 38200000,
   sale: 28900000,
   cost: 23500000,
-  stock: 1
+  stock: 0
 }, {
   sku: "Tari-7851SR",
   name: "KONOX - Chậu rửa bát Tari 7851SR",
@@ -148,7 +148,7 @@ const PRODUCTS = [{
   list: 8390000,
   sale: 6292000,
   cost: 4900000,
-  stock: 5
+  stock: 0
 }, {
   sku: "CZ-656HNT",
   name: "CANZY - Bếp từ CZ-656HNT 3 vùng nấu",
@@ -170,7 +170,7 @@ const PRODUCTS = [{
   list: 6900000,
   sale: 5900000,
   cost: 4600000,
-  stock: 6
+  stock: 0
 }, {
   sku: "VF-1858",
   name: "AS - Bồn cầu 1 khối VF-1858 Cozy",
@@ -181,7 +181,7 @@ const PRODUCTS = [{
   list: 6700000,
   sale: 4085000,
   cost: 3100000,
-  stock: 2
+  stock: 0
 }];
 const mkOrder = o => ({
   expense: 0,
@@ -195,166 +195,7 @@ const mkOrder = o => ({
   draft: false,
   ...o
 });
-const INIT_ORDERS = [mkOrder({
-  id: "DH260229",
-  dt: "15/06/2026 15:30",
-  name: "Anh Tuấn",
-  phone: "09xx111222",
-  addr: "Số 12 Lê Chân, HP",
-  channel: "Facebook",
-  store: "Kho HH",
-  staff: "NGOC HA",
-  expense: 200000,
-  paid: 12344000,
-  delivery: "Đã giao hàng",
-  deliveryConfirmed: true,
-  orderStatus: "",
-  imported: true,
-  exported: true,
-  items: [{
-    name: "INAX - Bồn cầu AC-989VN",
-    price: 4790000,
-    qty: 2,
-    disc: 0,
-    cost: 4760000
-  }, {
-    name: "INAX - Vòi Lavabo LFV-1402S-R",
-    price: 1382000,
-    qty: 2,
-    disc: 0,
-    cost: 1270000
-  }]
-}), mkOrder({
-  id: "DH260228",
-  dt: "12/06/2026 09:10",
-  name: "Chị Mai",
-  phone: "09xx333444",
-  addr: "KĐT Ngô Quyền, HP",
-  channel: "Zalo",
-  store: "Kho TB",
-  staff: "PAT",
-  expense: 300000,
-  paid: 5000000,
-  payments: [{kind: "Đặt cọc", amount: 5000000, datetime: "12/06/2026 09:10", account: "Tiền mặt", staff: "PAT"}],
-  delivery: "Chưa giao hàng",
-  deliveryConfirmed: true,
-  orderStatus: "",
-  imported: true,
-  exported: false,
-  items: [{
-    name: "BOSCH - Bếp từ PIE875DC1E Serie 8",
-    price: 24500000,
-    qty: 1,
-    disc: 0,
-    cost: 19800000
-  }]
-}), mkOrder({
-  id: "DH260227",
-  dt: "12/06/2026 16:42",
-  name: "Anh Bình",
-  phone: "09xx555666",
-  addr: "Hải An, HP",
-  channel: "Facebook",
-  store: "Kho HH",
-  staff: "NGOC HA",
-  expense: 0,
-  paid: 0,
-  delivery: "Chưa giao hàng",
-  orderStatus: "",
-  imported: false,
-  exported: false,
-  items: [{
-    name: "INAX - Vòi sen cây BFV-2015S nóng lạnh",
-    price: 8150000,
-    qty: 1,
-    disc: 0,
-    cost: 7100000
-  }]
-}), mkOrder({
-  id: "DH260226",
-  dt: "10/06/2026 11:05",
-  name: "Chị Lan",
-  phone: "09xx777888",
-  addr: "Hồng Bàng, HP",
-  channel: "TikTok",
-  store: "Kho HH",
-  staff: "SALE01",
-  expense: 150000,
-  paid: 6292000,
-  delivery: "Đã giao hàng",
-  deliveryConfirmed: true,
-  orderStatus: "",
-  imported: true,
-  exported: true,
-  items: [{
-    name: "KONOX - Chậu rửa bát Tari 7851SR",
-    price: 6292000,
-    qty: 1,
-    disc: 0,
-    cost: 4900000
-  }]
-}), mkOrder({
-  id: "DH260225",
-  dt: "08/06/2026 14:20",
-  name: "Anh Dũng",
-  phone: "09xx999000",
-  addr: "Kiến An, HP",
-  channel: "Đến CH",
-  store: "Kho HH",
-  staff: "PAT",
-  expense: 0,
-  paid: 0,
-  delivery: "Chưa giao hàng",
-  orderStatus: "Huỷ",
-  imported: false,
-  exported: false,
-  items: [{
-    name: "AS - Bồn tiểu nam treo tường WP-6509",
-    price: 5900000,
-    qty: 1,
-    disc: 0,
-    cost: 4600000
-  }]
-}), mkOrder({
-  id: "BG00007",
-  dt: "16/06/2026 08:30",
-  name: "Chị Hà",
-  phone: "09xx121314",
-  addr: "Dương Kinh, HP",
-  channel: "Facebook",
-  store: "Kho TB",
-  staff: "PAT",
-  draft: true,
-  desc: "Báo giá lò nướng cho khách xem",
-  draftStatus: "Đã tạo đơn hàng",
-  linkedOrderId: "DH260241",
-  items: [{
-    name: "BOSCH - Lò nướng âm tủ HBG7341B1 Serie 8",
-    price: 28900000,
-    qty: 1,
-    disc: 0,
-    cost: 23500000
-  }]
-}), mkOrder({
-  id: "BG00006",
-  dt: "15/06/2026 17:50",
-  name: "Khách lẻ",
-  phone: "",
-  addr: "",
-  channel: "Đến CH",
-  store: "Kho HH",
-  staff: "NGOC HA",
-  draft: true,
-  desc: "Khách hỏi giá tại quầy",
-  draftStatus: "Chưa tạo đơn hàng",
-  items: [{
-    name: "INAX - Bồn cầu AC-989VN",
-    price: 4790000,
-    qty: 1,
-    disc: 0,
-    cost: 4760000
-  }]
-})];
+const INIT_ORDERS = [];
 
 /* derived order fields */
 function calc(o) {
@@ -374,61 +215,7 @@ function calc(o) {
   const profit = o.imported && o.exported ? total - (o.expense || 0) - totalCost - (o.importExpense || 0) : null;
   return { total, totalCost, remaining, pay, orderStatus, profit };
 }
-const CUSTOMERS = [{
-  name: "Anh Tuấn",
-  phone: "09xx111222",
-  addr: "Lê Chân, HP",
-  src: "Facebook",
-  tier: "Vàng",
-  orders: 5,
-  spent: 48200000,
-  debt: 0
-}, {
-  name: "Chị Mai",
-  phone: "09xx333444",
-  addr: "Ngô Quyền, HP",
-  src: "Zalo",
-  tier: "Thường",
-  orders: 2,
-  spent: 24500000,
-  debt: 19500000
-}, {
-  name: "Anh Bình",
-  phone: "09xx555666",
-  addr: "Hải An, HP",
-  src: "Facebook",
-  tier: "Thường",
-  orders: 1,
-  spent: 8150000,
-  debt: 8150000
-}, {
-  name: "Chị Lan",
-  phone: "09xx777888",
-  addr: "Hồng Bàng, HP",
-  src: "TikTok",
-  tier: "Bạc",
-  orders: 4,
-  spent: 31900000,
-  debt: 0
-}, {
-  name: "Anh Dũng",
-  phone: "09xx999000",
-  addr: "Kiến An, HP",
-  src: "Đến CH",
-  tier: "Thường",
-  orders: 1,
-  spent: 5900000,
-  debt: 2900000
-}, {
-  name: "Chị Hà",
-  phone: "09xx121314",
-  addr: "Dương Kinh, HP",
-  src: "Facebook",
-  tier: "Kim cương",
-  orders: 9,
-  spent: 152780000,
-  debt: 18900000
-}];
+const CUSTOMERS = [];
 
 /* nhà cung cấp — tên đầy đủ + liên hệ + công nợ */
 const SUPPLIERS = [{
@@ -436,7 +223,7 @@ const SUPPLIERS = [{
   name: "AS LÊ HUY HẢI PHÒNG",
   phone: "0225 3 768 168",
   addr: "Lê Lợi, Ngô Quyền, HP",
-  open: 36472000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -444,7 +231,7 @@ const SUPPLIERS = [{
   name: "BANCOOT",
   phone: "0936 220 808",
   addr: "Lê Chân, HP",
-  open: 10139000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -452,7 +239,7 @@ const SUPPLIERS = [{
   name: "BLTK SG",
   phone: "0909 552 117",
   addr: "Tân Bình, TP.HCM",
-  open: 51100000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -460,7 +247,7 @@ const SUPPLIERS = [{
   name: "BOSCH BLUEHOME",
   phone: "024 3791 0102",
   addr: "431 Hoàng Quốc Việt, Hà Nội",
-  open: 151236000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -468,7 +255,7 @@ const SUPPLIERS = [{
   name: "EUROSUN",
   phone: "0243 7474 999",
   addr: "Cầu Giấy, Hà Nội",
-  open: 2380000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -476,7 +263,7 @@ const SUPPLIERS = [{
   name: "INAX HP - HỮU TÍN",
   phone: "0225 3 826 826",
   addr: "Lê Thánh Tông, Ngô Quyền, HP",
-  open: 566371002,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -484,7 +271,7 @@ const SUPPLIERS = [{
   name: "INAX HP - THÀNH LƯƠNG",
   phone: "0225 3 555 333",
   addr: "Lạch Tray, Ngô Quyền, HP",
-  open: 38100000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -492,7 +279,7 @@ const SUPPLIERS = [{
   name: "Không xác định",
   phone: "",
   addr: "",
-  open: 62976000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -500,7 +287,7 @@ const SUPPLIERS = [{
   name: "KIM QUÝ",
   phone: "0904 116 116",
   addr: "Hồng Bàng, HP",
-  open: 4830000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -508,7 +295,7 @@ const SUPPLIERS = [{
   name: "KOBESI",
   phone: "1900 6810",
   addr: "Hà Nội",
-  open: 400000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -516,7 +303,7 @@ const SUPPLIERS = [{
   name: "PHỤ KIỆN - THẾ AS",
   phone: "0966 333 222",
   addr: "Hải Phòng",
-  open: 1425000,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -524,7 +311,7 @@ const SUPPLIERS = [{
   name: "TÂN ĐẢO (BELLO, NOBI)",
   phone: "0913 268 268",
   addr: "Hà Đông, Hà Nội",
-  open: 89283508,
+  open: 0,
   ps: 0,
   tt: 0
 }, {
@@ -532,461 +319,31 @@ const SUPPLIERS = [{
   name: "TOTO NGỌC QUYẾN",
   phone: "0225 3 717 717",
   addr: "Văn Cao, Hải An, HP",
-  open: 85745697,
+  open: 0,
   ps: 0,
   tt: 0
 }];
 /* lô hàng dư nợ chi tiết theo NCC (drill-down) */
-const SUP_DETAIL = {
-  "0007": [{
-    date: "06/02/2026",
-    slip: "PN20260206_0608",
-    lot: "718_20260206_001",
-    prod: "AS - Vòi Sen Neo Modern Nóng Lạnh WF-0711",
-    sku: "WF-0711",
-    qty: 2,
-    cost: 1553000,
-    paid: 0,
-    pay: "Chưa thanh toán",
-    staff: "THUY LINH"
-  }, {
-    date: "06/02/2026",
-    slip: "PN20260206_0608",
-    lot: "722_20260206_001",
-    prod: "AS - Vòi Lavabo WF-1M01",
-    sku: "WF-1M01",
-    qty: 2,
-    cost: 1609000,
-    paid: 0,
-    pay: "Chưa thanh toán",
-    staff: "THUY LINH"
-  }]
-};
-const IMPORTS = [{
-  lot: "PN20260530_0031",
-  date: "30/05/2026",
-  prod: "INAX - Bồn cầu AC-989VN",
-  store: "Kho HH",
-  qtyIn: 5,
-  qtyNow: 4,
-  costNcc: 4760000,
-  fee: 50000,
-  supplier: "INAX HP - HỮU TÍN",
-  order: "ĐH00521",
-  staff: "NGOC HA",
-  pay: "Chưa thanh toán"
-}, {
-  lot: "PN20260530_0034",
-  date: "30/05/2026",
-  prod: "KONOX - Chậu rửa Tari 7851SR",
-  store: "Kho HH",
-  qtyIn: 6,
-  qtyNow: 5,
-  costNcc: 4900000,
-  fee: 80000,
-  supplier: "KONOX",
-  order: "ĐH00518",
-  staff: "THUY LINH",
-  pay: "Đã thanh toán"
-}, {
-  lot: "PN20260528_0012",
-  date: "28/05/2026",
-  prod: "BOSCH - Bếp từ PIE875DC1E",
-  store: "Kho TB",
-  qtyIn: 3,
-  qtyNow: 3,
-  costNcc: 19800000,
-  fee: 200000,
-  supplier: "BOSCH BLUEHOME",
-  order: "ĐH00497",
-  staff: "PAT",
-  pay: "Chưa thanh toán"
-}, {
-  lot: "PN20260525_0008",
-  date: "25/05/2026",
-  prod: "TOTO - Bàn cầu 1 khối S5",
-  store: "Kho HH",
-  qtyIn: 2,
-  qtyNow: 1,
-  costNcc: 21000000,
-  fee: 150000,
-  supplier: "TOTO NGỌC QUYẾN",
-  order: "ĐH00489",
-  staff: "NGOC HA",
-  pay: "Đã thanh toán"
-}];
-const RETURNS = [{
-  order: "DH260204",
-  cust: "Anh Ngọc Anh",
-  prod: "INAX - Bồn cầu AC-989VN",
-  qty: 1,
-  amount: 4530000,
-  store: "Kho HH",
-  date: "20/05/2026",
-  staff: "Quản Lý",
-  status: "Đã duyệt"
-}, {
-  order: "DH260197",
-  cust: "Anh Thiện",
-  prod: "INAX - Bồn cầu AC-989VN",
-  qty: 2,
-  amount: 9520000,
-  store: "Kho HH",
-  date: "20/05/2026",
-  staff: "Quản Lý",
-  status: "Đã duyệt"
-}, {
-  order: "DH260081",
-  cust: "Anh Chồi",
-  prod: "BELLO - Gương LED chữ nhật",
-  qty: 1,
-  amount: 630000,
-  store: "Kho HH",
-  date: "09/02/2026",
-  staff: "THUY LINH",
-  status: "Đã duyệt"
-}, {
-  order: "DH250048",
-  cust: "Chị Loan",
-  prod: "Đuôi xi phông nhựa",
-  qty: 1,
-  amount: 180000,
-  store: "Kho HH",
-  date: "03/01/2026",
-  staff: "NGOC HA",
-  status: "Đã từ chối"
-}];
+const SUP_DETAIL = {};
+const IMPORTS = [];
+const RETURNS = [];
 const ACCOUNTS_DEF = [
-  {key: "TCB-CTY", bank: "TCB-CTY BLTK HP", stk: "02", owner: "CÔNG TY BTLK HP", openBal: 56358134},
-  {key: "TCB-PAT", bank: "TCB-PAT",          stk: "01", owner: "PAT",              openBal: 1230722374},
-  {key: "Tiền mặt", bank: "TIEN MAT",         stk: "TM", owner: "Tiền mặt",         openBal: 273100000},
+  {key: "TCB-CTY", bank: "TCB-CTY BLTK HP", stk: "02", owner: "CÔNG TY BTLK HP", openBal: 0},
+  {key: "TCB-PAT", bank: "TCB-PAT",          stk: "01", owner: "PAT",              openBal: 0},
+  {key: "Tiền mặt", bank: "TIEN MAT",         stk: "TM", owner: "Tiền mặt",         openBal: 0},
 ];
-const TXNS = [
-  {id:390,date:"19/06/2026 15:24",entity:"Anh Đạt",  orderId:"DH260262",kind:"Đặt cọc",    acc:"TCB-PAT",  amount:3000000,  note:"",                      staff:"NGOC HA"},
-  {id:389,date:"15/06/2026 10:12",entity:"Chị Mai",  orderId:"DH260229",kind:"Thu tiền",   acc:"TCB-PAT",  amount:12370000, note:"",                      staff:"THUY LINH"},
-  {id:388,date:"13/06/2026 14:30",entity:"Anh Thành",orderId:"DH260248",kind:"Thanh toán", acc:"TCB-PAT",  amount:45600000, note:"",                      staff:"NGOC HA"},
-  {id:387,date:"11/06/2026 09:15",entity:"Chị Hoa",  orderId:"DH260240",kind:"Đặt cọc",   acc:"TCB-PAT",  amount:28000000, note:"",                      staff:"THUY LINH"},
-  {id:386,date:"10/06/2026 11:00",entity:"Anh Tuấn", orderId:"DH260235",kind:"Thanh toán", acc:"TCB-PAT",  amount:53632000, note:"",                      staff:"NGOC HA"},
-  {id:385,date:"10/06/2026 09:30",entity:"NCC INAX", orderId:"",        kind:"Chi mua hàng",acc:"Tiền mặt",amount:-350000,  note:"Vận chuyển lô PN..0034",staff:"THUY LINH"},
-  {id:384,date:"08/06/2026 11:05",entity:"Chị Ngân", orderId:"DH260225",kind:"Thu tiền",   acc:"TCB-CTY",  amount:3000000,  note:"",                      staff:"NGOC HA"},
-  {id:383,date:"07/06/2026 16:20",entity:"Anh Hùng", orderId:"DH260228",kind:"Đặt cọc",   acc:"Tiền mặt", amount:3350000,  note:"",                      staff:"NGOC HA"},
-  {id:382,date:"05/06/2026 10:00",entity:"Chị Mai",  orderId:"DH260218",kind:"Chi phí",    acc:"TCB-CTY",  amount:-280000,  note:"Ship lô hàng TOTO",     staff:"THUY LINH"},
-];
-const CASHFLOW = [{
-  d: "01/06",
-  thu: 0
-}, {
-  d: "02/06",
-  thu: 35
-}, {
-  d: "03/06",
-  thu: 23.5
-}, {
-  d: "06/06",
-  thu: 1
-}, {
-  d: "07/06",
-  thu: 3.4
-}, {
-  d: "08/06",
-  thu: 3
-}, {
-  d: "10/06",
-  thu: 5.5
-}, {
-  d: "12/06",
-  thu: 5
-}, {
-  d: "15/06",
-  thu: 12.4
-}];
-const STAFF_RANK = [{
-  name: "NGOC HA",
-  role: "Nhân viên",
-  orders: 7,
-  custs: 7,
-  rev: 154772000,
-  collected: 0.62
-}, {
-  name: "PAT",
-  role: "Admin",
-  orders: 4,
-  custs: 4,
-  rev: 48970000,
-  collected: 0.41
-}, {
-  name: "SALE01",
-  role: "Nhân viên",
-  orders: 3,
-  custs: 3,
-  rev: 21560000,
-  collected: 1.0
-}, {
-  name: "Quản Lý",
-  role: "Manager",
-  orders: 1,
-  custs: 1,
-  rev: 1480000,
-  collected: 1.0
-}];
-const SALES_BY_DAY = [{
-  day: "15/06/2026",
-  n: 2,
-  rev: 6480000,
-  paid: 1480000
-}, {
-  day: "12/06/2026",
-  n: 5,
-  rev: 39464000,
-  paid: 0
-}, {
-  day: "10/06/2026",
-  n: 2,
-  rev: 13270000,
-  paid: 5490000
-}, {
-  day: "08/06/2026",
-  n: 1,
-  rev: 6890000,
-  paid: 3000000
-}, {
-  day: "07/06/2026",
-  n: 3,
-  rev: 16940000,
-  paid: 3420000
-}];
-const EXPORTS = [{
-  slip: "PX20260615_002",
-  dt: "15/06/2026 15:30",
-  order: "DH260229",
-  sku: "AC-989VN",
-  prod: "INAX - Bồn cầu AC-989VN",
-  supplier: "INAX HP - HỮU TÍN",
-  store: "Kho HH",
-  lot: "867_20260615_002",
-  qty: 2,
-  sale: 4790000,
-  cust: "Anh Tuấn",
-  addr: "Số 12 Lê Chân, HP",
-  orderStatus: "Hoàn thành",
-  delivery: "Đã giao hàng",
-  staff: "NGOC HA"
-}, {
-  slip: "PX20260612_005",
-  dt: "12/06/2026 09:10",
-  order: "DH260228",
-  sku: "PIE875DC1E",
-  prod: "BOSCH - Bếp từ PIE875DC1E",
-  supplier: "BOSCH BLUEHOME",
-  store: "Kho TB",
-  lot: "910_20260612_001",
-  qty: 1,
-  sale: 24500000,
-  cust: "Chị Mai",
-  addr: "KĐT Ngô Quyền, HP",
-  orderStatus: "Chờ xử lý",
-  delivery: "Chưa giao hàng",
-  staff: "PAT"
-}, {
-  slip: "PX20260610_003",
-  dt: "10/06/2026 11:05",
-  order: "DH260226",
-  sku: "Tari-7851SR",
-  prod: "KONOX - Chậu rửa Tari 7851SR",
-  supplier: "KONOX",
-  store: "Kho HH",
-  lot: "732_20260610_001",
-  qty: 1,
-  sale: 6292000,
-  cust: "Chị Lan",
-  addr: "Hồng Bàng, HP",
-  orderStatus: "Hoàn thành",
-  delivery: "Đã giao hàng",
-  staff: "SALE01"
-}, {
-  slip: "PX20260530_001",
-  dt: "30/05/2026 17:51",
-  order: "DH260201",
-  sku: "WF-1M72",
-  prod: "AS - Sen Cây Nóng Lạnh WF-1M72",
-  supplier: "INAX HP - THÀNH LƯƠNG",
-  store: "Kho HH",
-  lot: "867_20260507_001",
-  qty: 3,
-  sale: 3700000,
-  cust: "Chị Hà",
-  addr: "Dương Kinh, HP",
-  orderStatus: "Hoàn thành",
-  delivery: "Đã giao hàng",
-  staff: "Quản Lý"
-}];
+const TXNS = [];
+const CASHFLOW = [];
+const STAFF_RANK = [];
+const SALES_BY_DAY = [];
+const EXPORTS = [];
 
 /* công nợ khách hàng — báo cáo tổng hợp */
-const CUST_DEBT = [{
-  staff: "NGOC HA",
-  name: "Anh Châu",
-  phone: "0989145440",
-  open: 0,
-  ps: 44716000,
-  tt: 5000000
-}, {
-  staff: "NGOC HA",
-  name: "Anh Chồi",
-  phone: "0348454068",
-  open: -1250000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "NGOC HA",
-  name: "Anh Dũng",
-  phone: "0985869995",
-  open: 3000000,
-  ps: 0,
-  tt: 0,
-  addr: "16/213 Phủ Thượng Đoạn"
-}, {
-  staff: "NGOC HA",
-  name: "Anh Dũng",
-  phone: "0913980857",
-  open: -1225000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "PAT",
-  name: "Anh Giang",
-  phone: "0394026208",
-  open: 7776000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "Quản Lý",
-  name: "Anh Hiển",
-  phone: "0912950622",
-  open: 16072000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "PAT",
-  name: "Anh Hoàng",
-  phone: "0936501658",
-  open: 7300000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "NGOC HA",
-  name: "Anh Khánh",
-  phone: "0904575005",
-  open: 54412000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "NGOC HA",
-  name: "Anh Khánh",
-  phone: "0906096124",
-  open: 10380000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "Quản Lý",
-  name: "Anh Linh",
-  phone: "0914404685",
-  open: 47245000,
-  ps: 1480000,
-  tt: 1480000
-}, {
-  staff: "NGOC HA",
-  name: "Anh Lương",
-  phone: "0938486888",
-  open: -610000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "Quản Lý",
-  name: "Anh Nghĩa",
-  phone: "0913501393",
-  open: 12794000,
-  ps: 0,
-  tt: 0
-}, {
-  staff: "PAT",
-  name: "Anh Ngọc Anh",
-  phone: "0961109397",
-  open: 23275000,
-  ps: 0,
-  tt: 0
-}];
-const CUST_DEBT_DETAIL = {
-  "0985869995": {
-    id: 600,
-    addr: "16/213 Phủ Thượng Đoạn",
-    email: "Không có",
-    orders: [{
-      id: "DH260192",
-      date: "20/04/2026",
-      expense: 200000,
-      payable: 3000000,
-      paid: 0,
-      items: [{
-        name: "VINGER - máy hút mùi chữ T VG 227 T01",
-        sku: "VG 227 T01",
-        qty: 1,
-        price: 2800000,
-        amount: 2800000
-      }, {
-        name: "MUNCHEN - Bộ nồi Schönbrunn Pro SB19",
-        sku: "Pro SB19",
-        qty: 1,
-        price: 0,
-        amount: 0
-      }]
-    }]
-  }
-};
+const CUST_DEBT = [];
+const CUST_DEBT_DETAIL = {};
 
 /* báo cáo sản phẩm đặt hàng */
-const PREORDER = [{
-  sku: "AC-989VN",
-  prod: "INAX - Bồn Cầu AC-989VN",
-  ordered: 5,
-  stock: 8,
-  orders: 3
-}, {
-  sku: "AL-289V/ L288VC",
-  prod: "INAX - Lavabo treo tường AL-289V/ L288VC",
-  ordered: 4,
-  stock: 1,
-  orders: 2
-}, {
-  sku: "VF-1862",
-  prod: "AS - Bồn Cầu VF-1862",
-  ordered: 4,
-  stock: 10,
-  orders: 1
-}, {
-  sku: "LFV-1402S-R",
-  prod: "INAX - Vòi Lavabo LFV-1402S-R",
-  ordered: 3,
-  stock: 1,
-  orders: 1
-}, {
-  sku: "DUOI XP INOX UON",
-  prod: "Đuôi xi phong inox SUS 304 uốn",
-  ordered: 3,
-  stock: 10,
-  orders: 1
-}, {
-  sku: "BFV-1405S",
-  prod: "INAX - Bộ Sen Cây BFV-1405S",
-  ordered: 2,
-  stock: 0,
-  orders: 2
-}, {
-  sku: "BL-GLH 50",
-  prod: "BELLO - Gương LED chữ nhật BL-GLH 50",
-  ordered: 2,
-  stock: 4,
-  orders: 1
-}];
+const PREORDER = [];
 const NAV = [{
   key: "finance",
   label: "Tài chính",
@@ -1386,9 +743,9 @@ function RangeBar({
 
 /* ── Bank accounts context (shared Finance ↔ Settings) ── */
 const INIT_BANK_ACCOUNTS = [
-  {id:1, key:"TCB-CTY",  bank:"TCB-CTY BLTK HP", account:"02", owner:"CÔNG TY BTLK HP", branch:"", note:"", openBal:56358134,   status:"Hoạt động"},
-  {id:2, key:"TCB-PAT",  bank:"TCB-PAT",          account:"01", owner:"PAT",              branch:"", note:"", openBal:1230722374, status:"Hoạt động"},
-  {id:3, key:"Tiền mặt", bank:"TIEN MAT",         account:"TM", owner:"Tiền mặt",         branch:"", note:"", openBal:273100000,  status:"Hoạt động"},
+  {id:1, key:"TCB-CTY",  bank:"TCB-CTY BLTK HP", account:"02", owner:"CÔNG TY BTLK HP", branch:"", note:"", openBal:0, status:"Hoạt động"},
+  {id:2, key:"TCB-PAT",  bank:"TCB-PAT",          account:"01", owner:"PAT",              branch:"", note:"", openBal:0, status:"Hoạt động"},
+  {id:3, key:"Tiền mặt", bank:"TIEN MAT",         account:"TM", owner:"Tiền mặt",         branch:"", note:"", openBal:0, status:"Hoạt động"},
 ];
 const BankCtx = React.createContext(null);
 const useBankAccounts = () => React.useContext(BankCtx);
@@ -1655,7 +1012,7 @@ function SalesModule({
   onImportKho
 }) {
   const [view, setView] = useState(openOrderId ? {edit: openOrderId} : "list");
-  React.useEffect(() => { if (openOrderId) { setOpenOrderId && setOpenOrderId(null); } }, []);
+  React.useEffect(() => { if (openOrderId) { setView({edit: openOrderId}); setOpenOrderId && setOpenOrderId(null); } }, [openOrderId]);
   const [modal, setModal] = useState(null);
   const addOrder = (o, asDraft) => {
     const id = o.id && !asDraft ? o.id : (asDraft ? "BG000" + Math.floor(10 + Math.random() * 89) : "DH2602" + Math.floor(10 + Math.random() * 89));
@@ -3570,7 +2927,7 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn({whInItems: items, setWhInItems: setItems, orders = []}) {
+function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrder}) {
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
@@ -3641,10 +2998,10 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = []}) {
     className: "px-2 py-1.5 text-center text-sm font-medium text-slate-700"
   }, r.kho), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
-  }, /*#__PURE__*/React.createElement(DocLink, {
-    code: impCode(r.lot),
-    onOpen: setDoc
-  })), /*#__PURE__*/React.createElement("td", {
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setSlipModal(r),
+    className: "font-medium text-[#2563EB] underline-offset-2 hover:underline"
+  }, impCode(r.lot))), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, r.order ? /*#__PURE__*/React.createElement("button", {
     onClick: () => openOrderDetail(r.order),
@@ -3696,7 +3053,9 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = []}) {
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số phiếu: "), /*#__PURE__*/React.createElement("span", {className: "font-semibold text-slate-800"}, impCode(slipModal.lot))),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Ngày nhập: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.date)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Kho: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.kho || slipModal.store)),
-      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số đơn hàng: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.order || "—")),
+      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số đơn hàng: "), slipModal.order
+        ? /*#__PURE__*/React.createElement("button", {onClick: () => { setSlipModal(null); onOpenOrder && onOpenOrder(slipModal.order); }, className: "font-medium text-[#2563EB] underline-offset-2 hover:underline"}, slipModal.order)
+        : /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-400"}, "—")),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Nhà cung cấp: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.supplier)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Người tạo: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.staff))),
     /*#__PURE__*/React.createElement("table", {className: "w-full border-collapse text-xs"},
@@ -3882,8 +3241,11 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     key: r.slip,
     className: "align-top hover:bg-slate-50/60"
   }, /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3 font-medium text-[#2563EB] tabular-nums"
-  }, r.slip), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 tabular-nums"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setSlipModal(r),
+    className: "font-medium text-[#2563EB] underline-offset-2 hover:underline"
+  }, r.slip)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
     value: r.dt
@@ -3957,88 +3319,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
       /*#__PURE__*/React.createElement("span", {className: "text-slate-900"}, vnd(slipModal.sale * slipModal.qty))))));
 }
 /* ───────── Tồn kho — Báo cáo xuất nhập tồn ───────── */
-const STOCK_REPORT = [{
-  store: "Kho HH",
-  sku: "CHÂN KÊ",
-  name: "AMILI - Chân kê máy rửa bát",
-  unit: "Bộ",
-  price: 200000,
-  o: 1,
-  in: 0,
-  out: 0
-}, {
-  store: "Kho HH",
-  sku: "VF-1862",
-  name: "AS - Bồn Cầu VF-1862",
-  unit: "Bộ",
-  price: 3650000,
-  o: 10,
-  in: 0,
-  out: 0
-}, {
-  store: "Kho HH",
-  sku: "VF-1863",
-  name: "AS - Bồn Cầu VF-1863",
-  unit: "Bộ",
-  price: 3200000,
-  o: 1,
-  in: 0,
-  out: 0
-}, {
-  store: "Kho HH",
-  sku: "VF-0420",
-  name: "AS - Chậu Rửa Đặt Bàn VF-0420",
-  unit: "Cái",
-  price: 1877000,
-  o: 1,
-  in: 0,
-  out: 0
-}, {
-  store: "Kho HH",
-  sku: "AC-989VN",
-  name: "INAX - Bồn cầu AC-989VN",
-  unit: "Bộ",
-  price: 4760000,
-  o: 6,
-  in: 0,
-  out: 2
-}, {
-  store: "Kho HH",
-  sku: "WF-1M13",
-  name: "AS - Sen cây nóng lạnh WF-1M13",
-  unit: "Cái",
-  price: 4480000,
-  o: 3,
-  in: 0,
-  out: 0
-}, {
-  store: "Kho HH",
-  sku: "Tari-7851SR",
-  name: "KONOX - Chậu rửa Tari 7851SR",
-  unit: "Bộ",
-  price: 4900000,
-  o: 6,
-  in: 0,
-  out: 1
-}, {
-  store: "Kho TB",
-  sku: "PIE875DC1E",
-  name: "BOSCH - Bếp từ PIE875DC1E",
-  unit: "Cái",
-  price: 19800000,
-  o: 3,
-  in: 3,
-  out: 1
-}, {
-  store: "Kho TB",
-  sku: "HBG7341B1",
-  name: "BOSCH - Lò nướng HBG7341B1",
-  unit: "Cái",
-  price: 23500000,
-  o: 1,
-  in: 0,
-  out: 0
-}];
+const STOCK_REPORT = [];
 function StockDetailModal({
   row,
   onClose
@@ -6020,7 +5301,7 @@ function Screen({
     case "purchase":
       return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders});
+      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         whOutItems: whOutItems,
