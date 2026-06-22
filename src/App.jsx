@@ -5857,10 +5857,8 @@ function LoginScreen() {
     finally { setLoading(false); }
   };
   return React.createElement("div", { className: "min-h-screen flex relative overflow-hidden",
-      style: { backgroundImage: "url('/banner.jpg')", backgroundSize: "cover", backgroundPosition: "center" }
+      style: { background: "radial-gradient(ellipse at 60% 40%, #c84b0e 0%, #8b2200 45%, #4a1000 100%)" }
     },
-    /* overlay mờ toàn màn hình */
-    React.createElement("div", { className: "absolute inset-0", style: { background: "rgba(0,0,0,0.18)" } }),
     /* Panel phải — form nổi trên ảnh */
     React.createElement("div", { className: "relative z-10 flex flex-1 items-center justify-center p-6" },
       React.createElement("div", { className: "rounded-3xl shadow-2xl w-full max-w-md p-10", style: { background: "rgba(255,255,255,0.18)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.35)" } },
