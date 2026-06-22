@@ -771,7 +771,7 @@ const DocLink = ({
       Kho: "Kho HH"
     }
   }),
-  className: `inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0] ${className}`
+  className: `inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309] ${className}`
 }, code);
 
 /* ───────── Dashboard ───────── */
@@ -1592,7 +1592,7 @@ function OrderTable({
       style: { position: "sticky", left: 90, zIndex: 1, background: rowBg }
     }, /*#__PURE__*/React.createElement("button", {
       onClick: () => onEdit(o),
-      className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+      className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
     }, o.id)), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3",
       style: { position: "sticky", left: 186, zIndex: 1, minWidth: 130, maxWidth: 130, background: rowBg }
@@ -1768,11 +1768,11 @@ function DraftTable({
     className: "whitespace-nowrap px-4 py-3"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => onEdit(o),
-    className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   }, o.id)), /*#__PURE__*/React.createElement("td", {
     className: "whitespace-nowrap px-4 py-3"
   }, o.linkedOrderId
-    ? /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"}, o.linkedOrderId)
+    ? /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, o.linkedOrderId)
     : /*#__PURE__*/React.createElement("span", {className: "text-slate-300 text-xs"}, "—")), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
@@ -2544,7 +2544,7 @@ function Returns() {
     className: "hover:bg-slate-50/60"
   }, /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
-  }, /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"}, r.order)), /*#__PURE__*/React.createElement("td", {
+  }, /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, r.order)), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-800"
   }, r.cust), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-600"
@@ -2848,7 +2848,7 @@ function PurchaseList({
     }, rows.map(r => /*#__PURE__*/React.createElement("tr", {key: r.lot},
       /*#__PURE__*/React.createElement("td", {className: "whitespace-nowrap px-3 py-2.5 text-slate-500"}, r.date),
       /*#__PURE__*/React.createElement("td", {className: "whitespace-nowrap px-3 py-2.5"},
-        /*#__PURE__*/React.createElement("button", {onClick: () => onEdit(r), className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"}, purCode(r.lot))),
+        /*#__PURE__*/React.createElement("button", {onClick: () => onEdit(r), className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, purCode(r.lot))),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"},
         /*#__PURE__*/React.createElement(Pill, {
           map: {"Đã nhập đủ": "bg-amber-50 text-[#92400e] ring-1 ring-amber-200", "Nhập một phần": "bg-amber-50 text-amber-700 ring-1 ring-amber-200", "Chờ nhập": "bg-slate-100 text-slate-500 ring-1 ring-slate-200"},
@@ -2968,12 +2968,12 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSlipModal(r),
-    className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   }, impCode(r.lot))), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, r.order ? /*#__PURE__*/React.createElement("button", {
     onClick: () => openOrderDetail(r.order),
-    className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   }, r.order) : /*#__PURE__*/React.createElement("span", {className: "text-slate-400"}, "—")), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-800"
   }, r.prod), /*#__PURE__*/React.createElement("td", {
@@ -3016,11 +3016,11 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
       /*#__PURE__*/React.createElement("button", {onClick: () => setSlipModal(null), className: ghostBtn}, "Đóng"))
   }, /*#__PURE__*/React.createElement("div", {className: "space-y-4 text-sm"},
     /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-y-2 text-xs"},
-      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số phiếu: "), /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"}, impCode(slipModal.lot))),
+      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số phiếu: "), /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, impCode(slipModal.lot))),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Ngày nhập: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.date)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Kho: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.kho || slipModal.store)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số đơn hàng: "), slipModal.order
-        ? /*#__PURE__*/React.createElement("button", {onClick: () => { setSlipModal(null); onOpenOrder && onOpenOrder(slipModal.order); }, className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"}, slipModal.order)
+        ? /*#__PURE__*/React.createElement("button", {onClick: () => { setSlipModal(null); onOpenOrder && onOpenOrder(slipModal.order); }, className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, slipModal.order)
         : /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-400"}, "—")),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Nhà cung cấp: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.supplier)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Người tạo: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.staff))),
@@ -3052,7 +3052,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
       /*#__PURE__*/React.createElement(PrintBtn, null),
       /*#__PURE__*/React.createElement("button", {onClick: () => setOrderModal(null), className: ghostBtn}, "Đóng"))
   }, orderModal._notFound
-    ? /*#__PURE__*/React.createElement("p", {className: "text-sm text-slate-500"}, "Không tìm thấy dữ liệu đơn hàng ", /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"}, orderModal.id), " trong hệ thống.")
+    ? /*#__PURE__*/React.createElement("p", {className: "text-sm text-slate-500"}, "Không tìm thấy dữ liệu đơn hàng ", /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, orderModal.id), " trong hệ thống.")
     : /*#__PURE__*/React.createElement("div", {className: "space-y-4 text-sm"},
         /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-3 rounded-lg bg-slate-50 px-4 py-3 text-xs"},
           /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Khách hàng: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, orderModal.name)),
@@ -3210,7 +3210,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     className: "px-3 py-3 tabular-nums"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSlipModal(r),
-    className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   }, r.slip)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
@@ -3219,7 +3219,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => onOpenOrder ? onOpenOrder(r.order) : null,
-    className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   }, r.order)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-slate-700"
   }, r.cust), /*#__PURE__*/React.createElement("td", {
@@ -3259,9 +3259,9 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
       /*#__PURE__*/React.createElement("button", {onClick: () => setSlipModal(null), className: ghostBtn}, "Đóng"))
   }, /*#__PURE__*/React.createElement("div", {className: "space-y-4 text-sm"},
     /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-y-2 text-xs"},
-      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số phiếu: "), /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"}, slipModal.slip)),
+      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số phiếu: "), /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, slipModal.slip)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Thời gian: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.dt)),
-      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Đơn hàng: "), /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"}, slipModal.order)),
+      /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Đơn hàng: "), /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, slipModal.order)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Kho: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, storeShort(slipModal.store))),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Khách hàng: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.cust)),
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Người xuất: "), /*#__PURE__*/React.createElement("span", {className: "font-medium text-slate-800"}, slipModal.staff)),
@@ -3366,7 +3366,7 @@ function StockDetailModal({
     className: "px-3 py-2.5 text-slate-500"
   }, m.date), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-2.5"
-  }, /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-xs font-semibold text-[#b45309]"}, m.slip)), /*#__PURE__*/React.createElement("td", {
+  }, /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, m.slip)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-2.5 text-slate-500"
   }, m.store), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-2.5 text-slate-500"
@@ -4366,7 +4366,7 @@ function DebtCust() {
       className: "px-3 py-3"
     }, /*#__PURE__*/React.createElement("button", {
       onClick: () => setDetail(r),
-      className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+      className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
     }, r.name)), /*#__PURE__*/React.createElement("td", {
       className: "border-l border-slate-100 px-3 py-3 text-xs text-slate-500"
     }, /*#__PURE__*/React.createElement(Phone, {
@@ -4474,7 +4474,7 @@ function CustDebtDetail({
       rowSpan: o.items.length,
       className: "px-3 py-3 align-top"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"
+      className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
     }, o.id), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
       className: "text-xs text-slate-400"
     }, o.date)), /*#__PURE__*/React.createElement("td", {
@@ -4591,7 +4591,7 @@ function DebtNcc() {
       className: "px-3 py-3"
     }, s.code ? /*#__PURE__*/React.createElement("button", {
       onClick: () => setDetail(s),
-      className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309] hover:bg-[#fef9f0]"
+      className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
     }, s.name) : /*#__PURE__*/React.createElement("span", {
       className: "text-slate-600"
     }, s.name)), /*#__PURE__*/React.createElement("td", {
@@ -5808,7 +5808,7 @@ function SettingsDocNum() {
                   : r.num
               ),
               /*#__PURE__*/React.createElement("td", {className: td},
-                /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-mono font-semibold text-[#b45309]"}, preview(r))
+                /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-mono font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, preview(r))
               ),
               /*#__PURE__*/React.createElement("td", {className: td + " text-center"},
                 editing && editing.id === r.id
