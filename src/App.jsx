@@ -5891,7 +5891,7 @@ function LoginScreen() {
     ),
     /* Panel form */
     React.createElement("div", { className: "relative z-10 flex flex-1 items-center justify-center p-6" },
-      React.createElement("div", { className: "rounded-3xl w-full max-w-md p-10", style: { background: "rgba(255,255,255,0.15)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)" } },
+      React.createElement("div", { className: "rounded-3xl w-full max-w-md p-10", style: { background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" } },
         /* Header — căn giữa */
         React.createElement("div", { className: "mb-8 flex flex-col items-center text-center" },
           React.createElement("img", { src: "/banner.jpg", alt: "BLTK", className: "w-24 h-24 rounded-2xl object-cover mb-5 shadow-lg" }),
@@ -5923,7 +5923,7 @@ function LoginScreen() {
           ),
           React.createElement("button", { type: "submit", disabled: loading,
             className: "w-full text-white font-semibold rounded-xl py-3 text-sm transition disabled:opacity-60 mt-2",
-            style: { background: loading ? "#7a2200" : "linear-gradient(135deg,#c84b0e,#8b2200)" } },
+            style: { background: loading ? "#7a2200" : "linear-gradient(to top,#6b1a00,#d45510)" } },
             loading ? "Đang đăng nhập..." : "Đăng nhập →")
         )
       )
