@@ -5000,7 +5000,7 @@ function Finance({setActive, onOpenOrder}) {
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
         /*#__PURE__*/React.createElement(TableShell, {minW:"1100px",
           head:/*#__PURE__*/React.createElement(React.Fragment,null,
-            /*#__PURE__*/React.createElement(Th,null,"Mã GD"),
+            /*#__PURE__*/React.createElement(Th,null,"Số phiếu"),
             /*#__PURE__*/React.createElement(Th,{center:true},"Ngày"),
             /*#__PURE__*/React.createElement(Th,null,"Đối tượng"),
             /*#__PURE__*/React.createElement(Th,null,"Số đơn hàng"),
