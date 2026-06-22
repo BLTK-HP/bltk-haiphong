@@ -1673,7 +1673,7 @@ function OrderTable({
     const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
     const sumRemain = rows.reduce((s, o) => s + calc(o).remaining, 0);
     return /*#__PURE__*/React.createElement("tr", {
-      className: "border-t-2 border-[#fdba74] bg-[#fed7aa] font-semibold text-slate-800"
+      className: "bg-[#fed7aa] font-semibold text-slate-800"
     }, /*#__PURE__*/React.createElement("td", {
       colSpan: 4,
       className: "px-3 py-3",
