@@ -396,6 +396,7 @@ const inputSm = "w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm f
 
 const purCode = lot => String(lot).match(/^PM\d{6}$/) ? lot : "PM" + yr2() + String(lot).replace(/\D/g,"").slice(-4).padStart(4,"0");
 const impCode = lot => String(lot).match(/^PN\d{6}$/) ? lot : "PN" + yr2() + String(lot).replace(/\D/g,"").slice(-4).padStart(4,"0");
+const expCode = lot => String(lot).match(/^PX\d{6}$/) ? lot : "PX" + yr2() + String(lot).replace(/\D/g,"").slice(-4).padStart(4,"0");
 
 /* ô nhập số có định dạng phân tách hàng nghìn (vi-VN) */
 function NumInput({
@@ -3169,13 +3170,13 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     minW: "1400px",
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 130
+        width: 90
       }
-    }, "Số phiếu xuất"), /*#__PURE__*/React.createElement(Th, {
+    }, "Ngày xuất"), /*#__PURE__*/React.createElement(Th, {
       style: {
         width: 110
       }
-    }, "Thời gian"), /*#__PURE__*/React.createElement(Th, {
+    }, "Số phiếu xuất"), /*#__PURE__*/React.createElement(Th, {
       style: {
         width: 100
       }
@@ -3223,15 +3224,15 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     key: r.slip,
     className: "align-top hover:bg-slate-50/60"
   }, /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3 tabular-nums"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => setSlipModal(r),
-    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
-  }, r.slip)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
     value: r.dt
   })), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 tabular-nums"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setSlipModal(r),
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
+  }, expCode(r.slip))), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => onOpenOrder ? onOpenOrder(r.order) : null,
