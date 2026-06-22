@@ -5430,7 +5430,9 @@ function App({ profile, logout }) {
   React.useEffect(() => {
     localStorage.setItem('bltk_banks', JSON.stringify(bankAccounts));
   }, [bankAccounts]);
-  const [txns, setTxns] = useState(TXNS);
+  const [txnsFS] = useCollection("txns");
+  const txns = txnsFS;
+  const setTxns = u => syncFS("txns", t => String(t.id))(txns, u);
   const title = LABELS[active] || "";
   return /*#__PURE__*/React.createElement(InvCtx.Provider, {value: {whInItems, setWhInItems, whOutItems, setWhOutItems}},
   /*#__PURE__*/React.createElement(TxnCtx.Provider, {value: {txns, setTxns}},
