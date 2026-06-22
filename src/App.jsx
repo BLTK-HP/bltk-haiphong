@@ -2576,7 +2576,7 @@ function Returns() {
 }
 
 /* ───────── Purchase Module (list + create) ───────── */
-function PurchaseModule({onImportToWh, purchaseList: list, setPurchaseList: setList}) {
+function PurchaseModule({onImportToWh, purchaseList: list, setPurchaseList: setList, setActive}) {
   const [view, setView] = React.useState("list"); // "list" | "create" | {edit: record}
   const onSave = recs => setList(xs => [...recs, ...xs]);
   if (view === "create") return /*#__PURE__*/React.createElement(PurchaseCreate, {onBack: () => setView("list"), onSave, onImportToWh});
@@ -2585,6 +2585,7 @@ function PurchaseModule({onImportToWh, purchaseList: list, setPurchaseList: setL
     onNew: () => setView("create"),
     onEdit: r => setView({edit: r}),
     onImportToWh,
+    onGoToWhIn: () => setActive && setActive("wh_in"),
     list,
     setList
   });
@@ -2801,6 +2802,7 @@ function PurchaseList({
   onNew,
   onEdit,
   onImportToWh,
+  onGoToWhIn,
   list,
   setList
 }) {
@@ -2858,11 +2860,34 @@ function PurchaseList({
       /*#__PURE__*/React.createElement("td", {className: "whitespace-nowrap px-3 py-2.5 text-slate-500"}, r.date),
       /*#__PURE__*/React.createElement("td", {className: "whitespace-nowrap px-3 py-2.5"},
         /*#__PURE__*/React.createElement("button", {onClick: () => onEdit(r), className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, purCode(r.lot))),
-      /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"},
-        /*#__PURE__*/React.createElement(Pill, {
-          map: {"Đã nhập đủ": "bg-amber-50 text-[#92400e] ring-1 ring-amber-200", "Nhập một phần": "bg-amber-50 text-amber-700 ring-1 ring-amber-200", "Chờ nhập": "bg-slate-100 text-slate-500 ring-1 ring-slate-200"},
-          value: r.qtyNow >= r.qtyIn ? "Đã nhập đủ" : r.qtyNow > 0 ? "Nhập một phần" : "Chờ nhập"
-        })),
+      /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"}, (() => {
+        const status = r.qtyNow >= r.qtyIn ? "Đã nhập đủ" : r.qtyNow > 0 ? "Nhập một phần" : "Chờ nhập";
+        if (status === "Chờ nhập") {
+          return /*#__PURE__*/React.createElement("button", {
+            title: "Click để nhập kho và chuyển sang danh sách nhập hàng",
+            onClick: () => {
+              const khoMap = {HH:"Kho HH", HG:"Kho HG", SR:"Kho SR"};
+              const slip = {
+                lot: "PN" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now()).slice(-4),
+                date: new Date().toLocaleDateString("vi-VN"),
+                prod: r.prod, store: khoMap[r.kho] || r.store,
+                qtyIn: r.qtyIn, qtyNow: r.qtyIn,
+                costNcc: r.costNcc, fee: r.fee || 0,
+                supplier: r.supplier, order: r.lot,
+                staff: r.staff || "NGOC HA", pay: "Chưa thanh toán"
+              };
+              if (onImportToWh) onImportToWh(slip);
+              setList(xs => xs.map(x => x.lot === r.lot ? {...x, qtyNow: x.qtyIn} : x));
+              if (onGoToWhIn) onGoToWhIn();
+            },
+            className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-amber-50 text-[#92400e] ring-amber-300 hover:bg-amber-100 cursor-pointer"
+          }, "Chờ nhập →");
+        }
+        return /*#__PURE__*/React.createElement(Pill, {
+          map: {"Đã nhập đủ": "bg-amber-50 text-[#92400e] ring-1 ring-amber-200", "Nhập một phần": "bg-amber-50 text-amber-700 ring-1 ring-amber-200"},
+          value: status
+        });
+      })()),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-slate-700"}, r.supplier),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-slate-800"}, r.prod),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5 text-right tabular-nums text-slate-600"}, r.qtyIn),
@@ -2873,24 +2898,6 @@ function PurchaseList({
       /*#__PURE__*/React.createElement("td", {className: "px-2 py-1.5 text-center text-sm font-medium text-slate-700"}, r.kho),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"},
         /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-center gap-0.5"},
-          /*#__PURE__*/React.createElement(IconBtn, {icon: ArrowDownToLine, title: "Nhập kho", onClick: () => {
-              const khoMap = {HH:"Kho HH", HG:"Kho HG", SR:"Kho SR"};
-              const slip = {
-                lot: "PN" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now()).slice(-4),
-                date: new Date().toLocaleDateString("vi-VN"),
-                prod: r.prod,
-                store: khoMap[r.kho] || r.store,
-                qtyIn: r.qtyIn,
-                qtyNow: r.qtyIn,
-                costNcc: r.costNcc,
-                fee: r.fee || 0,
-                supplier: r.supplier,
-                order: r.lot,
-                staff: r.staff || "NGOC HA",
-                pay: "Chưa thanh toán"
-              };
-              if (onImportToWh) { onImportToWh(slip); } else notify("Nhập kho thành công");
-            }}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Pencil, title: "Sửa", onClick: () => onEdit(r)}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Printer, title: "In", onClick: () => window.print()}),
           /*#__PURE__*/React.createElement(IconBtn, {icon: Trash2, tone: "danger", title: "Xoá", onClick: () => del(r.lot)})))))),
@@ -5322,7 +5329,7 @@ function Screen({
         onImportKho: onImportKho
       });
     case "purchase":
-      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList});
+      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList, setActive});
     case "wh_in":
       return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "wh_out":
