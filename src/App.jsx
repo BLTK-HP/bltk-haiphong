@@ -3223,7 +3223,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   }, rows.map(r => /*#__PURE__*/React.createElement("tr", {
     key: r.slip,
     className: "align-top hover:bg-slate-50/60"
-  }, /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 text-xs"}, (() => {
+  }, /*#__PURE__*/React.createElement("td", {className:"px-3 py-3", style:{fontSize:"11px"}}, (() => {
     const p = String(r.dt||"").split(" ");
     const dateStr = p[0]||"";
     const timeStr = p[1] ? p[1].split(":").slice(0,2).join(":") : "";
@@ -3234,7 +3234,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     className: "px-3 py-3 tabular-nums"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSlipModal(r),
-    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309] hover:bg-amber-100"
+    className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309] hover:bg-amber-100"
   }, expCode(r.slip))), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement("button", {
