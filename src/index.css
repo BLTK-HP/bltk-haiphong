@@ -56,14 +56,14 @@ body {
 /*  Bảng danh sách chung (.tbl-list) */
 /* ──────────────────────────────── */
 .tbl-list th {
-  background-color: #E6FFFA;
+  background-color: #ffedd5;
   font-size: 0.75rem;           /* 12px */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748B;
-  border-bottom: 1px solid #DDE3E8;
-  border-right: 1px solid #E8ECEF;
+  color: #7c2d12;
+  border-bottom: 1px solid #fed7aa;
+  border-right: 1px solid #fed7aa;
   /* Chuẩn hóa padding — ghi đè Tailwind px-N */
   padding-top: 10px;
   padding-bottom: 10px;
