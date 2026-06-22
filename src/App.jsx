@@ -1394,6 +1394,8 @@ const BankCtx = React.createContext(null);
 const useBankAccounts = () => React.useContext(BankCtx);
 const TxnCtx = React.createContext(null);
 const useTxns = () => React.useContext(TxnCtx);
+const InvCtx = React.createContext({whInItems: [], setWhInItems: () => {}, whOutItems: [], setWhOutItems: () => {}});
+const useInventory = () => React.useContext(InvCtx);
 
 /* ── Toast nhẹ để báo thao tác đã chạy ── */
 const ToastCtx = React.createContext(() => {});
@@ -1754,20 +1756,25 @@ function SalesModule({
       const dt = dateStr + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
       const base = now.toISOString().slice(0,10).replace(/-/g,"");
       if (!p.allExported && onImportKho) {
-        const inSlips = ord.items.map((it, i) => ({
-          lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ord.items.length > 1 ? "_" + i : ""),
-          date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
-          prod: it.name,
-          store: ord.store || "Kho HH",
-          qtyIn: it.qty,
-          qtyNow: it.qty,
-          costNcc: p.items[i]?.cost || it.cost || 0,
-          fee: 0,
-          supplier: p.items[i]?.supplier || it.supplier || "",
-          order: ord.id,
-          staff: "NGOC HA",
-          pay: "Chưa thanh toán"
-        }));
+        const inSlips = ord.items.map((it, i) => {
+          const costNcc = p.items[i]?.cost || it.cost || 0;
+          return {
+            lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ord.items.length > 1 ? "_" + i : ""),
+            date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
+            prod: it.name,
+            store: ord.store || "Kho HH",
+            qtyIn: it.qty,
+            qtyNow: it.qty,
+            qtyRemaining: it.qty,
+            costNcc,
+            unitCost: costNcc,
+            fee: 0,
+            supplier: p.items[i]?.supplier || it.supplier || "",
+            order: ord.id,
+            staff: "NGOC HA",
+            pay: "Chưa thanh toán"
+          };
+        });
         onImportKho(inSlips);
       }
       if (p.allExported && onExportKho) {
@@ -1782,6 +1789,7 @@ function SalesModule({
           lot: "",
           qty: it.qty,
           sale: it.price,
+          unitCost: p.items[i]?.cost || it.cost || 0,
           cust: ord.name,
           addr: ord.addr || "",
           orderStatus: "Chờ xử lý",
@@ -1886,10 +1894,8 @@ function PaymentModal({
     placeholder: "Ghi chú khoản thu…"
   }))));
 }
-const stockOf = name => {
-  const p = PRODUCTS.find(x => x.name === name);
-  return p ? p.stock : null;
-};
+const stockOfStatic = name => { const p = PRODUCTS.find(x => x.name === name); return p ? p.stock : 0; };
+const stockOfLive = (name, whInItems) => whInItems.filter(r => r.prod === name).reduce((s, r) => s + (r.qtyRemaining ?? r.qtyNow ?? 0), 0);
 const skuOf = name => {
   const p = PRODUCTS.find(x => x.name === name);
   return p ? p.sku : "—";
@@ -1899,6 +1905,8 @@ function KhoModal({
   onClose,
   onConfirm
 }) {
+  const {whInItems: _inv} = useInventory();
+  const stockOf = name => stockOfLive(name, _inv) || stockOfStatic(name);
   const [imported, setImported] = useState(!!order.imported);
   const [exported, setExported] = useState(!!order.exported);
   const [editing, setEditing] = useState(false);
@@ -2018,7 +2026,7 @@ function KhoModal({
         React.createElement("tbody", null,
           rows.map((r, i) => {
             const stock = stockOf(r.name);
-            return React.createElement("tr", { key: i, className: "border-b border-slate-100 align-middle" },
+            return React.createElement("tr", { key: r.name, className: "border-b border-slate-100 align-middle" },
               React.createElement("td", { className: "px-3 py-3 text-center" },
                 React.createElement("span", { className: `rounded px-1.5 py-0.5 text-xs font-medium ${(stock || 0) === 0 ? "bg-rose-100 text-[#B91C1C]" : "bg-emerald-100 text-emerald-700"}` }, stock ?? "—")),
               React.createElement("td", { className: "px-3 py-3 text-center" },
@@ -3132,20 +3140,25 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       const base = now.toISOString().slice(0,10).replace(/-/g,"");
       const ordItems = lines.filter(l => l.name);
       if (!p.allExported && onImportKho) {
-        onImportKho(ordItems.map((it, i) => ({
-          lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ordItems.length > 1 ? "_" + i : ""),
-          date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
-          prod: it.name,
-          store: it.kho || "Kho HH",
-          qtyIn: it.qty,
-          qtyNow: it.qty,
-          costNcc: p.items[i]?.cost || it.cost || 0,
-          fee: 0,
-          supplier: p.items[i]?.supplier || it.supplier || "",
-          order: effectiveOrderId,
-          staff: "NGOC HA",
-          pay: "Chưa thanh toán"
-        })));
+        onImportKho(ordItems.map((it, i) => {
+          const costNcc = p.items[i]?.cost || it.cost || 0;
+          return {
+            lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ordItems.length > 1 ? "_" + i : ""),
+            date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
+            prod: it.name,
+            store: it.kho || "Kho HH",
+            qtyIn: it.qty,
+            qtyNow: it.qty,
+            qtyRemaining: it.qty,
+            costNcc,
+            unitCost: costNcc,
+            fee: 0,
+            supplier: p.items[i]?.supplier || it.supplier || "",
+            order: effectiveOrderId,
+            staff: "NGOC HA",
+            pay: "Chưa thanh toán"
+          };
+        }));
       }
       if (p.allExported && onExportKho) {
         const dt = dateStr + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
@@ -3160,6 +3173,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           lot: "",
           qty: it.qty,
           sale: it.price,
+          unitCost: p.items[i]?.cost || it.cost || 0,
           cust: cust.name,
           addr: cust.addr || "",
           orderStatus: "Chờ xử lý",
@@ -3233,7 +3247,7 @@ function Returns() {
 }
 
 /* ───────── Purchase Module (list + create) ───────── */
-function PurchaseModule({onImportToWh, onGoToWh, purchaseList: list, setPurchaseList: setList}) {
+function PurchaseModule({onImportToWh, purchaseList: list, setPurchaseList: setList}) {
   const [view, setView] = React.useState("list"); // "list" | "create" | {edit: record}
   const onSave = recs => setList(xs => [...recs, ...xs]);
   if (view === "create") return /*#__PURE__*/React.createElement(PurchaseCreate, {onBack: () => setView("list"), onSave, onImportToWh});
@@ -3747,18 +3761,16 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = []}) {
           /*#__PURE__*/React.createElement("span", {className: `font-bold tabular-nums ${(orderModal.total||0)-(orderModal.paid||0)>0?"text-[#B91C1C]":"text-[#047857]"}`},
             vnd((orderModal.total||0)-(orderModal.paid||0))))))));
 }
-function WhOut({pendingExportSlips, onConsumePending, onOpenOrder}) {
+function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   const storeShort = s => (s || "").replace(/^Kho\s+/, "") || s || "—";
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
   const [fProd, setFProd] = useState("Tất cả");
   const [fSup, setFSup] = useState("Tất cả");
-  const [list, setList] = useState(() => pendingExportSlips?.length ? [...pendingExportSlips, ...EXPORTS] : EXPORTS);
-  React.useEffect(() => { if (pendingExportSlips?.length && onConsumePending) onConsumePending(); }, []);
-  const prodList = ["Tất cả", ...new Set(list.map(r => r.prod))];
-  const supList = ["Tất cả", ...new Set(list.map(r => r.supplier))];
-  const rows = list.filter(r => {
+  const prodList = ["Tất cả", ...new Set(items.map(r => r.prod))];
+  const supList = ["Tất cả", ...new Set(items.map(r => r.supplier))];
+  const rows = items.filter(r => {
     if (fProd !== "Tất cả" && r.prod !== fProd) return false;
     if (fSup !== "Tất cả" && r.supplier !== fSup) return false;
     if (q && !`${r.order} ${r.prod} ${r.cust} ${r.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
@@ -5975,17 +5987,14 @@ function Screen({
   setOrders,
   openOrderId,
   setOpenOrderId,
-  pendingExportSlips,
-  setPendingExportSlips,
-  pendingImportSlip,
-  setPendingImportSlip,
-  pendingImportSlips,
-  setPendingImportSlips,
   purchaseList,
   setPurchaseList,
   whInItems,
   setWhInItems,
-  onImportToWh
+  whOutItems,
+  setWhOutItems,
+  onImportToWh,
+  onExportToWh
 }) {
   switch (active) {
     case "finance":
@@ -6005,17 +6014,17 @@ function Screen({
         setActive: setActive,
         openOrderId: openOrderId,
         setOpenOrderId: setOpenOrderId,
-        onExportKho: slips => { setPendingExportSlips(slips); },
+        onExportKho: slips => { onExportToWh(slips); },
         onImportKho: slips => { setWhInItems(prev => mergeWhIn(prev, slips)); }
       });
     case "purchase":
-      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, onGoToWh: () => setActive("wh_in"), purchaseList, setPurchaseList});
+      return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList});
     case "wh_in":
       return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
-        pendingExportSlips: pendingExportSlips,
-        onConsumePending: () => setPendingExportSlips(null),
+        whOutItems: whOutItems,
+        setWhOutItems: setWhOutItems,
         onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }
       });
     case "wh_stock":
@@ -6077,18 +6086,27 @@ function App() {
   });
   const [orders, setOrders] = useState(INIT_ORDERS);
   const [openOrderId, setOpenOrderId] = useState(null);
-  const [pendingExportSlips, setPendingExportSlips] = useState(null);
-  const [pendingImportSlip, setPendingImportSlip] = useState(null);
-  const [pendingImportSlips, setPendingImportSlips] = useState(null);
   const [purchaseList, setPurchaseList] = useState(() => IMPORTS.map(r => ({...r, kho: r.store === "Kho HH" ? "HH" : r.store === "Kho HG" ? "HG" : "SR"})));
   const toKhoGlobal = s => (s||"HH").replace(/^Kho\s+/, "") || "HH";
-  const addKhoGlobal = r => ({...r, kho: r.kho || toKhoGlobal(r.store)});
+  const addKhoGlobal = r => ({
+    ...r,
+    kho: r.kho || toKhoGlobal(r.store),
+    qtyRemaining: r.qtyRemaining ?? r.qtyNow ?? r.qtyIn ?? 0,
+    unitCost: r.unitCost ?? (r.qtyIn > 0 ? Math.round(((r.costNcc || 0) * r.qtyIn + (r.fee || 0)) / r.qtyIn) : (r.costNcc || 0))
+  });
   const mergeWhIn = (prev, newSlips) => {
     const existing = new Set(prev.map(r => r.lot));
     const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(s.lot)).map(addKhoGlobal);
     return fresh.length ? [...fresh, ...prev] : prev;
   };
   const [whInItems, setWhInItems] = useState(() => IMPORTS.map(addKhoGlobal));
+  const addUnitCostOut = r => ({...r, unitCost: r.unitCost ?? 0});
+  const mergeWhOut = (prev, newSlips) => {
+    const existing = new Set(prev.map(r => r.slip));
+    const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(s.slip));
+    return fresh.length ? [...fresh, ...prev] : prev;
+  };
+  const [whOutItems, setWhOutItems] = useState(() => EXPORTS.map(addUnitCostOut));
   const [bankAccounts, setBankAccounts] = useState(() => {
     try { return JSON.parse(localStorage.getItem('bltk_banks')) || INIT_BANK_ACCOUNTS; }
     catch { return INIT_BANK_ACCOUNTS; }
@@ -6098,7 +6116,8 @@ function App() {
   }, [bankAccounts]);
   const [txns, setTxns] = useState(TXNS);
   const title = LABELS[active] || "";
-  return /*#__PURE__*/React.createElement(TxnCtx.Provider, {value: {txns, setTxns}},
+  return /*#__PURE__*/React.createElement(InvCtx.Provider, {value: {whInItems, setWhInItems, whOutItems, setWhOutItems}},
+  /*#__PURE__*/React.createElement(TxnCtx.Provider, {value: {txns, setTxns}},
   /*#__PURE__*/React.createElement(BankCtx.Provider, {value: {bankAccounts, setBankAccounts}},
   /*#__PURE__*/React.createElement(ToastHost, null, /*#__PURE__*/React.createElement("div", {
     className: "flex min-h-screen bg-[#F4F6F8] font-sans text-[#1E293B]",
@@ -6173,18 +6192,15 @@ function App() {
     setOrders: setOrders,
     openOrderId: openOrderId,
     setOpenOrderId: setOpenOrderId,
-    pendingExportSlips: pendingExportSlips,
-    setPendingExportSlips: setPendingExportSlips,
-    pendingImportSlip: pendingImportSlip,
-    setPendingImportSlip: setPendingImportSlip,
-    pendingImportSlips: pendingImportSlips,
-    setPendingImportSlips: setPendingImportSlips,
     purchaseList: purchaseList,
     setPurchaseList: setPurchaseList,
     whInItems: whInItems,
     setWhInItems: setWhInItems,
-    onImportToWh: slipOrSlips => { setWhInItems(prev => mergeWhIn(prev, slipOrSlips)); setActive("wh_in"); }
-  })))))));
+    whOutItems: whOutItems,
+    setWhOutItems: setWhOutItems,
+    onImportToWh: slipOrSlips => { setWhInItems(prev => mergeWhIn(prev, slipOrSlips)); setActive("wh_in"); },
+    onExportToWh: slips => { setWhOutItems(prev => mergeWhOut(prev, slips)); }
+  }))))))));
 }
 
 /* ───────── Settings Payment ───────── */
