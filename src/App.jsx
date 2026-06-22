@@ -1676,7 +1676,7 @@ function OrderTable({
     }, sumPaid > 0 ? num(sumPaid) : "–"), /*#__PURE__*/React.createElement("td", {
       className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${sumRemain > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`, style: {fontWeight:700}
     }, sumRemain > 0 ? num(sumRemain) : "–"), /*#__PURE__*/React.createElement("td", {
-      colSpan: 7
+      colSpan: 6
     }));
   })())), doc && /*#__PURE__*/React.createElement(DocModal, {
     doc: doc,
