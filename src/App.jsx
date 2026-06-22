@@ -5863,7 +5863,7 @@ function LoginScreen() {
     {w:45,h:45,l:5,d:7,t:11},{w:100,h:100,l:35,d:3.5,t:20},{w:25,h:25,l:90,d:0.5,t:6},
   ];
   return React.createElement("div", { className: "min-h-screen flex relative overflow-hidden",
-      style: { background: "linear-gradient(to right, #3a0a00, #8b2200, #c84b0e, #e05a10)" }
+      style: { background: "linear-gradient(to bottom right, #e05a10, #c84b0e, #8b2200, #3a0a00)" }
     },
     /* CSS keyframes bóng nước */
     React.createElement("style", null, `
