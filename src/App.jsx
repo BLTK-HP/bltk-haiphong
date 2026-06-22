@@ -5856,15 +5856,45 @@ function LoginScreen() {
     catch { setErr("Email hoặc mật khẩu không đúng."); }
     finally { setLoading(false); }
   };
+  const BUBBLES = [
+    {w:80,h:80,l:10,d:0,t:14},{w:40,h:40,l:25,d:2,t:9},{w:120,h:120,l:50,d:4,t:18},
+    {w:30,h:30,l:70,d:1,t:8},{w:60,h:60,l:85,d:3,t:12},{w:50,h:50,l:40,d:5,t:10},
+    {w:90,h:90,l:60,d:1.5,t:16},{w:35,h:35,l:15,d:6,t:7},{w:70,h:70,l:78,d:2.5,t:13},
+    {w:45,h:45,l:5,d:7,t:11},{w:100,h:100,l:35,d:3.5,t:20},{w:25,h:25,l:90,d:0.5,t:6},
+  ];
   return React.createElement("div", { className: "min-h-screen flex relative overflow-hidden",
       style: { background: "radial-gradient(ellipse at 60% 40%, #c84b0e 0%, #8b2200 45%, #4a1000 100%)" }
     },
-    /* Panel phải — form nổi trên ảnh */
+    /* CSS keyframes bóng nước */
+    React.createElement("style", null, `
+      @keyframes floatBubble {
+        0%   { transform: translateY(0) scale(1);   opacity: 0; }
+        10%  { opacity: 0.5; }
+        85%  { opacity: 0.25; }
+        100% { transform: translateY(-110vh) scale(1.2); opacity: 0; }
+      }
+    `),
+    /* Bóng nước nổi */
+    React.createElement("div", { className: "absolute inset-0 overflow-hidden pointer-events-none" },
+      ...BUBBLES.map((b,i) => React.createElement("div", { key: i, style: {
+        position: "absolute",
+        bottom: "-120px",
+        left: `${b.l}%`,
+        width: `${b.w}px`,
+        height: `${b.h}px`,
+        borderRadius: "50%",
+        border: "1px solid rgba(255,255,255,0.35)",
+        background: "radial-gradient(circle at 35% 35%, rgba(255,255,255,0.18), rgba(255,255,255,0.03))",
+        animation: `floatBubble ${b.t}s ease-in ${b.d}s infinite`,
+        boxShadow: "inset 0 0 12px rgba(255,255,255,0.12)",
+      }}))
+    ),
+    /* Panel form */
     React.createElement("div", { className: "relative z-10 flex flex-1 items-center justify-center p-6" },
       React.createElement("div", { className: "rounded-3xl shadow-2xl w-full max-w-md p-10", style: { background: "rgba(255,255,255,0.18)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", border: "1px solid rgba(255,255,255,0.35)" } },
-        /* Header */
-        React.createElement("div", { className: "mb-8" },
-          React.createElement("img", { src: "/banner.jpg", alt: "BLTK", className: "w-20 h-20 rounded-2xl object-cover mb-4 shadow" }),
+        /* Header — căn giữa */
+        React.createElement("div", { className: "mb-8 flex flex-col items-center text-center" },
+          React.createElement("img", { src: "/banner.jpg", alt: "BLTK", className: "w-24 h-24 rounded-2xl object-cover mb-5 shadow-lg" }),
           React.createElement("h1", { className: "text-2xl font-bold text-white" }, "Đăng nhập"),
           React.createElement("p", { className: "text-white/70 text-sm mt-1" }, "Nhập thông tin tài khoản của bạn")
         ),
