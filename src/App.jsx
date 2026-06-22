@@ -5840,14 +5840,19 @@ function SettingsDocNum() {
 /* ───────── Màn hình đăng nhập ───────── */
 function LoginScreen() {
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("bltk_saved_email") || "");
+  const [pass, setPass] = useState(() => localStorage.getItem("bltk_saved_pass") || "");
+  const [remember, setRemember] = useState(() => !!localStorage.getItem("bltk_saved_email"));
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const submit = async e => {
     e.preventDefault();
     setErr(""); setLoading(true);
-    try { await login(email.trim(), pass); }
+    try {
+      await login(email.trim(), pass);
+      if (remember) { localStorage.setItem("bltk_saved_email", email.trim()); localStorage.setItem("bltk_saved_pass", pass); }
+      else { localStorage.removeItem("bltk_saved_email"); localStorage.removeItem("bltk_saved_pass"); }
+    }
     catch { setErr("Email hoặc mật khẩu không đúng."); }
     finally { setLoading(false); }
   };
@@ -5881,7 +5886,11 @@ function LoginScreen() {
               className: "w-full border border-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-transparent text-white placeholder-white/40",
               style: { background: "rgba(255,255,255,0.15)" } })
           ),
-          err && React.createElement("div", { className: "flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2.5" },
+          React.createElement("label", { className: "flex items-center gap-2 cursor-pointer select-none" },
+            React.createElement("input", { type: "checkbox", checked: remember, onChange: e => setRemember(e.target.checked), className: "w-4 h-4 rounded accent-amber-700" }),
+            React.createElement("span", { className: "text-sm text-white/80" }, "Lưu mật khẩu")
+          ),
+          err && React.createElement("div", { className: "flex items-center gap-2 text-sm text-red-200 bg-red-900/40 rounded-xl px-4 py-2.5" },
             React.createElement(AlertTriangle, { className: "h-4 w-4 flex-shrink-0" }), err
           ),
           React.createElement("button", { type: "submit", disabled: loading,
