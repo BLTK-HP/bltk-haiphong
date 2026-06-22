@@ -1,0 +1,64 @@
+import { useState, useEffect, createContext, useContext } from "react";
+import { auth, db } from "./firebase";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
+// role: "manager" | "sales" | "warehouse"
+export const ROLES = {
+  manager:   { label: "Quản lý / Kế toán", color: "bg-purple-100 text-purple-700" },
+  sales:     { label: "Nhân viên bán hàng", color: "bg-blue-100 text-blue-700" },
+  warehouse: { label: "Nhân viên kho",      color: "bg-green-100 text-green-700" },
+};
+
+// Màn hình nào role nào được xem
+export const ALLOWED = {
+  manager:   ["sales_orders","sales_draft","sales_create","purchase","wh_in","wh_out","products","customers","finance","report","settings","settings_payment","settings_numformat","settings_docnum","users","dashboard","rp_revenue","rp_products","rp_staff"],
+  sales:     ["sales_orders","sales_draft","sales_create","products","customers","dashboard"],
+  warehouse: ["wh_in","wh_out","purchase","products","customers","dashboard","wh_in","wh_out"],
+};
+
+export const AuthCtx = createContext(null);
+export const useAuth = () => useContext(AuthCtx);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(undefined); // undefined = đang load
+  const [profile, setProfile] = useState(null); // {name, role, email}
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async fbUser => {
+      if (fbUser) {
+        const snap = await getDoc(doc(db, "users", fbUser.uid));
+        setProfile(snap.exists() ? snap.data() : { role: "sales", name: fbUser.email });
+        setUser(fbUser);
+      } else {
+        setUser(null);
+        setProfile(null);
+      }
+    });
+    return unsub;
+  }, []);
+
+  const login = (email, password) =>
+    signInWithEmailAndPassword(auth, email, password);
+
+  const logout = () => signOut(auth);
+
+  const canSee = screen => {
+    if (!profile) return false;
+    return (ALLOWED[profile.role] || []).includes(screen);
+  };
+
+  return React.createElement(AuthCtx.Provider,
+    { value: { user, profile, login, logout, canSee } },
+    children
+  );
+}
+
+// Tạo user mới (chỉ manager dùng)
+export async function createUserProfile(uid, data) {
+  await setDoc(doc(db, "users", uid), data);
+}

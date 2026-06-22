@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
+import { AuthProvider, useAuth, ROLES, ALLOWED, createUserProfile } from './useAuth.js'
+import { auth } from './firebase.js'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
@@ -352,6 +355,9 @@ const NAV = [{
   }, {
     key: "settings_docnum",
     label: "Quy tắc đánh số chứng từ"
+  }, {
+    key: "users",
+    label: "Quản lý nhân viên"
   }]
 }];
 const LABELS = {
@@ -5332,6 +5338,8 @@ function Screen({
       return /*#__PURE__*/React.createElement(SettingsNumFormat, null);
     case "settings_docnum":
       return /*#__PURE__*/React.createElement(SettingsDocNum, null);
+    case "users":
+      return /*#__PURE__*/React.createElement(UsersTab, null);
     default:
       return /*#__PURE__*/React.createElement(Dashboard, null);
   }
@@ -5362,11 +5370,11 @@ function CartLogo({
   /*#__PURE__*/React.createElement("circle", { cx: "24", cy: "93", r: "7", fill: "#EE3D24" }),
   /*#__PURE__*/React.createElement("circle", { cx: "68", cy: "93", r: "7", fill: "#EE3D24" }));
 }
-function App() {
-  const [active, setActive] = useState("sales_orders");
-  const [open, setOpen] = useState({
-    sales: true
-  });
+function App({ profile, logout }) {
+  const allowed = ALLOWED[profile?.role] || ALLOWED.sales;
+  const defaultScreen = allowed.includes("sales_orders") ? "sales_orders" : allowed[0] || "dashboard";
+  const [active, setActive] = useState(defaultScreen);
+  const [open, setOpen] = useState({ sales: true });
   // Firestore-backed state
   const [orders] = useCollection("orders");
   const [openOrderId, setOpenOrderId] = useState(null);
@@ -5435,14 +5443,23 @@ function App() {
   }, /*#__PURE__*/React.createElement("aside", {
     className: "flex w-64 shrink-0 flex-col bg-[#1e293b]"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center px-4 py-4 border-b border-[#2d3f55]"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "text-[12px] font-bold tracking-wider text-white uppercase leading-tight"
-  }, "BÁN LẺ TẠI KHO HẢI PHÒNG")), /*#__PURE__*/React.createElement("nav", {
+    className: "flex items-center px-4 py-4 border-b border-[#2d3f55] gap-2"
+  }, /*#__PURE__*/React.createElement("div", { className: "flex-1" },
+    /*#__PURE__*/React.createElement("p", {
+      className: "text-[12px] font-bold tracking-wider text-white uppercase leading-tight"
+    }, "BÁN LẺ TẠI KHO HẢI PHÒNG"),
+    profile && /*#__PURE__*/React.createElement("p", { className: "text-[10px] text-slate-400 mt-0.5 truncate" },
+      (profile.name || profile.email) + " · " + (ROLES[profile.role]?.label || ""))
+  ),
+  logout && /*#__PURE__*/React.createElement("button", { onClick: logout, title: "Đăng xuất",
+    className: "text-slate-400 hover:text-white transition shrink-0" },
+    /*#__PURE__*/React.createElement(X, { className: "h-4 w-4" })
+  )), /*#__PURE__*/React.createElement("nav", {
     className: "flex-1 space-y-0.5 overflow-y-auto px-3 py-2"
   }, NAV.map(item => {
     const I = item.icon;
     if (!item.children) {
+      if (!allowed.includes(item.key)) return null;
       const on = active === item.key;
       return /*#__PURE__*/React.createElement("button", {
         key: item.key,
@@ -5454,8 +5471,10 @@ function App() {
         className: "flex-1 text-left"
       }, item.label));
     }
+    const visibleChildren = item.children.filter(c => allowed.includes(c.key));
+    if (visibleChildren.length === 0) return null;
     const isOpen = !!open[item.key];
-    const childOn = item.children.some(c => c.key === active);
+    const childOn = visibleChildren.some(c => c.key === active);
     return /*#__PURE__*/React.createElement("div", {
       key: item.key
     }, /*#__PURE__*/React.createElement("button", {
@@ -5472,7 +5491,7 @@ function App() {
       className: `h-4 w-4 shrink-0 transition ${isOpen ? "rotate-180" : ""}`
     })), isOpen && /*#__PURE__*/React.createElement("div", {
       className: "mt-0.5 space-y-0.5 pl-7"
-    }, item.children.map(c => /*#__PURE__*/React.createElement("button", {
+    }, visibleChildren.map(c => /*#__PURE__*/React.createElement("button", {
       key: c.key,
       onClick: () => setActive(c.key),
       className: `block w-full rounded-lg px-3 py-1.5 text-left text-sm transition ${active === c.key ? "font-medium text-[#CCFBF1]" : "text-slate-400 hover:bg-[#253552] hover:text-white"}`
@@ -5802,4 +5821,147 @@ function SettingsDocNum() {
   );
 }
 
-export default App
+/* ───────── Màn hình đăng nhập ───────── */
+function LoginScreen() {
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const submit = async e => {
+    e.preventDefault();
+    setErr(""); setLoading(true);
+    try { await login(email.trim(), pass); }
+    catch { setErr("Email hoặc mật khẩu không đúng."); }
+    finally { setLoading(false); }
+  };
+  return React.createElement("div", { className: "min-h-screen flex items-center justify-center bg-[#F4F6F8]" },
+    React.createElement("div", { className: "bg-white rounded-2xl shadow-lg p-10 w-full max-w-sm" },
+      React.createElement("div", { className: "text-center mb-8" },
+        React.createElement("div", { className: "text-2xl font-bold text-[#1e293b]" }, "BÁN LẺ TẠI KHO"),
+        React.createElement("div", { className: "text-sm text-slate-400 mt-1" }, "Hải Phòng")
+      ),
+      React.createElement("form", { onSubmit: submit, className: "space-y-4" },
+        React.createElement("div", null,
+          React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1" }, "Email"),
+          React.createElement("input", { type: "email", value: email, onChange: e => setEmail(e.target.value), required: true, autoFocus: true,
+            className: "w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" })
+        ),
+        React.createElement("div", null,
+          React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1" }, "Mật khẩu"),
+          React.createElement("input", { type: "password", value: pass, onChange: e => setPass(e.target.value), required: true,
+            className: "w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" })
+        ),
+        err && React.createElement("p", { className: "text-sm text-red-500" }, err),
+        React.createElement("button", { type: "submit", disabled: loading,
+          className: "w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg py-2.5 text-sm transition disabled:opacity-50" },
+          loading ? "Đang đăng nhập..." : "Đăng nhập")
+      )
+    )
+  );
+}
+
+/* ───────── Màn hình quản lý người dùng (chỉ manager) ───────── */
+function UsersTab() {
+  const notify = useToast();
+  const [users] = useCollection("users");
+  const [form, setForm] = useState(null); // null | {} new | user edit
+  const [newEmail, setNewEmail] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newRole, setNewRole] = useState("sales");
+  const [saving, setSaving] = useState(false);
+
+  const createUser = async e => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, newEmail.trim(), newPass);
+      await createUserProfile(cred.user.uid, { email: newEmail.trim(), name: newName.trim(), role: newRole });
+      notify("Đã tạo tài khoản " + newEmail);
+      setForm(null); setNewEmail(""); setNewPass(""); setNewName(""); setNewRole("sales");
+    } catch(err) {
+      notify("Lỗi: " + (err.code === "auth/email-already-in-use" ? "Email đã tồn tại" : err.message));
+    } finally { setSaving(false); }
+  };
+
+  const changeRole = async (u, role) => {
+    await saveDoc("users", u.uid || u.id, { ...u, role });
+    notify("Đã cập nhật quyền");
+  };
+
+  const roleColors = { manager: "bg-purple-100 text-purple-700", sales: "bg-blue-100 text-blue-700", warehouse: "bg-green-100 text-green-700" };
+
+  return React.createElement("div", { className: "space-y-4" },
+    React.createElement("div", { className: "flex justify-between items-center" },
+      React.createElement("h2", { className: "text-base font-semibold" }, users.length + " tài khoản"),
+      React.createElement("button", { onClick: () => setForm({}), className: blueBtn },
+        React.createElement(Plus, { className: "h-4 w-4" }), " Thêm nhân viên")
+    ),
+    React.createElement(TableShell, {
+      head: React.createElement(React.Fragment, null,
+        React.createElement(Th, null, "Họ tên"),
+        React.createElement(Th, null, "Email"),
+        React.createElement(Th, null, "Vai trò"),
+      )
+    },
+      users.map(u => React.createElement("tr", { key: u.email, className: "hover:bg-slate-50" },
+        React.createElement("td", { className: "px-4 py-2 text-sm font-medium" }, u.name || "—"),
+        React.createElement("td", { className: "px-4 py-2 text-sm text-slate-500" }, u.email),
+        React.createElement("td", { className: "px-4 py-2" },
+          React.createElement("select", {
+            value: u.role, onChange: e => changeRole(u, e.target.value),
+            className: "text-xs rounded-full px-2 py-1 border-0 " + (roleColors[u.role] || "")
+          },
+            Object.entries(ROLES).map(([k, v]) => React.createElement("option", { key: k, value: k }, v.label))
+          )
+        )
+      ))
+    ),
+    form && React.createElement("div", { className: "fixed inset-0 bg-black/40 flex items-center justify-center z-50" },
+      React.createElement("div", { className: "bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm" },
+        React.createElement("h3", { className: "text-lg font-bold mb-6" }, "Thêm nhân viên"),
+        React.createElement("form", { onSubmit: createUser, className: "space-y-4" },
+          React.createElement("div", null,
+            React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1" }, "Họ tên"),
+            React.createElement("input", { value: newName, onChange: e => setNewName(e.target.value), required: true,
+              className: field + " w-full" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1" }, "Email"),
+            React.createElement("input", { type: "email", value: newEmail, onChange: e => setNewEmail(e.target.value), required: true,
+              className: field + " w-full" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1" }, "Mật khẩu tạm"),
+            React.createElement("input", { type: "text", value: newPass, onChange: e => setNewPass(e.target.value), required: true, minLength: 6,
+              className: field + " w-full" })
+          ),
+          React.createElement("div", null,
+            React.createElement("label", { className: "block text-sm font-medium text-slate-600 mb-1" }, "Vai trò"),
+            React.createElement("select", { value: newRole, onChange: e => setNewRole(e.target.value), className: field + " w-full" },
+              Object.entries(ROLES).map(([k, v]) => React.createElement("option", { key: k, value: k }, v.label))
+            )
+          ),
+          React.createElement("div", { className: "flex gap-2 pt-2" },
+            React.createElement("button", { type: "button", onClick: () => setForm(null), className: "flex-1 border rounded-lg py-2 text-sm" }, "Huỷ"),
+            React.createElement("button", { type: "submit", disabled: saving, className: blueBtn + " flex-1 justify-center disabled:opacity-50" },
+              saving ? "Đang tạo..." : "Tạo tài khoản")
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ───────── App wrapper với Auth ───────── */
+function AppWithAuth() {
+  const { user, profile, logout } = useAuth();
+  if (user === undefined) return React.createElement("div", { className: "min-h-screen flex items-center justify-center text-slate-400" }, "Đang tải...");
+  if (!user) return React.createElement(LoginScreen, null);
+  return React.createElement(App, { profile, logout });
+}
+
+export default function Root() {
+  return React.createElement(AuthProvider, null, React.createElement(AppWithAuth, null));
+}
