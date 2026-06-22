@@ -16,7 +16,7 @@ export const ROLES = {
 
 // Màn hình nào role nào được xem
 export const ALLOWED = {
-  manager:   ["sales_orders","sales_draft","sales_create","purchase","wh_in","wh_out","wh_stock","products","customers","finance","report","settings","settings_payment","settings_numformat","settings_docnum","users","dashboard","rp_revenue","rp_products","rp_staff"],
+  manager:   ["sales_orders","sales_draft","sales_create","purchase","wh_in","wh_out","wh_stock","products","customers","finance","report","settings","settings_payment","settings_numformat","settings_docnum","users","dashboard","rp_sales","rp_preorder","rp_staff"],
   sales:     ["sales_orders","sales_draft","sales_create","products","customers","dashboard"],
   warehouse: ["wh_in","wh_out","wh_stock","purchase","products","customers","dashboard"],
 };

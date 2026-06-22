@@ -3430,7 +3430,29 @@ function Stock() {
   const [store, setStore] = useState("Tất cả kho");
   const [q, setQ] = useState("");
   const [detail, setDetail] = useState(null);
-  const rows = STOCK_REPORT.filter(r => (store === "Tất cả kho" || r.store === store) && (!q || `${r.name} ${r.sku}`.toLowerCase().includes(q.toLowerCase())));
+  const { whInItems = [], whOutItems = [] } = useInventory();
+  const [prodsFS] = useCollection("products");
+  const stockReport = React.useMemo(() => {
+    const map = {};
+    whInItems.forEach(r => {
+      const key = `${r.prod}__${r.store || "Kho HH"}`;
+      if (!map[key]) map[key] = { prod: r.prod, store: r.store || "Kho HH", in: 0, out: 0, costNcc: r.costNcc || 0 };
+      map[key].in += r.qtyIn || 0;
+      if (r.costNcc) map[key].costNcc = r.costNcc;
+    });
+    whOutItems.forEach(r => {
+      const storeName = r.store || "Kho HH";
+      const key = `${r.prod}__${storeName}`;
+      if (!map[key]) map[key] = { prod: r.prod, store: storeName, in: 0, out: 0, costNcc: 0 };
+      map[key].out += r.qty || 0;
+    });
+    const prods = prodsFS || [];
+    return Object.values(map).map(m => {
+      const p = prods.find(x => x.name === m.prod || (x.sku && m.prod && m.prod.includes(x.sku)));
+      return { store: m.store, sku: p?.sku || "", name: m.prod, unit: p?.unit || "Cái", price: m.costNcc || p?.sale || 0, o: 0, in: m.in, out: m.out };
+    }).sort((a,b) => a.name.localeCompare(b.name, "vi"));
+  }, [whInItems, whOutItems, prodsFS]);
+  const rows = stockReport.filter(r => (store === "Tất cả kho" || r.store === store) && (!q || `${r.name} ${r.sku}`.toLowerCase().includes(q.toLowerCase())));
   const cell = "px-3 py-3 text-right tabular-nums";
   const onExport = () => exportCSV("bao-cao-xuat-nhap-ton-kho", ["Tên kho", "Mã SP", "Tên sản phẩm", "ĐVT", "Đơn giá", "Đầu kỳ SL", "Nhập SL", "Xuất SL", "Cuối kỳ SL"], rows.map(r => [r.store, r.sku, r.name, r.unit, r.price, r.o, r.in, r.out, r.o + r.in - r.out]));
   return /*#__PURE__*/React.createElement("div", {
