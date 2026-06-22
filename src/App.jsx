@@ -952,8 +952,15 @@ function SalesModule({
   const [view, setView] = useState(openOrderId ? {edit: openOrderId} : "list");
   React.useEffect(() => { if (openOrderId) { setView({edit: openOrderId}); setOpenOrderId && setOpenOrderId(null); } }, [openOrderId]);
   const [modal, setModal] = useState(null);
+  const {docNums, setDocNums} = useDocNum();
+  const nextId = (prefix) => {
+    const row = docNums.find(r => r.prefix === prefix);
+    const num = row ? row.num : 1;
+    if (setDocNums) setDocNums(ds => ds.map(r => r.prefix === prefix ? {...r, num: r.num + 1} : r));
+    return fmtDocId(prefix, num);
+  };
   const addOrder = (o, asDraft) => {
-    const id = o.id && !asDraft ? o.id : (asDraft ? fmtDocId("BG", Math.floor(10 + Math.random() * 89)) : fmtDocId("DH", Math.floor(10 + Math.random() * 89)));
+    const id = o.id && !asDraft ? o.id : (asDraft ? nextId("BG") : nextId("DH"));
     setOrders(p => [mkOrder({
       ...o,
       id,
@@ -1914,7 +1921,13 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       .map(o => ({phone: o.phone, name: o.name, addr: o.addr}));
   }, [cust.phone, orders]);
   const {txns: _txns, setTxns: _setTxns} = useTxns();
-  const [pendingOrderId] = useState(() => fmtDocId("DH", Math.floor(10 + Math.random() * 89)));
+  const {docNums: _dn, setDocNums: _sdn} = useDocNum() || {};
+  const [pendingOrderId] = useState(() => {
+    const row = _dn && _dn.find(r => r.prefix === "DH");
+    const num = row ? row.num : 1;
+    if (_sdn) _sdn(ds => ds.map(r => r.prefix === "DH" ? {...r, num: r.num + 1} : r));
+    return fmtDocId("DH", num);
+  });
   const nowStr = () => { const d = new Date(), pad = n => String(n).padStart(2,"0"); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   const effectiveOrderId = editOrder?.id || (!isDraft ? pendingOrderId : "");
   const autoAddTxn = (p) => {
