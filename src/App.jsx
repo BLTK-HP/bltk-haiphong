@@ -2312,7 +2312,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   /*#__PURE__*/React.createElement("div", {className: "flex gap-4 items-start"},
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
-        /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-[#92400e]"}, "Thông tin đơn hàng")),
+        /*#__PURE__*/React.createElement("p", {className:"text-[13px] font-semibold text-[#92400e]"}, "Thông tin đơn hàng")),
       /*#__PURE__*/React.createElement("div", {className:"p-4"},
       /*#__PURE__*/React.createElement("dl", {className:"space-y-2 text-sm"},
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
@@ -2346,7 +2346,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal(true), className:"flex-1 rounded-xl bg-[#92400e] py-2 text-sm font-medium text-white hover:bg-[#78350f]"}, "Thanh toán")))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
-        /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-[#92400e]"}, "Lịch sử thanh toán")),
+        /*#__PURE__*/React.createElement("p", {className:"text-[13px] font-semibold text-[#92400e]"}, "Lịch sử thanh toán")),
       /*#__PURE__*/React.createElement("div", {className:"p-4"},
         payments.length === 0
           ? /*#__PURE__*/React.createElement("p", {className:"text-center text-sm text-slate-400"}, "Chưa có thanh toán")
@@ -2364,7 +2364,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                     /*#__PURE__*/React.createElement("button", {onClick:()=>{const delta=p.kind==="Tiền hàng trả lại"||p.kind==="Hoàn tiền"?-p.amount:p.kind==="Giảm giá thêm"?0:p.amount;setPayments(xs=>xs.filter((_,j)=>j!==i));setPaid(v=>Math.max(0,v-delta));}, title:"Xóa", className:"rounded p-1 bg-amber-100 text-[#92400e] hover:bg-amber-200"}, /*#__PURE__*/React.createElement(X, {className:"h-3 w-3"}))))))))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
-        /*#__PURE__*/React.createElement("p", {className:"text-[16px] font-semibold text-[#92400e]"}, "Chi phí công ty thanh toán"),
+        /*#__PURE__*/React.createElement("p", {className:"text-[13px] font-semibold text-[#92400e]"}, "Chi phí công ty thanh toán"),
         /*#__PURE__*/React.createElement("button", {onClick:()=>setCompCostModal(true), className:"flex items-center gap-1.5 rounded-lg border border-[#92400e] bg-white px-3 py-1.5 text-sm font-semibold text-[#92400e] hover:bg-[#fef3c7]"},
           /*#__PURE__*/React.createElement(Plus, {className:"h-4 w-4"}), "Thêm")),
       /*#__PURE__*/React.createElement("div", {className:"p-4"},
