@@ -3013,7 +3013,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     title: "In phiếu nhập",
     className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
   }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
-  /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#fdba74] bg-[#fed7aa]"},
+  /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa]"},
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 6}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-3 text-right tabular-nums ${rows.reduce((s,r)=>s+r.qtyIn,0)<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qtyIn,0)),
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-3 text-right tabular-nums ${rows.reduce((s,r)=>s+r.qtyNow,0)<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qtyNow,0)),
