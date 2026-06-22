@@ -34,6 +34,19 @@ const vndShort = n => {
   if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + " tr";
   return new Intl.NumberFormat("vi-VN").format(n);
 };
+const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+const localMonthStart = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`; };
+const parseViDate = s => {
+  if (!s) return 0;
+  const parts = String(s).split(" ");
+  let dd,mm,yy,hh=0,mn=0;
+  if (parts[0] && parts[0].includes("/")) {
+    [dd,mm,yy] = parts[0].split("/"); if (parts[1]) [hh,mn] = parts[1].split(":");
+  } else if (parts[1] && parts[1].includes("/")) {
+    [dd,mm,yy] = parts[1].split("/"); if (parts[0]) [hh,mn] = parts[0].split(":");
+  } else return 0;
+  return new Date(+yy,+mm-1,+dd,+hh||0,+mn||0).getTime() || 0;
+};
 const CHANNELS = {
   Facebook: "bg-blue-50 text-blue-700 ring-blue-200",
   Zalo: "bg-sky-50 text-sky-700 ring-sky-200",
@@ -637,8 +650,8 @@ function RangeBar({
   q,
   setQ,
   placeholder = "Tìm kiếm…",
-  from = "2026-06-01",
-  to = "2026-06-16",
+  from = localMonthStart(),
+  to = localToday(),
   onFilter,
   onExport,
   extra
@@ -778,165 +791,164 @@ const DocLink = ({
 }, code);
 
 /* ───────── Dashboard ───────── */
-function Dashboard() {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "space-y-6"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-2 gap-4 lg:grid-cols-4"
-  }, /*#__PURE__*/React.createElement(StatCard, {
-    label: "Tài sản",
-    value: vnd(1633126508),
-    sub: "Tiền + tồn kho",
-    tone: "accent",
-    icon: Wallet
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Thu tiền hàng",
-    value: "+" + vnd(72946000),
-    sub: "Tháng 06/2026",
-    tone: "pos",
-    icon: TrendingUp
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Giá trị tồn kho",
-    value: vnd(374829177),
-    sub: "Kho HH + TB",
-    icon: Package
-  }), /*#__PURE__*/React.createElement(StatCard, {
-    label: "Lợi nhuận",
-    value: vnd(242456000),
-    sub: "Tháng 06/2026",
-    tone: "pos",
-    icon: TrendingUp
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-1 gap-6 lg:grid-cols-3"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lg:col-span-2"
-  }, /*#__PURE__*/React.createElement(Card, {
-    title: "Dòng tiền thu theo ngày",
-    right: /*#__PURE__*/React.createElement("span", {
-      className: "text-xs text-slate-400"
-    }, "triệu đồng")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "h-56"
-  }, /*#__PURE__*/React.createElement(ResponsiveContainer, {
-    width: "100%",
-    height: "100%"
-  }, /*#__PURE__*/React.createElement(AreaChart, {
-    data: CASHFLOW,
-    margin: {
-      left: -18,
-      right: 8,
-      top: 4
-    }
-  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
-    id: "g",
-    x1: "0",
-    y1: "0",
-    x2: "0",
-    y2: "1"
-  }, /*#__PURE__*/React.createElement("stop", {
-    offset: "0%",
-    stopColor: "#2563eb",
-    stopOpacity: 0.25
-  }), /*#__PURE__*/React.createElement("stop", {
-    offset: "100%",
-    stopColor: "#2563eb",
-    stopOpacity: 0
-  }))), /*#__PURE__*/React.createElement(CartesianGrid, {
-    strokeDasharray: "3 3",
-    stroke: "#eef2f7",
-    vertical: false
-  }), /*#__PURE__*/React.createElement(XAxis, {
-    dataKey: "d",
-    tick: {
-      fontSize: 11,
-      fill: "#94a3b8"
-    },
-    tickLine: false,
-    axisLine: false
-  }), /*#__PURE__*/React.createElement(YAxis, {
-    tick: {
-      fontSize: 11,
-      fill: "#94a3b8"
-    },
-    tickLine: false,
-    axisLine: false
-  }), /*#__PURE__*/React.createElement(Tooltip, {
-    formatter: v => [v + " tr", "Đã thu"],
-    contentStyle: {
-      borderRadius: 8,
-      fontSize: 12,
-      border: "1px solid #e2e8f0"
-    }
-  }), /*#__PURE__*/React.createElement(Area, {
-    type: "monotone",
-    dataKey: "thu",
-    stroke: "#2563eb",
-    strokeWidth: 2,
-    fill: "url(#g)"
-  })))))), /*#__PURE__*/React.createElement(Card, {
-    title: "Công nợ — 06/2026"
-  }, /*#__PURE__*/React.createElement("ul", {
-    className: "space-y-3 text-sm"
-  }, /*#__PURE__*/React.createElement("li", {
-    className: "flex justify-between"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "Phải thu KH"), /*#__PURE__*/React.createElement("span", {
-    className: "font-semibold tabular-nums text-[#B91C1C]"
-  }, vnd(633555810))), /*#__PURE__*/React.createElement("li", {
-    className: "flex justify-between"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "— Đã thu"), /*#__PURE__*/React.createElement("span", {
-    className: "font-medium tabular-nums text-[#92400e]"
-  }, vnd(72946000))), /*#__PURE__*/React.createElement("li", {
-    className: "flex justify-between border-t border-slate-100 pt-3"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "Phải trả NCC"), /*#__PURE__*/React.createElement("span", {
-    className: "font-semibold tabular-nums text-amber-600"
-  }, vnd(1100458207)))), /*#__PURE__*/React.createElement("h3", {
-    className: "mb-3 mt-5 text-sm font-semibold text-slate-700"
-  }, "Số dư tài khoản"), /*#__PURE__*/React.createElement("ul", {
-    className: "space-y-2 text-sm"
-  }, [["TCB · Công ty", 56358134], ["TCB · PAT", 1303668374], ["Tiền mặt", 273100000]].map(([k, v]) => /*#__PURE__*/React.createElement("li", {
-    key: k,
-    className: "flex justify-between"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, k), /*#__PURE__*/React.createElement("span", {
-    className: "font-medium tabular-nums text-slate-800"
-  }, vnd(v))))))), /*#__PURE__*/React.createElement(Card, {
-    title: "Xếp hạng nhân viên"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "-mx-5 -mb-5 divide-y divide-slate-100"
-  }, STAFF_RANK.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: s.name,
-    className: "flex items-center gap-4 px-5 py-3"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"
-  }, i + 1), /*#__PURE__*/React.createElement("div", {
-    className: "w-28 shrink-0"
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "text-sm font-medium text-slate-800"
-  }, s.name), /*#__PURE__*/React.createElement("p", {
-    className: "text-xs text-slate-400"
-  }, s.role)), /*#__PURE__*/React.createElement("div", {
-    className: "hidden w-28 shrink-0 text-xs text-slate-500 sm:block"
-  }, s.orders, " đơn · ", s.custs, " khách"), /*#__PURE__*/React.createElement("div", {
-    className: "w-28 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-800"
-  }, vndShort(s.rev)), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-1 items-center gap-2"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "h-full rounded-full bg-[#92400e]",
-    style: {
-      width: `${s.collected * 100}%`
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "w-10 text-right text-xs tabular-nums text-slate-500"
-  }, Math.round(s.collected * 100), "%")))))));
+function Dashboard({ orders = [] }) {
+  const { txns = [] }           = useTxns()         || {};
+  const { bankAccounts = [] }   = useBankAccounts() || {};
+  const { whInItems = [] }      = useInventory()    || {};
+
+  const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+  const [fromDate, setFromDate] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`; });
+  const [toDate, setToDate]     = useState(localToday);
+
+  const parseD   = s => { if (!s) return new Date(0); const p = s.split(' ')[0].split('/'); return new Date(+p[2],+p[1]-1,+p[0]); };
+  const parseISO = s => { const [y,m,d] = s.split('-'); return new Date(+y,+m-1,+d); };
+  const fromD = fromDate ? parseISO(fromDate) : null;
+  const toD   = toDate   ? parseISO(toDate)   : null;
+  const inRange = s => { const d = parseD(s); return (!fromD || d >= fromD) && (!toD || d <= toD); };
+
+  // Dữ liệu lọc theo kỳ
+  const fOrders = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && inRange(o.dt));
+  const fTxns   = txns.filter(t => inRange(t.date));
+
+  // KPIs
+  const revenue      = fOrders.reduce((s,o) => s + calc(o).total, 0);
+  const collected    = fTxns.filter(t => t.amount > 0).reduce((s,t) => s + t.amount, 0);
+  const stockVal     = whInItems.reduce((s,r) => s + (r.qtyRemaining ?? r.qtyNow ?? 0) * (r.unitCost ?? r.costNcc ?? 0), 0);
+  const doneOrders   = fOrders.filter(o => o.imported && o.exported);
+  const profit       = doneOrders.reduce((s,o) => s + (calc(o).profit ?? 0), 0);
+
+  // Biểu đồ dòng tiền thu theo ngày
+  const byDate = {};
+  fTxns.filter(t => t.amount > 0).forEach(t => {
+    const day = (t.date||"").split(' ')[0];
+    byDate[day] = (byDate[day]||0) + t.amount;
+  });
+  const chartData = Object.entries(byDate)
+    .sort(([a],[b]) => { const pa=a.split('/'),pb=b.split('/'); return new Date(+pa[2],+pa[1]-1,+pa[0]) - new Date(+pb[2],+pb[1]-1,+pb[0]); })
+    .map(([d, thu]) => ({ d: d.split('/').slice(0,2).join('/'), thu: Math.round(thu/1000000) }));
+
+  // Công nợ (toàn bộ, không lọc ngày)
+  const allActive  = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy');
+  const receivable = allActive.reduce((s,o) => s + Math.max(0, calc(o).remaining), 0);
+
+  // Số dư tài khoản (giao dịch đến cuối kỳ)
+  const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
+  const accBals    = activeAccs.map(a => {
+    const net = txns.filter(t => t.acc===a.key && (!toD || parseD(t.date)<=toD)).reduce((s,t)=>s+t.amount,0);
+    return {...a, bal: a.openBal + net};
+  });
+
+  // Xếp hạng nhân viên
+  const sMap = {};
+  fOrders.forEach(o => {
+    if (!o.staff) return;
+    if (!sMap[o.staff]) sMap[o.staff] = {name:o.staff, cnt:0, custs:new Set(), rev:0, paid:0};
+    sMap[o.staff].cnt++;
+    if (o.name) sMap[o.staff].custs.add(o.name);
+    sMap[o.staff].rev  += calc(o).total;
+    sMap[o.staff].paid += o.paid||0;
+  });
+  const staffRank = Object.values(sMap)
+    .map(s => ({...s, custs:s.custs.size, pct: s.rev>0?s.paid/s.rev:0}))
+    .sort((a,b)=>b.rev-a.rev);
+  const maxRev = staffRank[0]?.rev || 1;
+
+  return /*#__PURE__*/React.createElement("div", {className:"space-y-6"},
+    // Thanh lọc ngày
+    /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"},
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Từ ngày"),
+        /*#__PURE__*/React.createElement("input", {type:"date", value:fromDate, onChange:e=>setFromDate(e.target.value), className:field})
+      ),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Đến ngày"),
+        /*#__PURE__*/React.createElement("input", {type:"date", value:toDate, onChange:e=>setToDate(e.target.value), className:field})
+      ),
+      /*#__PURE__*/React.createElement("span", {className:"self-end pb-2 text-[13px] text-slate-400"},
+        fOrders.length + " đơn hàng · " + fTxns.filter(t=>t.amount>0).length + " giao dịch thu"
+      )
+    ),
+    // 4 KPI cards
+    /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-4 lg:grid-cols-4"},
+      /*#__PURE__*/React.createElement(StatCard, {label:"Doanh thu", value:revenue>0?vnd(revenue):"—", sub:"Đơn hàng trong kỳ", tone:"accent", icon:TrendingUp}),
+      /*#__PURE__*/React.createElement(StatCard, {label:"Thu tiền hàng", value:collected>0?"+"+vnd(collected):"—", sub:"Giao dịch thu trong kỳ", tone:collected>0?"pos":undefined, icon:Wallet}),
+      /*#__PURE__*/React.createElement(StatCard, {label:"Giá trị tồn kho", value:stockVal>0?vnd(stockVal):"—", sub:"Tồn kho hiện tại", icon:Package}),
+      /*#__PURE__*/React.createElement(StatCard, {label:"Lợi nhuận", value:doneOrders.length>0?vnd(profit):"—", sub:doneOrders.length>0?doneOrders.length+" đơn hoàn tất":"Chưa có đơn hoàn tất", tone:profit>0?"pos":undefined, icon:TrendingUp})
+    ),
+    // Biểu đồ + công nợ
+    /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-1 gap-6 lg:grid-cols-3"},
+      /*#__PURE__*/React.createElement("div", {className:"lg:col-span-2"},
+        /*#__PURE__*/React.createElement(Card, {title:"Dòng tiền thu theo ngày", right:/*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-400"}, "triệu đồng")},
+          chartData.length===0
+            ? /*#__PURE__*/React.createElement("div", {className:"flex h-56 items-center justify-center text-slate-400 text-sm"}, "Chưa có giao dịch thu trong kỳ")
+            : /*#__PURE__*/React.createElement("div", {className:"h-56"},
+                /*#__PURE__*/React.createElement(ResponsiveContainer, {width:"100%",height:"100%"},
+                  /*#__PURE__*/React.createElement(AreaChart, {data:chartData, margin:{left:-18,right:8,top:4}},
+                    /*#__PURE__*/React.createElement("defs", null,
+                      /*#__PURE__*/React.createElement("linearGradient", {id:"g",x1:"0",y1:"0",x2:"0",y2:"1"},
+                        /*#__PURE__*/React.createElement("stop", {offset:"0%",stopColor:"#2563eb",stopOpacity:0.25}),
+                        /*#__PURE__*/React.createElement("stop", {offset:"100%",stopColor:"#2563eb",stopOpacity:0})
+                      )
+                    ),
+                    /*#__PURE__*/React.createElement(CartesianGrid, {strokeDasharray:"3 3",stroke:"#eef2f7",vertical:false}),
+                    /*#__PURE__*/React.createElement(XAxis, {dataKey:"d",tick:{fontSize:11,fill:"#94a3b8"},tickLine:false,axisLine:false}),
+                    /*#__PURE__*/React.createElement(YAxis, {tick:{fontSize:11,fill:"#94a3b8"},tickLine:false,axisLine:false}),
+                    /*#__PURE__*/React.createElement(Tooltip, {formatter:v=>[v+" tr","Đã thu"],contentStyle:{borderRadius:8,fontSize:12,border:"1px solid #e2e8f0"}}),
+                    /*#__PURE__*/React.createElement(Area, {type:"monotone",dataKey:"thu",stroke:"#2563eb",strokeWidth:2,fill:"url(#g)"})
+                  )
+                )
+              )
+        )
+      ),
+      /*#__PURE__*/React.createElement(Card, {title:"Công nợ"},
+        /*#__PURE__*/React.createElement("ul", {className:"space-y-3 text-sm"},
+          /*#__PURE__*/React.createElement("li", {className:"flex justify-between"},
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Phải thu KH"),
+            /*#__PURE__*/React.createElement("span", {className:"font-semibold tabular-nums text-[#B91C1C]"}, receivable>0?vnd(receivable):"—")
+          ),
+          /*#__PURE__*/React.createElement("li", {className:"flex justify-between"},
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "— Đã thu kỳ này"),
+            /*#__PURE__*/React.createElement("span", {className:"font-medium tabular-nums text-[#92400e]"}, collected>0?vnd(collected):"—")
+          ),
+          /*#__PURE__*/React.createElement("li", {className:"flex justify-between border-t border-slate-100 pt-3"},
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Phải trả NCC"),
+            /*#__PURE__*/React.createElement("span", {className:"font-semibold tabular-nums text-amber-600"}, "—")
+          )
+        ),
+        /*#__PURE__*/React.createElement("h3", {className:"mb-3 mt-5 text-sm font-semibold text-slate-700"}, "Số dư tài khoản"),
+        /*#__PURE__*/React.createElement("ul", {className:"space-y-2 text-sm"},
+          accBals.length===0
+            ? /*#__PURE__*/React.createElement("li", {className:"text-center text-slate-400 py-2"}, "Chưa có tài khoản")
+            : accBals.map(a=>/*#__PURE__*/React.createElement("li", {key:a.key, className:"flex justify-between"},
+                /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, a.bank),
+                /*#__PURE__*/React.createElement("span", {className:"font-medium tabular-nums text-slate-800"}, vnd(a.bal))
+              ))
+        )
+      )
+    ),
+    // Xếp hạng nhân viên
+    /*#__PURE__*/React.createElement(Card, {title:"Xếp hạng nhân viên"},
+      staffRank.length===0
+        ? /*#__PURE__*/React.createElement("div", {className:"py-6 text-center text-slate-400 text-sm"}, "Chưa có đơn hàng trong kỳ")
+        : /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5 divide-y divide-slate-100"},
+            staffRank.map((s,i)=>/*#__PURE__*/React.createElement("div", {key:s.name, className:"flex items-center gap-4 px-5 py-3"},
+              /*#__PURE__*/React.createElement("div", {className:"flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600"}, i+1),
+              /*#__PURE__*/React.createElement("div", {className:"w-28 shrink-0"},
+                /*#__PURE__*/React.createElement("p", {className:"text-sm font-medium text-slate-800"}, s.name),
+                /*#__PURE__*/React.createElement("p", {className:"text-xs text-slate-400"}, s.cnt+" đơn · "+s.custs+" KH")
+              ),
+              /*#__PURE__*/React.createElement("div", {className:"hidden w-28 shrink-0 text-xs text-slate-500 sm:block"}, "Đã thu: "+Math.round(s.pct*100)+"%"),
+              /*#__PURE__*/React.createElement("div", {className:"w-28 shrink-0 text-right text-sm font-semibold tabular-nums text-slate-800"}, vndShort(s.rev)),
+              /*#__PURE__*/React.createElement("div", {className:"flex flex-1 items-center gap-2"},
+                /*#__PURE__*/React.createElement("div", {className:"h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100"},
+                  /*#__PURE__*/React.createElement("div", {className:"h-full rounded-full bg-[#92400e]", style:{width:Math.round(s.rev*100/maxRev)+"%"}})
+                ),
+                /*#__PURE__*/React.createElement("span", {className:"w-10 text-right text-xs tabular-nums text-slate-500"}, Math.round(s.rev*100/maxRev)+"%")
+              )
+            ))
+          )
+    )
+  );
 }
 
 /* ───────── Sales module ───────── */
@@ -1064,7 +1076,7 @@ function SalesModule({
           const costNcc = p.items[i]?.cost || it.cost || 0;
           return {
             lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ord.items.length > 1 ? "_" + i : ""),
-            date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
+            date: dateStr,
             prod: it.name,
             store: ord.store || "Kho HH",
             qtyIn: it.qty,
@@ -1095,6 +1107,7 @@ function SalesModule({
           sale: it.price,
           unitCost: p.items[i]?.cost || it.cost || 0,
           cust: ord.name,
+          phone: ord.phone || "",
           addr: ord.addr || "",
           orderStatus: "Chờ xử lý",
           delivery: ord.delivery || "Chưa giao hàng",
@@ -1221,8 +1234,8 @@ function KhoModal({
   const [editing, setEditing] = useState(false);
   const [pn, setPn] = useState(order.pn || ("PN" + String(order.id).replace(/\D/g, "")));
   const [px, setPx] = useState(order.px || ("PX" + String(order.id).replace(/\D/g, "")));
-  const [dateIn, setDateIn] = useState(order.dateIn || "2026-06-16");
-  const [dateOut, setDateOut] = useState(order.dateOut || "2026-06-03");
+  const [dateIn, setDateIn] = useState(order.dateIn || localToday());
+  const [dateOut, setDateOut] = useState(order.dateOut || localToday());
   const [rows, setRows] = useState((order.items || []).map(it => {
     const stk = stockOf(it.name) || 0;
     const need = Math.max(0, it.qty - stk);
@@ -1463,7 +1476,7 @@ function OrderTable({
     if (fStaff !== "Tất cả" && o.staff !== fStaff) return false;
     if (q && !`${o.id} ${o.name} ${o.phone}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
-  });
+  }).sort((a,b) => parseViDate(b.dt) - parseViDate(a.dt));
   const onExport = () => exportCSV("danh-sach-don-hang", ["Số ĐH", "Ngày", "Khách hàng", "SĐT", "Địa chỉ", "Thành tiền", "Đã trả", "Còn lại", "Giao hàng", "Trạng thái", "Nhân viên"], rows.map(o => {
     const c = calc(o);
     return [o.id, o.dt, o.name, o.phone, o.addr, c.total, o.paid, c.remaining, o.delivery, c.orderStatus, o.staff];
@@ -1485,13 +1498,13 @@ function OrderTable({
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -1588,11 +1601,10 @@ function OrderTable({
   }, /*#__PURE__*/React.createElement(React.Fragment, null, rows.map((o, ri) => {
     const c = calc(o);
     const isCancel = c.orderStatus === "Huỷ";
-    const rowBg = isCancel ? "#f1f5f9" : (ri % 2 === 0 ? "#FFFFFF" : "#F8FAFC");
     return /*#__PURE__*/React.createElement("tr", {
       key: o.id,
-      className: `align-top hover:brightness-95 ${isCancel ? "opacity-60 grayscale text-slate-400" : ""}`,
-      style: { background: rowBg, borderBottom: "1px solid #e2e8f0" }
+      className: `align-top hover:bg-slate-50/60 ${isCancel ? "opacity-60 grayscale text-slate-400 bg-slate-50" : "bg-white"}`,
+      style: { borderBottom: "1px solid #e2e8f0" }
     }, /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3"
     }, /*#__PURE__*/React.createElement(DateTime, {
@@ -1707,7 +1719,7 @@ function DraftTable({
     "Chưa tạo đơn hàng": "bg-slate-100 text-slate-600 ring-slate-200",
   "Đã tạo đơn hàng": "bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   };
-  const rows = drafts.filter(o => !q || `${o.id} ${o.name} ${o.phone} ${o.desc || ""}`.toLowerCase().includes(q.toLowerCase()));
+  const rows = drafts.filter(o => !q || `${o.id} ${o.name} ${o.phone} ${o.desc || ""}`.toLowerCase().includes(q.toLowerCase())).sort((a,b) => parseViDate(b.dt) - parseViDate(a.dt));
   const onExport = () => exportCSV("bao-gia", ["Mã Báo giá", "Ngày", "Tên khách hàng", "Địa chỉ", "Diễn giải", "Trạng thái", "Nhân viên"], rows.map(o => [o.id, o.dt, o.name, o.addr, o.desc, o.draftStatus || "Chưa xử lý", o.staff]));
   const Toolbar = () => /*#__PURE__*/React.createElement("div", {
     className: "space-y-3"
@@ -1724,13 +1736,13 @@ function DraftTable({
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   })), /*#__PURE__*/React.createElement("div", {
     className: "relative flex-1"
@@ -1916,6 +1928,9 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const {txns: _txns, setTxns: _setTxns} = useTxns();
   const {docNums: _dn, setDocNums: _sdn} = useDocNum() || {};
   const [pendingOrderId] = useState(() => {
+    // Chỉ cấp số DH khi: (1) tạo đơn hàng mới (không phải báo giá), hoặc (2) chuyển báo giá → đơn hàng
+    const needsNewDH = (!editOrder && !isDraft) || (editOrder && editOrder.draft);
+    if (!needsNewDH) return "";
     const row = _dn && _dn.find(r => r.prefix === "DH");
     const num = row ? row.num : 1;
     if (_sdn) _sdn(ds => ds.map(r => r.prefix === "DH" ? {...r, num: r.num + 1} : r));
@@ -2466,7 +2481,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       setImported(true);
       if (p.allExported) setExported(true);
       const now = new Date();
-      const dateStr = now.toLocaleDateString("vi-VN");
+      const timeStr = now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
+      const fmtDate = (iso) => iso ? new Date(iso).toLocaleDateString("vi-VN") + " " + timeStr : now.toLocaleDateString("vi-VN") + " " + timeStr;
+      const importDate = fmtDate(p.dateIn);
+      const exportDate = fmtDate(p.dateOut);
       const base = now.toISOString().slice(0,10).replace(/-/g,"");
       const ordItems = lines.filter(l => l.name);
       if (!p.allExported && onImportKho) {
@@ -2474,7 +2492,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           const costNcc = p.items[i]?.cost || it.cost || 0;
           return {
             lot: (p.pn || ("PN" + base + "_" + String(Date.now()).slice(-4))) + (ordItems.length > 1 ? "_" + i : ""),
-            date: p.dateIn ? new Date(p.dateIn).toLocaleDateString("vi-VN") : dateStr,
+            date: importDate,
             prod: it.name,
             store: it.kho || "Kho HH",
             qtyIn: it.qty,
@@ -2491,7 +2509,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         }));
       }
       if (p.allExported && onExportKho) {
-        const dt = dateStr + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
+        const dt = exportDate;
         onExportKho(ordItems.map((it, i) => ({
           slip: (() => { const row = _dn && _dn.find(r => r.prefix === "PX"); const num = (row ? row.num : 1) + i; if (_sdn && i === 0) _sdn(ds => ds.map(r => r.prefix === "PX" ? {...r, num: r.num + ordItems.length} : r)); return fmtDocId("PX", num); })(),
           dt,
@@ -2505,6 +2523,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           sale: it.price,
           unitCost: p.items[i]?.cost || it.cost || 0,
           cust: cust.name,
+          phone: cust.phone || "",
           addr: cust.addr || "",
           orderStatus: "Chờ xử lý",
           delivery: delivery || "Chưa giao hàng",
@@ -2630,7 +2649,7 @@ function PurchaseCreate({
   const pad2 = n => String(n).padStart(2, "0");
   const buildRecords = () => {
     const d = new Date();
-    const dateStr = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+    const dateStr = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
     const base = Date.now();
     return rows.filter(l => l.name).map((l, i) => ({
       lot: `PM${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${String(base + i).slice(-4)}`,
@@ -2690,7 +2709,7 @@ function PurchaseCreate({
         /*#__PURE__*/React.createElement("div", null,
           /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"},
             "Ngày đặt hàng ", /*#__PURE__*/React.createElement("span", {className: "text-[#B91C1C]"}, "(*)")),
-          /*#__PURE__*/React.createElement("input", {type: "date", className: inputF, defaultValue: "2026-06-16"})),
+          /*#__PURE__*/React.createElement("input", {type: "date", className: inputF, defaultValue: localToday()})),
         /*#__PURE__*/React.createElement("div", null,
           /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Ghi chú"),
           /*#__PURE__*/React.createElement("input", {
@@ -2812,7 +2831,7 @@ function PurchaseList({
   const [doc, setDoc] = useState(null);
   const [fSup, setFSup] = useState("Tất cả");
   const supNames = ["Tất cả", ...new Set(list.map(r => r.supplier))];
-  const rows = list.filter(r => (fSup === "Tất cả" || r.supplier === fSup) && (!q || `${purCode(r.lot)} ${r.supplier} ${r.prod}`.toLowerCase().includes(q.toLowerCase())));
+  const rows = list.filter(r => (fSup === "Tất cả" || r.supplier === fSup) && (!q || `${purCode(r.lot)} ${r.supplier} ${r.prod}`.toLowerCase().includes(q.toLowerCase()))).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
   const setKho = (lot, kho) => setList(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
   const del = lot => {
     if (window.confirm("Xoá phiếu mua hàng này?")) {
@@ -2823,17 +2842,16 @@ function PurchaseList({
   const onExport = () => exportCSV("danh-sach-phieu-mua-hang", ["Ngày đặt", "Số phiếu", "Trạng thái", "Nhà cung cấp", "Sản phẩm", "Số lượng", "Đơn giá", "Chi phí", "Thành tiền", "Người tạo", "Kho"], rows.map(r => [r.date, purCode(r.lot), r.qtyNow >= r.qtyIn ? "Đã nhập đủ" : r.qtyNow > 0 ? "Nhập một phần" : "Chờ nhập", r.supplier, r.prod, r.qtyIn, r.costNcc, r.fee || 0, r.costNcc * r.qtyIn, r.staff, r.kho]));
   return /*#__PURE__*/React.createElement("div", {className: "space-y-4"},
     /*#__PURE__*/React.createElement("div", {className: "flex flex-wrap items-center justify-end gap-2"},
-      /*#__PURE__*/React.createElement(PrintBtn, null),
-      /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExport}),
       /*#__PURE__*/React.createElement("button", {onClick: onNew, className: blueBtn},
-        /*#__PURE__*/React.createElement(Plus, {className: "h-4 w-4"}), " Tạo phiếu mua hàng")),
+        /*#__PURE__*/React.createElement(Plus, {className: "h-4 w-4"}), " Tạo phiếu mua hàng"),
+      /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExport})),
     /*#__PURE__*/React.createElement("div", {className: "flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"},
       /*#__PURE__*/React.createElement("div", null,
         /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Từ ngày"),
-        /*#__PURE__*/React.createElement("input", {type: "date", defaultValue: "2026-06-01", className: field})),
+        /*#__PURE__*/React.createElement("input", {type: "date", defaultValue: localMonthStart(), className: field})),
       /*#__PURE__*/React.createElement("div", null,
         /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Đến ngày"),
-        /*#__PURE__*/React.createElement("input", {type: "date", defaultValue: "2026-06-16", className: field})),
+        /*#__PURE__*/React.createElement("input", {type: "date", defaultValue: localToday(), className: field})),
       /*#__PURE__*/React.createElement("div", null,
         /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "NCC"),
         /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: field},
@@ -2845,7 +2863,7 @@ function PurchaseList({
     /*#__PURE__*/React.createElement(TableShell, {
       minW: "1200px",
       head: /*#__PURE__*/React.createElement(React.Fragment, null,
-        /*#__PURE__*/React.createElement(Th, {center: true}, "Ngày đặt"),
+        /*#__PURE__*/React.createElement(Th, {center: true}, "Ngày"),
         /*#__PURE__*/React.createElement(Th, {center: true}, "Số phiếu"),
         /*#__PURE__*/React.createElement(Th, {center: true}, "Trạng thái"),
         /*#__PURE__*/React.createElement(Th, {center: true, style: {minWidth: 150}}, "Nhà cung cấp"),
@@ -2858,7 +2876,12 @@ function PurchaseList({
         /*#__PURE__*/React.createElement(Th, {center: true}, "Kho"),
         /*#__PURE__*/React.createElement(Th, {center: true}, "Thao tác"))
     }, rows.map(r => /*#__PURE__*/React.createElement("tr", {key: r.lot},
-      /*#__PURE__*/React.createElement("td", {className: "whitespace-nowrap px-3 py-2.5 text-slate-500"}, r.date),
+      /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5", style:{fontSize:"11px"}}, (() => {
+        const p = String(r.date||"").split(" ");
+        return /*#__PURE__*/React.createElement("span", {className:"text-slate-500"},
+          /*#__PURE__*/React.createElement("span", {className:"block"}, p[0]||""),
+          p[1] ? /*#__PURE__*/React.createElement("span", {className:"block text-slate-400"}, p[1]) : null);
+      })()),
       /*#__PURE__*/React.createElement("td", {className: "whitespace-nowrap px-3 py-2.5"},
         /*#__PURE__*/React.createElement("button", {onClick: () => onEdit(r), className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, purCode(r.lot))),
       /*#__PURE__*/React.createElement("td", {className: "px-3 py-2.5"}, (() => {
@@ -2870,7 +2893,7 @@ function PurchaseList({
               const khoMap = {HH:"Kho HH", HG:"Kho HG", SR:"Kho SR"};
               const slip = {
                 lot: "PN" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now()).slice(-4),
-                date: new Date().toLocaleDateString("vi-VN"),
+                date: (() => { const _d = new Date(); return _d.toLocaleDateString("vi-VN") + " " + _d.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"}); })(),
                 prod: r.prod, store: khoMap[r.kho] || r.store,
                 qtyIn: r.qtyIn, qtyNow: r.qtyIn,
                 costNcc: r.costNcc, fee: r.fee || 0,
@@ -2920,7 +2943,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     (fSup === "Tất cả" || r.supplier === fSup) &&
     (fProd === "Tất cả" || r.prod === fProd) &&
     (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
-  );
+  ).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
   const findOrder = id => orders.find(o => o.id === id || o.id.replace(/^Đ/i,"D") === id.replace(/^Đ/i,"D"));
   const openOrderDetail = id => { const o = findOrder(id); setOrderModal(o || {id, _notFound: true}); };
   const onExport = () => exportCSV("danh-sach-phieu-nhap-kho", ["Kho", "Số phiếu nhập", "Số đơn hàng", "Ngày nhập", "Sản phẩm", "SL nhập", "SL còn", "Đơn giá", "CPMH", "Giá vốn", "Thành tiền", "Nhà cung cấp", "Người tạo"], rows.map(r => [r.store, impCode(r.lot), r.order || "", r.date, r.prod, r.qtyIn, r.qtyNow, r.costNcc, r.fee || 0, r.costNcc + (r.fee || 0), (r.costNcc + (r.fee || 0)) * r.qtyIn, r.supplier, r.staff]));
@@ -2976,8 +2999,14 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     key: r.lot,
     className: "hover:bg-slate-50/60"
   }, /*#__PURE__*/React.createElement("td", {
-    className: "whitespace-nowrap px-4 py-3 text-slate-500"
-  }, r.date), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3", style: {fontSize:"11px"}
+  }, (() => {
+    const p = String(r.date||"").split(" ");
+    const dateS = p[0]||""; const timeS = p[1]||"";
+    return /*#__PURE__*/React.createElement("span", {className:"text-slate-500"},
+      /*#__PURE__*/React.createElement("span", {className:"block"}, dateS),
+      timeS ? /*#__PURE__*/React.createElement("span", {className:"block text-slate-400"}, timeS) : null);
+  })()), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-500"
   }, r.supplier), /*#__PURE__*/React.createElement("td", {
     className: "px-2 py-1.5 text-center text-sm font-medium text-slate-700"
@@ -3117,7 +3146,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     if (fSup !== "Tất cả" && r.supplier !== fSup) return false;
     if (q && !`${r.order} ${r.prod} ${r.cust} ${r.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
-  });
+  }).sort((a,b) => parseViDate(b.dt) - parseViDate(a.dt));
   const onExport = () => exportCSV("danh-sach-phieu-xuat-kho", ["Thời gian", "Đơn hàng", "Khách hàng", "Địa chỉ", "Tên sản phẩm", "Nhà cung cấp", "Kho", "SL xuất", "Giá bán", "Thành tiền", "TT Đơn", "TT Giao", "Người xuất"], rows.map(r => [r.dt, r.order, r.cust, r.addr, r.prod, r.supplier, r.store, r.qty, r.sale, r.sale * r.qty, r.orderStatus, r.delivery, r.staff]));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
@@ -3127,13 +3156,13 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -3182,11 +3211,11 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
       }
     }, "Đơn hàng"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 120
+        minWidth: 160
       }
     }, "Khách hàng"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        minWidth: 180
+        minWidth: 160
       }
     }, "Địa chỉ"), /*#__PURE__*/React.createElement(Th, {
       style: {
@@ -3241,8 +3270,11 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     onClick: () => onOpenOrder ? onOpenOrder(r.order) : null,
     className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
   }, r.order)), /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3 text-slate-700"
-  }, r.cust), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3",
+    style: {minWidth: 160}
+  }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800 truncate"}, r.cust),
+    r.phone ? /*#__PURE__*/React.createElement("div", {className: "mt-0.5 text-xs text-slate-400"}, /*#__PURE__*/React.createElement(Phone, {value: r.phone})) : null
+  ), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-xs text-slate-500"
   }, r.addr), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-slate-800"
@@ -3406,18 +3438,18 @@ function Stock() {
   }, /*#__PURE__*/React.createElement("h2", {
     className: "text-[16px] font-semibold text-[#92400e]"
   }, "Báo cáo xuất nhập tồn kho"), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-wrap items-end gap-3"
+    className: "flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -3436,13 +3468,10 @@ function Stock() {
     onChange: e => setQ(e.target.value),
     placeholder: "Nhập mã hoặc tên sản phẩm…",
     className: `${field} w-full`
-  })), /*#__PURE__*/React.createElement("button", {
-    className: blueBtn + " py-2"
-  }, /*#__PURE__*/React.createElement(Search, {
-    className: "h-4 w-4"
-  }), " Lọc"), /*#__PURE__*/React.createElement(PrintBtn, null), /*#__PURE__*/React.createElement(ExportBtn, {
-    onClick: onExport
-  })), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {className: "flex items-end gap-2 pb-0.5"},
+    /*#__PURE__*/React.createElement(PrintBtn, null), /*#__PURE__*/React.createElement(ExportBtn, {
+      onClick: onExport
+    }))), /*#__PURE__*/React.createElement("div", {
     className: "overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm"
   }, /*#__PURE__*/React.createElement("table", {
     className: "w-full text-sm",
@@ -3480,10 +3509,10 @@ function Stock() {
     className: "border border-[#DDE3E8] bg-[#FFFBEB] px-3 py-2 text-center text-[#B45309]"
   }, "Xuất kho"), /*#__PURE__*/React.createElement("th", {
     colSpan: 2,
-    className: "border border-[#DDE3E8] bg-[#FFF1F2] px-3 py-2 text-center text-[#B91C1C]"
+    className: "border border-[#DDE3E8] bg-[#fef9f0] px-3 py-2 text-center text-[#92400e]"
   }, "Cuối kỳ")), /*#__PURE__*/React.createElement("tr", {
     className: "bg-[#fde68a] text-xs font-semibold uppercase tracking-wide text-[#475569]"
-  }, [["SL","bg-[#fef9f0]"],["Giá trị","bg-[#fef9f0]"],["SL","bg-[#fef3c7]"],["Giá trị","bg-[#fef3c7]"],["SL","bg-[#FFFBEB]"],["Giá trị","bg-[#FFFBEB]"],["SL","bg-[#FFF1F2]"],["Giá trị","bg-[#FFF1F2]"]].map(([h,bg], i) => /*#__PURE__*/React.createElement("th", {
+  }, [["SL","bg-[#fef9f0]"],["Giá trị","bg-[#fef9f0]"],["SL","bg-[#fef3c7]"],["Giá trị","bg-[#fef3c7]"],["SL","bg-[#FFFBEB]"],["Giá trị","bg-[#FFFBEB]"],["SL","bg-[#fef9f0]"],["Giá trị","bg-[#fef9f0]"]].map(([h,bg], i) => /*#__PURE__*/React.createElement("th", {
     key: i,
     className: `border border-[#DDE3E8] px-3 py-1.5 text-right ${bg}`
   }, h)))), /*#__PURE__*/React.createElement("tbody", {
@@ -3521,9 +3550,9 @@ function Stock() {
     }, r.out || "–"), /*#__PURE__*/React.createElement("td", {
       className: cell + ` border-l border-slate-100 ${r.out ? "text-[#D97706]" : "text-[#94A3B8]"}`
     }, r.out ? num(r.out * r.price) : "–"), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${end < 0 ? "text-[#B91C1C]" : end > 0 ? "text-slate-600" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-100 ${end > 0 ? "text-[#92400e]" : "text-[#94A3B8]"}`
     }, end || "–"), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${end < 0 ? "text-[#B91C1C]" : end > 0 ? "text-slate-600" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-100 ${end > 0 ? "text-[#92400e]" : "text-[#94A3B8]"}`
     }, end ? num(end * r.price) : "–"));
   }), (() => {
     const tO    = rows.reduce((s,r)=>s+(r.o||0),0);
@@ -3534,16 +3563,16 @@ function Stock() {
     const tOutVal=rows.reduce((s,r)=>s+(r.out||0)*r.price,0);
     const tEnd  = rows.reduce((s,r)=>s+(r.o+r.in-r.out),0);
     const tEndVal=rows.reduce((s,r)=>s+(r.o+r.in-r.out)*r.price,0);
-    return /*#__PURE__*/React.createElement("tr", {className:"border-t-2 border-[#fdba74] bg-[#fed7aa]"},
+    return /*#__PURE__*/React.createElement("tr", {className:"bg-[#fed7aa]"},
       /*#__PURE__*/React.createElement("td", {className:"border border-[#DDE3E8] px-3 py-2.5 text-center text-xs uppercase text-slate-800", style:{fontWeight:700}, colSpan:5}, "TỔNG CỘNG"),
       /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-slate-800", style:{fontWeight:700}}, tO||"–"),
       /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-slate-800", style:{fontWeight:700}}, tOVal?num(tOVal):"–"),
       /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#92400e]", style:{fontWeight:700}}, tIn||"–"),
       /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#92400e]", style:{fontWeight:700}}, tInVal?num(tInVal):"–"),
-      /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#D97706]", style:{fontWeight:700}}, tOut||"–"),
-      /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#D97706]", style:{fontWeight:700}}, tOutVal?num(tOutVal):"–"),
-      /*#__PURE__*/React.createElement("td", {className:cell+` border-l border-[#DDE3E8] ${tEnd<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, tEnd||"–"),
-      /*#__PURE__*/React.createElement("td", {className:cell+` border-l border-[#DDE3E8] ${tEndVal<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, tEndVal?num(tEndVal):"–"));
+      /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#b45309]", style:{fontWeight:700}}, tOut||"–"),
+      /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#b45309]", style:{fontWeight:700}}, tOutVal?num(tOutVal):"–"),
+      /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#92400e]", style:{fontWeight:700}}, tEnd||"–"),
+      /*#__PURE__*/React.createElement("td", {className:cell+" border-l border-[#DDE3E8] text-[#92400e]", style:{fontWeight:700}}, tEndVal?num(tEndVal):"–"));
   })()
   ))), detail && /*#__PURE__*/React.createElement(StockDetailModal, {
     row: detail,
@@ -4323,13 +4352,13 @@ function DebtCust() {
     className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   }), /*#__PURE__*/React.createElement("span", {
     className: "text-slate-400"
   }, "→"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   }), /*#__PURE__*/React.createElement("button", {
     className: blueBtn
@@ -4547,13 +4576,13 @@ function DebtNcc() {
     className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   }), /*#__PURE__*/React.createElement("span", {
     className: "text-slate-400"
   }, "→"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   }), /*#__PURE__*/React.createElement("select", {
     className: field
@@ -4887,8 +4916,7 @@ function Finance({setActive, onOpenOrder}) {
   const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
   const {txns, setTxns}       = useTxns();
   const [q, setQ]             = useState("");
-  const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
-  const [fromDate, setFromDate] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`; });
+  const [fromDate, setFromDate] = useState(localMonthStart);
   const [toDate, setToDate]   = useState(localToday);
   const [fAcc, setFAcc]       = useState("Tất cả");
   const [fDir, setFDir]       = useState("Tất cả");
@@ -5073,13 +5101,13 @@ function ReportSales() {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   }))), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-2 gap-4 lg:grid-cols-4"
@@ -5150,13 +5178,13 @@ function ReportPreorder() {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   })), /*#__PURE__*/React.createElement("div", {
     className: "min-w-[180px] flex-1"
@@ -5235,13 +5263,13 @@ function ReportStaff() {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Từ ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-01",
+    defaultValue: localMonthStart(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
   }, "Đến ngày"), /*#__PURE__*/React.createElement("input", {
     type: "date",
-    defaultValue: "2026-06-16",
+    defaultValue: localToday(),
     className: field
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -5360,7 +5388,7 @@ function Screen({
     case "debt_ncc":
       return /*#__PURE__*/React.createElement(DebtNcc, null);
     case "dashboard":
-      return /*#__PURE__*/React.createElement(Dashboard, null);
+      return /*#__PURE__*/React.createElement(Dashboard, {orders});
     case "rp_sales":
       return /*#__PURE__*/React.createElement(ReportSales, null);
     case "rp_preorder":
@@ -5376,7 +5404,7 @@ function Screen({
     case "users":
       return /*#__PURE__*/React.createElement(UsersTab, null);
     default:
-      return /*#__PURE__*/React.createElement(Dashboard, null);
+      return /*#__PURE__*/React.createElement(Dashboard, {orders});
   }
 }
 
