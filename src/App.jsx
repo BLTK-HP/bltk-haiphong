@@ -1526,7 +1526,7 @@ function OrderTable({
       style: { width: 90 }
     }, "Ngày"), /*#__PURE__*/React.createElement(Th, {
       style: { width: 96 }
-    }, "Số ĐH"), /*#__PURE__*/React.createElement(Th, {
+    }, "Số đơn hàng"), /*#__PURE__*/React.createElement(Th, {
       style: { width: 130 }
     }, "Khách hàng"), /*#__PURE__*/React.createElement(Th, {
       style: { width: 180 }
