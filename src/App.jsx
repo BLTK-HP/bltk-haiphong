@@ -394,9 +394,8 @@ const field = "rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm t
 const inputF = "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#92400e] focus:outline-none focus:ring-1 focus:ring-[#fde68a]";
 const inputSm = "w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none";
 
-/* số phiếu mua hàng dạng ngắn theo quy tắc đánh số (PMH + 5 số) */
-const purCode = lot => "PMH" + String(700 + (parseInt(String(lot).replace(/\D/g, "").slice(-3), 10) % 99 || 1)).padStart(5, "0");
-const impCode = lot => "PNK" + String(31 + (parseInt(String(lot).replace(/\D/g, "").slice(-4), 10) % 99 || 1)).padStart(5, "0");
+const purCode = lot => String(lot).match(/^PM\d{6}$/) ? lot : "PM" + yr2() + String(lot).replace(/\D/g,"").slice(-4).padStart(4,"0");
+const impCode = lot => String(lot).match(/^PN\d{6}$/) ? lot : "PN" + yr2() + String(lot).replace(/\D/g,"").slice(-4).padStart(4,"0");
 
 /* ô nhập số có định dạng phân tách hàng nghìn (vi-VN) */
 function NumInput({
@@ -686,6 +685,10 @@ const TxnCtx = React.createContext(null);
 const useTxns = () => React.useContext(TxnCtx);
 const InvCtx = React.createContext({whInItems: [], setWhInItems: () => {}, whOutItems: [], setWhOutItems: () => {}});
 const useInventory = () => React.useContext(InvCtx);
+const DocNumCtx = React.createContext(null);
+const useDocNum = () => React.useContext(DocNumCtx);
+const yr2 = () => String(new Date().getFullYear()).slice(-2);
+const fmtDocId = (prefix, num) => prefix + yr2() + String(num).padStart(4, "0");
 
 /* ── Toast nhẹ để báo thao tác đã chạy ── */
 const ToastCtx = React.createContext(() => {});
@@ -948,7 +951,7 @@ function SalesModule({
   React.useEffect(() => { if (openOrderId) { setView({edit: openOrderId}); setOpenOrderId && setOpenOrderId(null); } }, [openOrderId]);
   const [modal, setModal] = useState(null);
   const addOrder = (o, asDraft) => {
-    const id = o.id && !asDraft ? o.id : (asDraft ? "BG000" + Math.floor(10 + Math.random() * 89) : "DH2602" + Math.floor(10 + Math.random() * 89));
+    const id = o.id && !asDraft ? o.id : (asDraft ? fmtDocId("BG", Math.floor(10 + Math.random() * 89)) : fmtDocId("DH", Math.floor(10 + Math.random() * 89)));
     setOrders(p => [mkOrder({
       ...o,
       id,
@@ -1903,7 +1906,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       .map(o => ({phone: o.phone, name: o.name, addr: o.addr}));
   }, [cust.phone, orders]);
   const {txns: _txns, setTxns: _setTxns} = useTxns();
-  const [pendingOrderId] = useState(() => `DH2602${Math.floor(10 + Math.random() * 89)}`);
+  const [pendingOrderId] = useState(() => fmtDocId("DH", Math.floor(10 + Math.random() * 89)));
   const nowStr = () => { const d = new Date(), pad = n => String(n).padStart(2,"0"); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   const effectiveOrderId = editOrder?.id || (!isDraft ? pendingOrderId : "");
   const autoAddTxn = (p) => {
@@ -5433,8 +5436,18 @@ function App({ profile, logout }) {
   const [txnsFS] = useCollection("txns");
   const txns = txnsFS;
   const setTxns = u => syncFS("txns", t => String(t.id))(txns, u);
+  const [docNums, setDocNums] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("bltk_docnums") || "null");
+      if (!saved) return DOC_NUM_INIT;
+      const curYear = new Date().getFullYear();
+      return saved.map(r => r.year !== curYear ? {...r, num:1, year:curYear} : r);
+    } catch { return DOC_NUM_INIT; }
+  });
+  React.useEffect(() => { localStorage.setItem("bltk_docnums", JSON.stringify(docNums)); }, [docNums]);
   const title = LABELS[active] || "";
-  return /*#__PURE__*/React.createElement(InvCtx.Provider, {value: {whInItems, setWhInItems, whOutItems, setWhOutItems}},
+  return /*#__PURE__*/React.createElement(DocNumCtx.Provider, {value: {docNums, setDocNums}},
+  /*#__PURE__*/React.createElement(InvCtx.Provider, {value: {whInItems, setWhInItems, whOutItems, setWhOutItems}},
   /*#__PURE__*/React.createElement(TxnCtx.Provider, {value: {txns, setTxns}},
   /*#__PURE__*/React.createElement(BankCtx.Provider, {value: {bankAccounts, setBankAccounts}},
   /*#__PURE__*/React.createElement(ToastHost, null, /*#__PURE__*/React.createElement("div", {
@@ -5530,7 +5543,7 @@ function App({ profile, logout }) {
     onImportToWh: slipOrSlips => { setWhInItems(prev => mergeWhIn(prev, slipOrSlips)); setActive("wh_in"); },
     onImportKho: slips => { setWhInItems(prev => mergeWhIn(prev, slips)); },
     onExportToWh: slips => { setWhOutItems(prev => mergeWhOut(prev, slips)); }
-  }))))))));
+  })))))))));
 }
 
 /* ───────── Settings Payment ───────── */
@@ -5731,21 +5744,21 @@ function SettingsNumFormat() {
 
 /* ───────── Settings: Quy tắc đánh số chứng từ ───────── */
 const DOC_NUM_INIT = [
-  {id:1, type:"Báo giá",            prefix:"BG",  num:72,  digits:5},
-  {id:2, type:"Đơn hàng",           prefix:"DH",  num:48,  digits:5},
-  {id:3, type:"Phiếu mua hàng",     prefix:"PM",  num:18,  digits:5},
-  {id:4, type:"Phiếu nhập kho",     prefix:"PN",  num:35,  digits:5},
-  {id:5, type:"Phiếu xuất kho",     prefix:"PX",  num:27,  digits:5},
-  {id:6, type:"Phiếu thu",          prefix:"PT",  num:125, digits:5},
-  {id:7, type:"Phiếu chi",          prefix:"PC",  num:187, digits:5},
+  {id:1, type:"Báo giá",        prefix:"BG", num:1, year:new Date().getFullYear()},
+  {id:2, type:"Đơn hàng",       prefix:"DH", num:1, year:new Date().getFullYear()},
+  {id:3, type:"Phiếu mua hàng", prefix:"PM", num:1, year:new Date().getFullYear()},
+  {id:4, type:"Phiếu nhập kho", prefix:"PN", num:1, year:new Date().getFullYear()},
+  {id:5, type:"Phiếu xuất kho", prefix:"PX", num:1, year:new Date().getFullYear()},
+  {id:6, type:"Phiếu thu",      prefix:"PT", num:1, year:new Date().getFullYear()},
+  {id:7, type:"Phiếu chi",      prefix:"PC", num:1, year:new Date().getFullYear()},
 ];
 
 function SettingsDocNum() {
-  const [rows, setRows] = React.useState(DOC_NUM_INIT);
-  const [editing, setEditing] = React.useState(null); // {id, num}
+  const {docNums: rows, setDocNums: setRows} = useDocNum();
+  const [editing, setEditing] = React.useState(null);
   const notify = useToast();
 
-  const preview = r => r.prefix + String(r.num).padStart(r.digits, "0");
+  const preview = r => fmtDocId(r.prefix, r.num);
 
   const save = () => {
     setRows(xs => xs.map(r => r.id === editing.id ? {...r, num: Number(editing.num) || r.num} : r));
@@ -5767,8 +5780,7 @@ function SettingsDocNum() {
             /*#__PURE__*/React.createElement("th", {className: th}, "Loại chứng từ"),
             /*#__PURE__*/React.createElement("th", {className: th}, "Tiền tố"),
             /*#__PURE__*/React.createElement("th", {className: th + " text-right"}, "Số hiện tại"),
-            /*#__PURE__*/React.createElement("th", {className: th + " text-right"}, "Tổng ký tự số"),
-            /*#__PURE__*/React.createElement("th", {className: th}, "Hiển thị"),
+            /*#__PURE__*/React.createElement("th", {className: th}, "Ví dụ hiển thị"),
             /*#__PURE__*/React.createElement("th", {className: th + " text-center"}, "Thao tác")
           )
         ),
@@ -5790,9 +5802,8 @@ function SettingsDocNum() {
                     })
                   : r.num
               ),
-              /*#__PURE__*/React.createElement("td", {className: td + " text-right"}, r.digits),
               /*#__PURE__*/React.createElement("td", {className: td},
-                /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-semibold text-[#b45309]"}, preview(r))
+                /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center rounded-md border border-[#b45309] bg-white px-2.5 py-0.5 text-sm font-mono font-semibold text-[#b45309]"}, preview(r))
               ),
               /*#__PURE__*/React.createElement("td", {className: td + " text-center"},
                 editing && editing.id === r.id
@@ -5810,14 +5821,11 @@ function SettingsDocNum() {
 
     /*#__PURE__*/React.createElement("div", {className: "rounded-xl border border-slate-200 bg-white p-5 space-y-2"},
       /*#__PURE__*/React.createElement("p", {className: "text-[13px] text-slate-500"},
-        "Số hiện tại là số của chứng từ ",
-        /*#__PURE__*/React.createElement("strong", null, "gần nhất đã tạo"),
-        ". Chứng từ tiếp theo sẽ được đánh số = số hiện tại + 1."
+        "Định dạng: ", /*#__PURE__*/React.createElement("strong", null, "Tiền tố + 2 số cuối năm + 4 số thứ tự"),
+        ". Ví dụ: ", /*#__PURE__*/React.createElement("strong", null, "BG260001"), ", ", /*#__PURE__*/React.createElement("strong", null, "DH260002"), "."
       ),
       /*#__PURE__*/React.createElement("p", {className: "text-[13px] text-slate-500"},
-        "Tổng ký tự số: số thứ tự được bổ sung số 0 phía trước để đủ ",
-        /*#__PURE__*/React.createElement("strong", null, "5 chữ số"),
-        " (VD: 72 → 00072)."
+        "Sang năm mới, số thứ tự tự động reset về 0001. Ví dụ: ", /*#__PURE__*/React.createElement("strong", null, "BG270001"), "."
       )
     )
   );
