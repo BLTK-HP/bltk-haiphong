@@ -1756,7 +1756,7 @@ function DraftTable({
       style: {
         minWidth: 180
       }
-    }, "Ghi chú"), /*#__PURE__*/React.createElement(Th, {right: true}, "Tổng đơn"), /*#__PURE__*/React.createElement(Th, null, "Trạng thái"), /*#__PURE__*/React.createElement(Th, null, "Nhân viên"), /*#__PURE__*/React.createElement(Th, {
+    }, "Ghi chú"), /*#__PURE__*/React.createElement(Th, {right: true, style:{minWidth:110}}, "Tổng đơn"), /*#__PURE__*/React.createElement(Th, null, "Nhân viên"), /*#__PURE__*/React.createElement(Th, {
       center: true,
       style: {
         width: 110
@@ -1784,17 +1784,12 @@ function DraftTable({
   }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800 truncate"}, o.name),
     o.phone ? /*#__PURE__*/React.createElement("div", {className: "mt-0.5 text-xs text-slate-400"}, /*#__PURE__*/React.createElement(Phone, {value: o.phone})) : null), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3",
-    style: {maxWidth: 120, width: 120}
+    style: {minWidth: 210, maxWidth: 210}
   }, /*#__PURE__*/React.createElement("div", {className: "text-xs text-slate-500 truncate"}, o.addr || "—")), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-xs text-slate-500"
   }, o.note || "—"), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-right tabular-nums font-medium text-[#B91C1C]"
   }, vnd((o.items||[]).reduce((s,i)=>s+i.price*i.qty*(1-(i.disc||0)/100),0))), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3"
-  }, /*#__PURE__*/React.createElement(Pill, {
-    map: DSTATUS,
-    value: o.draftStatus || "Chưa xử lý"
-  })), /*#__PURE__*/React.createElement("td", {
     className: "whitespace-nowrap px-4 py-3 text-xs text-slate-500"
   }, o.staff), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
