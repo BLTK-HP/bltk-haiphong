@@ -1248,7 +1248,7 @@ function KhoModal({
   const totalOut = rows.reduce((s, r) => s + ttXuat(r), 0);
   const cpmhTotal = rows.reduce((s, r) => s + (r.cpmh || 0), 0);
   const statusLabel = exported ? "Đã xuất kho" : imported ? "Đã nhập kho" : "Đang xử lý";
-  const statusCls = exported ? "bg-amber-50 text-[#92400e] ring-amber-200" : imported ? "bg-sky-50 text-sky-700 ring-sky-200" : "bg-amber-50 text-amber-700 ring-amber-200";
+  const statusCls = exported ? "bg-[#fef9f0] text-[#92400e] ring-[#b45309]" : imported ? "bg-[#fef9f0] text-[#c2410c] ring-[#fdba74]" : "bg-amber-50 text-amber-700 ring-amber-200";
   const inp = "w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-center focus:border-[#92400e] focus:outline-none";
   const inpSL = "w-12 rounded-lg border border-slate-200 px-1 py-1.5 text-sm text-center focus:border-[#92400e] focus:outline-none";
   const inpCP = "w-20 rounded-lg border border-slate-200 px-1 py-1.5 text-sm text-center focus:border-[#92400e] focus:outline-none";
@@ -1296,7 +1296,7 @@ function KhoModal({
         onClick: doExport,
         disabled: (!imported && !editing) || (exported && !editing) || !order.deliveryConfirmed,
         title: !order.deliveryConfirmed ? "Cần xác nhận giao hàng trước khi xuất kho" : undefined,
-        className: "rounded-lg bg-emerald-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+        className: "rounded-lg bg-[#78350f] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#92400e] disabled:bg-slate-300 disabled:cursor-not-allowed"
       }, "↑ Xuất kho"))
   },
     !order.deliveryConfirmed && React.createElement("div", { className: "mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3" },
@@ -5026,7 +5026,7 @@ function Finance({setActive, onOpenOrder}) {
             /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-slate-500"},t.date),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-700"},t.entity),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
-              t.orderId ? /*#__PURE__*/React.createElement("span",{className:"text-[#2563EB] hover:underline cursor-pointer", onClick:()=>onOpenOrder&&onOpenOrder(t.orderId)},t.orderId) : /*#__PURE__*/React.createElement("span",{className:"text-slate-300"},"—")),
+              t.orderId ? /*#__PURE__*/React.createElement("button",{className:"inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309] hover:bg-amber-100", onClick:()=>onOpenOrder&&onOpenOrder(t.orderId)},t.orderId) : /*#__PURE__*/React.createElement("span",{className:"text-slate-300"},"—")),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
               /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS[t.kind]||"bg-slate-100 text-slate-600 ring-1 ring-slate-200"}`},t.kind)),
             /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-slate-600"},t.acc),
