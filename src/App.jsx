@@ -1463,14 +1463,14 @@ function OrderTable({
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center justify-end gap-2"
-  }, /*#__PURE__*/React.createElement(ExportBtn, {
-    onClick: onExport
-  }), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onNew,
     className: blueBtn
   }, /*#__PURE__*/React.createElement(Plus, {
     className: "h-4 w-4"
-  }), " Tạo đơn hàng")), /*#__PURE__*/React.createElement("div", {
+  }), " Tạo đơn hàng"), /*#__PURE__*/React.createElement(ExportBtn, {
+    onClick: onExport
+  })), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
@@ -1669,7 +1669,6 @@ function OrderTable({
     }, /*#__PURE__*/React.createElement("td", {
       colSpan: 4,
       className: "px-3 py-3",
-      style: { background: "#fef9f0" }
     }, "TỔNG CỘNG (", rows.length, " ĐƠN)"), /*#__PURE__*/React.createElement("td", {
       className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-[#92400e]", style: {fontWeight:700}
     }, num(sumTotal)), /*#__PURE__*/React.createElement("td", {
