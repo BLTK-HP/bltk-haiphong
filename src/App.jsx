@@ -589,14 +589,16 @@ function DateTime({
   if (!value) return /*#__PURE__*/React.createElement("span", {
     className: "text-slate-400"
   }, "—");
-  const [d, ...rest] = String(value).split(" ");
+  const parts = String(value).split(" ");
+  const time = parts[0];
+  const date = parts.slice(1).join(" ");
   return /*#__PURE__*/React.createElement("span", {
     className: "text-xs text-slate-500"
   }, /*#__PURE__*/React.createElement("span", {
     className: "block"
-  }, d), rest.length ? /*#__PURE__*/React.createElement("span", {
+  }, date || time), date ? /*#__PURE__*/React.createElement("span", {
     className: "block text-slate-400"
-  }, rest.join(" ")) : null);
+  }, time) : null);
 }
 
 /* ── Xuất Excel/CSV thật (E3) ── */
@@ -1023,7 +1025,8 @@ function SalesModule({
     onEdit: o => setView({
       edit: o.id
     }),
-    onDelete: id => setOrders(os => os.filter(o => o.id !== id))
+    onDelete: id => setOrders(os => os.filter(o => o.id !== id)),
+    onOpenOrder: id => setView({edit: id})
   }) : /*#__PURE__*/React.createElement(OrderTable, {
     orders: orders.filter(o => !o.draft),
     onNew: () => setView("create"),
@@ -1688,7 +1691,8 @@ function DraftTable({
   drafts,
   onDelete,
   onNew,
-  onEdit
+  onEdit,
+  onOpenOrder
 }) {
   const notify = useToast();
   const [q, setQ] = useState("");
@@ -1739,7 +1743,7 @@ function DraftTable({
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(Toolbar, null), /*#__PURE__*/React.createElement(TableShell, {
-    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Số Báo giá"), /*#__PURE__*/React.createElement(Th, null, "Số ĐH"), /*#__PURE__*/React.createElement(Th, {
+    head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, null, "Số Báo giá"), /*#__PURE__*/React.createElement(Th, null, "Số đơn hàng"), /*#__PURE__*/React.createElement(Th, {
       style: {
         width: 90
       }
@@ -1772,7 +1776,7 @@ function DraftTable({
   }, o.id)), /*#__PURE__*/React.createElement("td", {
     className: "whitespace-nowrap px-4 py-3"
   }, o.linkedOrderId
-    ? /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, o.linkedOrderId)
+    ? /*#__PURE__*/React.createElement("button", {onClick: () => onOpenOrder && onOpenOrder(o.linkedOrderId), className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309] hover:bg-amber-100"}, o.linkedOrderId)
     : /*#__PURE__*/React.createElement("span", {className: "text-slate-300 text-xs"}, "—")), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement(DateTime, {
@@ -1782,8 +1786,8 @@ function DraftTable({
     style: {maxWidth: 130}
   }, /*#__PURE__*/React.createElement("div", {className: "text-slate-800 truncate"}, o.name),
     o.phone ? /*#__PURE__*/React.createElement("div", {className: "mt-0.5 text-xs text-slate-400"}, /*#__PURE__*/React.createElement(Phone, {value: o.phone})) : null), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-xs text-slate-500 truncate",
-    style: {maxWidth: 120}
+    className: "px-4 py-3 text-xs text-slate-500",
+    style: {maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}
   }, o.addr || "—"), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-xs text-slate-500"
   }, o.note || "—"), /*#__PURE__*/React.createElement("td", {
