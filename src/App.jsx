@@ -1083,7 +1083,7 @@ function SalesModule({
       }
       if (p.allExported && onExportKho) {
         const slips = (ord.items || []).map((it, i) => ({
-          slip: "PX" + base + "_" + String(Date.now() + i).slice(-4),
+          slip: nextId("PX"),
           dt,
           order: ord.id,
           sku: it.sku || "",
@@ -2493,7 +2493,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       if (p.allExported && onExportKho) {
         const dt = dateStr + " " + now.toLocaleTimeString("vi-VN", {hour:"2-digit", minute:"2-digit"});
         onExportKho(ordItems.map((it, i) => ({
-          slip: "PX" + base + "_" + String(Date.now() + i).slice(-4),
+          slip: (() => { const row = _dn && _dn.find(r => r.prefix === "PX"); const num = (row ? row.num : 1) + i; if (_sdn && i === 0) _sdn(ds => ds.map(r => r.prefix === "PX" ? {...r, num: r.num + ordItems.length} : r)); return fmtDocId("PX", num); })(),
           dt,
           order: effectiveOrderId,
           sku: it.sku || "",
@@ -3223,11 +3223,14 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   }, rows.map(r => /*#__PURE__*/React.createElement("tr", {
     key: r.slip,
     className: "align-top hover:bg-slate-50/60"
-  }, /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3", style:{fontSize:"11px"}
-  }, /*#__PURE__*/React.createElement(DateTime, {
-    value: r.dt
-  })), /*#__PURE__*/React.createElement("td", {
+  }, /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 text-xs"}, (() => {
+    const p = String(r.dt||"").split(" ");
+    const dateStr = p[0]||"";
+    const timeStr = p[1] ? p[1].split(":").slice(0,2).join(":") : "";
+    return /*#__PURE__*/React.createElement("span", {className:"text-slate-500"},
+      /*#__PURE__*/React.createElement("span", {className:"block"}, dateStr),
+      timeStr ? /*#__PURE__*/React.createElement("span", {className:"block text-slate-400"}, timeStr) : null);
+  })()), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 tabular-nums"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSlipModal(r),
