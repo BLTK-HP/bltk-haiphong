@@ -2837,8 +2837,11 @@ function PurchaseCreate({
     const dateStr = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
     const pmRow = docNums.find(r => r.prefix === "PM");
     const pmStart = pmRow ? pmRow.num : 1;
-    return rows.filter(l => l.name).map((l, i) => ({
-      lot: fmtDocId("PM", pmStart),
+    const pmSlip = fmtDocId("PM", pmStart);
+    const filtered = rows.filter(l => l.name);
+    return filtered.map((l, i) => ({
+      slip: pmSlip,
+      lot: filtered.length > 1 ? pmSlip + "_" + i : pmSlip,
       date: dateStr,
       prod: l.name,
       store: "Kho HH",
@@ -4828,7 +4831,7 @@ function CustDebtDetail({
 }
 
 /* ───────── Công nợ NCC (tổng hợp → chi tiết) ───────── */
-function DebtNcc({ purchaseList = [] }) {
+function DebtNcc({ purchaseList = [], setPurchaseList }) {
   const [detail, setDetail] = useState(null);
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
@@ -4842,7 +4845,8 @@ function DebtNcc({ purchaseList = [] }) {
       const key = r.supplier || "Không rõ";
       if (!map[key]) { const sup = SUPPLIERS.find(s=>s.name===key); map[key] = { name:key, open: sup?.open||0, ps:0, tt:0, lots:[] }; }
       const total = (r.qtyIn||0)*(r.costNcc||0)+(r.fee||0);
-      map[key].ps += total;
+      const returnAmt = (r.returns||[]).reduce((s,x)=>s+(x.amount||0),0);
+      map[key].ps += total - returnAmt;
       map[key].tt += r.paid || (r.pay==="Đã thanh toán" ? total : 0);
       map[key].lots.push(r);
     });
@@ -4850,6 +4854,8 @@ function DebtNcc({ purchaseList = [] }) {
   }, [purchaseList, fromDate, toDate]);
   if (detail) return /*#__PURE__*/React.createElement(NccDebtDetail, {
     sup: detail,
+    purchaseList,
+    setPurchaseList,
     onBack: () => setDetail(null)
   });
   const onExport = () => exportCSV("cong-no-nha-cung-cap", ["Tên nhà cung cấp", "Dư nợ đầu kỳ", "Phát sinh", "Thanh toán", "Dư nợ cuối kỳ"], nccDebt.map(s => [s.name, s.open, s.ps, s.tt, s.open + s.ps - s.tt]));
@@ -4947,12 +4953,49 @@ function DebtNcc({ purchaseList = [] }) {
     className: "border-l border-slate-100 px-3 py-3 text-right tabular-nums text-slate-800", style:{fontWeight:700}
   }, num(nccDebt.reduce((s,x)=>s+(x.open+x.ps-x.tt),0))))))));
 }
+function NccReturnModal({lot, prod, costNcc, onClose, onSave}) {
+  const today = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
+  const [qty, setQty] = useState(1);
+  const [amount, setAmount] = useState(costNcc||0);
+  const [note, setNote] = useState("");
+  return /*#__PURE__*/React.createElement(Modal, {title:"Hoàn hàng NCC", onClose, maxW:"max-w-md",
+    footer:/*#__PURE__*/React.createElement(React.Fragment,null,
+      /*#__PURE__*/React.createElement("button",{onClick:onClose,className:ghostBtn},"Hủy"),
+      /*#__PURE__*/React.createElement("button",{onClick:()=>onSave({qty,amount,date:today(),note}),disabled:qty<=0||amount<=0,className:blueBtn+(qty>0&&amount>0?"":" opacity-50 cursor-not-allowed")},"Xác nhận hoàn"))},
+    /*#__PURE__*/React.createElement("div",{className:"space-y-3 text-sm"},
+      /*#__PURE__*/React.createElement("p",null,/*#__PURE__*/React.createElement("span",{className:"text-slate-500"},"Sản phẩm: "),/*#__PURE__*/React.createElement("b",null,prod)),
+      /*#__PURE__*/React.createElement("div",{className:"grid grid-cols-2 gap-3"},
+        /*#__PURE__*/React.createElement("div",null,
+          /*#__PURE__*/React.createElement("label",{className:"mb-1 block text-xs font-medium text-slate-500"},"Số lượng hoàn"),
+          /*#__PURE__*/React.createElement(NumInput,{value:qty,onChange:setQty,className:"w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+        /*#__PURE__*/React.createElement("div",null,
+          /*#__PURE__*/React.createElement("label",{className:"mb-1 block text-xs font-medium text-slate-500"},"Số tiền hoàn"),
+          /*#__PURE__*/React.createElement(NumInput,{value:amount,onChange:setAmount,className:"w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"}))),
+      /*#__PURE__*/React.createElement("div",null,
+        /*#__PURE__*/React.createElement("label",{className:"mb-1 block text-xs font-medium text-slate-500"},"Ghi chú"),
+        /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),placeholder:"Lý do hoàn...",className:"w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})))
+  );
+}
+
 function NccDebtDetail({
   sup,
+  purchaseList,
+  setPurchaseList,
   onBack
 }) {
   const lots = sup.lots || [];
   const close = (sup.open||0) + (sup.ps||0) - (sup.tt||0);
+  const [returnModal, setReturnModal] = useState(null);
+  const onReturn = lot => {
+    const rec = (purchaseList||[]).find(r => r.lot === lot.lot && r.prod === lot.prod);
+    if (!rec) return;
+    setReturnModal(rec);
+  };
+  const doReturn = (rec, ret) => {
+    if (!setPurchaseList) return;
+    setPurchaseList(xs => xs.map(r => (r.lot===rec.lot&&r.prod===rec.prod) ? {...r, returns:[...(r.returns||[]),ret]} : r));
+    setReturnModal(null);
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("button", {
@@ -4997,19 +5040,24 @@ function NccDebtDetail({
     className: "px-3 py-2.5 text-right"
   }, "Tiền hàng"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
+  }, "Hoàn hàng"), /*#__PURE__*/React.createElement("th", {
+    className: "px-3 py-2.5 text-right"
   }, "Chi phí"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
   }, "Phải thanh toán"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
   }, "Đã thanh toán"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
-  }, "Còn nợ"))), /*#__PURE__*/React.createElement("tbody", {
+  }, "Còn nợ"), /*#__PURE__*/React.createElement("th", {
+    className: "px-3 py-2.5"
+  }, ""))), /*#__PURE__*/React.createElement("tbody", {
     className: "divide-y divide-slate-50"
   }, lots.map((l, li) => {
     const tienHang = (l.qtyIn||0)*(l.costNcc||0);
     const chiPhi = l.fee||0;
-    const tot = tienHang + chiPhi;
-    const paidAmt = l.paid || (l.pay==="Đã thanh toán" ? tot : 0);
+    const returnAmt = (l.returns||[]).reduce((s,x)=>s+(x.amount||0),0);
+    const tot = tienHang + chiPhi - returnAmt;
+    const paidAmt = l.paid || (l.pay==="Đã thanh toán" ? tienHang+chiPhi : 0);
     const con = tot - paidAmt;
     const td = "px-3 py-3 border-l border-slate-100";
     return /*#__PURE__*/React.createElement("tr", {
@@ -5018,8 +5066,8 @@ function NccDebtDetail({
     }, /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-slate-500 whitespace-nowrap"
     }, l.date), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 font-mono text-xs text-slate-600"
-    }, l.lot), /*#__PURE__*/React.createElement("td", {
+      className: "px-3 py-3"
+    }, /*#__PURE__*/React.createElement("span", {className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"}, purCode(l.slip||l.lot))), /*#__PURE__*/React.createElement("td", {
       className: td + " text-slate-800"
     }, l.prod), /*#__PURE__*/React.createElement("td", {
       className: td + " text-right tabular-nums text-slate-600"
@@ -5028,6 +5076,8 @@ function NccDebtDetail({
     }, num(l.costNcc)), /*#__PURE__*/React.createElement("td", {
       className: td + " text-right tabular-nums text-slate-700 font-medium"
     }, num(tienHang)), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums text-[#b45309]"
+    }, returnAmt > 0 ? num(returnAmt) : ""), /*#__PURE__*/React.createElement("td", {
       className: td + " text-right tabular-nums text-slate-600"
     }, chiPhi > 0 ? num(chiPhi) : ""), /*#__PURE__*/React.createElement("td", {
       className: td + " text-right tabular-nums text-slate-700 font-semibold"
@@ -5035,7 +5085,9 @@ function NccDebtDetail({
       className: td + " text-right tabular-nums text-[#92400e] font-semibold"
     }, paidAmt > 0 ? num(paidAmt) : ""), /*#__PURE__*/React.createElement("td", {
       className: td + " text-right tabular-nums font-semibold " + (con > 0 ? "text-[#B91C1C]" : "text-slate-400")
-    }, num(con)||"0"));
+    }, num(con)||"0"), /*#__PURE__*/React.createElement("td", {
+      className: "px-3 py-3 border-l border-slate-100"
+    }, setPurchaseList && /*#__PURE__*/React.createElement("button", {onClick:()=>onReturn(l), className:"rounded px-2 py-1 text-xs font-medium bg-amber-50 text-[#92400e] hover:bg-amber-100 border border-[#fed7aa] whitespace-nowrap"}, "Hoàn")));
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
     className: "bg-slate-50 font-semibold border-t border-slate-200"
   }, /*#__PURE__*/React.createElement("td", {
@@ -5044,14 +5096,16 @@ function NccDebtDetail({
   }, "Tổng cộng"), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-700 font-semibold"
   }, num(lots.reduce((s,l)=>(l.qtyIn||0)*(l.costNcc||0)+s,0))), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#b45309]"
+  }, lots.reduce((s,l)=>s+(l.returns||[]).reduce((r,x)=>r+(x.amount||0),0),0)>0 ? num(lots.reduce((s,l)=>s+(l.returns||[]).reduce((r,x)=>r+(x.amount||0),0),0)) : ""), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-600"
   }, lots.reduce((s,l)=>s+(l.fee||0),0)>0 ? num(lots.reduce((s,l)=>s+(l.fee||0),0)) : ""), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-700 font-semibold"
-  }, num(lots.reduce((s,l)=>s+(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0),0))), /*#__PURE__*/React.createElement("td", {
+  }, num(lots.reduce((s,l)=>{ const rA=(l.returns||[]).reduce((r,x)=>r+(x.amount||0),0); return s+(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0)-rA; },0))), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#92400e] font-semibold"
   }, num(lots.reduce((s,l)=>{ const t=(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0); return s+(l.paid||(l.pay==="Đã thanh toán"?t:0)); },0))), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#B91C1C] font-semibold"
-  }, num(lots.reduce((s,l)=>{ const t=(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0); const p=l.paid||(l.pay==="Đã thanh toán"?t:0); return s+t-p; },0))))))) : /*#__PURE__*/React.createElement(Empty, null, "Không có dữ liệu lô hàng chi tiết. Tổng dư nợ cuối kỳ: ", /*#__PURE__*/React.createElement("b", {
+  }, num(lots.reduce((s,l)=>{ const rA=(l.returns||[]).reduce((r,x)=>r+(x.amount||0),0); const t=(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0)-rA; const p=l.paid||(l.pay==="Đã thanh toán"?(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0):0); return s+t-p; },0))), /*#__PURE__*/React.createElement("td", null))), returnModal && /*#__PURE__*/React.createElement(NccReturnModal, {lot:returnModal.lot, prod:returnModal.prod, costNcc:returnModal.costNcc||0, onClose:()=>setReturnModal(null), onSave:ret=>doReturn(returnModal,ret)}))) : /*#__PURE__*/React.createElement(Empty, null, "Không có dữ liệu lô hàng chi tiết. Tổng dư nợ cuối kỳ: ", /*#__PURE__*/React.createElement("b", {
     className: "text-[#B91C1C]"
   }, num(sup.open)))));
 }
@@ -5706,7 +5760,7 @@ function Screen({
     case "debt_cust":
       return /*#__PURE__*/React.createElement(DebtCust, {orders});
     case "debt_ncc":
-      return /*#__PURE__*/React.createElement(DebtNcc, {purchaseList});
+      return /*#__PURE__*/React.createElement(DebtNcc, {purchaseList, setPurchaseList});
     case "dashboard":
       return /*#__PURE__*/React.createElement(Dashboard, {orders});
     case "rp_sales":
