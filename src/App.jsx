@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
+import { collection, getDocs, deleteDoc, doc as fsDoc } from 'firebase/firestore'
+import { db } from './firebase.js'
 import { AuthProvider, useAuth, ROLES, ALLOWED, createUserProfile } from './useAuth.js'
 import { auth } from './firebase.js'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
@@ -369,6 +371,9 @@ const NAV = [{
     key: "settings_docnum",
     label: "Quy tắc đánh số chứng từ"
   }, {
+    key: "admin_clear",
+    label: "Xóa dữ liệu test"
+  }, {
     key: "users",
     label: "Quản lý nhân viên"
   }]
@@ -393,7 +398,8 @@ const LABELS = {
   settings: "Cài đặt",
   settings_payment: "Cài đặt thanh toán",
   settings_numformat: "Định dạng số",
-  settings_docnum: "Quy tắc đánh số chứng từ"
+  settings_docnum: "Quy tắc đánh số chứng từ",
+  admin_clear: "Xóa dữ liệu test"
 };
 
 /* ───────── atoms ───────── */
@@ -5775,6 +5781,8 @@ function Screen({
       return /*#__PURE__*/React.createElement(SettingsNumFormat, null);
     case "settings_docnum":
       return /*#__PURE__*/React.createElement(SettingsDocNum, null);
+    case "admin_clear":
+      return /*#__PURE__*/React.createElement(AdminClearData, null);
     case "users":
       return /*#__PURE__*/React.createElement(UsersTab, null);
     default:
@@ -6259,6 +6267,41 @@ function SettingsDocNum() {
       ),
       /*#__PURE__*/React.createElement("p", {className: "text-[13px] text-slate-500"},
         "Sang năm mới, số thứ tự tự động reset về 0001. Ví dụ: ", /*#__PURE__*/React.createElement("strong", null, "BG270001"), "."
+      )
+    )
+  );
+}
+
+/* ───────── TEMP: Xóa dữ liệu test ───────── */
+function AdminClearData() {
+  const [busy, setBusy] = React.useState(false);
+  const [done, setDone] = React.useState(null);
+  const COLS = ["orders","purchases","wh_in","wh_out","txns"];
+  const clearAll = async () => {
+    if (!window.confirm("Xóa TOÀN BỘ dữ liệu orders, purchases, wh_in, wh_out, txns?\nKhông thể hoàn tác!")) return;
+    setBusy(true); setDone(null);
+    const counts = {};
+    for (const col of COLS) {
+      const snap = await getDocs(collection(db, col));
+      await Promise.all(snap.docs.map(d => deleteDoc(fsDoc(db, col, d.id))));
+      counts[col] = snap.size;
+    }
+    setBusy(false);
+    setDone(counts);
+  };
+  return React.createElement("div", {className: "space-y-4 max-w-lg"},
+    React.createElement("div", {className: "rounded-xl border-2 border-red-200 bg-red-50 p-5 space-y-3"},
+      React.createElement("p", {className: "font-semibold text-red-700"}, "⚠ Xóa dữ liệu test"),
+      React.createElement("p", {className: "text-sm text-red-600"}, "Xóa toàn bộ: orders, purchases, wh_in, wh_out, txns. Không thể hoàn tác."),
+      React.createElement("button", {
+        onClick: clearAll, disabled: busy,
+        className: "rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+      }, busy ? "Đang xóa..." : "Xóa tất cả dữ liệu"),
+      done && React.createElement("div", {className: "text-sm text-green-700 space-y-1"},
+        React.createElement("p", {className: "font-semibold"}, "✅ Đã xóa xong:"),
+        Object.entries(done).map(([col, n]) =>
+          React.createElement("p", {key: col}, col, ": ", n, " bản ghi")
+        )
       )
     )
   );
