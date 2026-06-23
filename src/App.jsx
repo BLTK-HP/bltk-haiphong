@@ -4559,7 +4559,7 @@ function DebtCust({ orders = [] }) {
   const custDebt = React.useMemo(() => {
     const _pISO = s => { const [y,m,d] = s.split('-'); return new Date(+y,+m-1,+d); };
     const fD = fromDate ? _pISO(fromDate) : null;
-    const tD = toDate   ? _pISO(toDate)   : null;
+    const tD = toDate   ? new Date(_pISO(toDate).setHours(23,59,59,999)) : null;
     const inR = s => { const ms = parseViDate(s); if (!ms) return true; const d = new Date(ms); return (!fD || d >= fD) && (!tD || d <= tD); };
     const active = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && inR(o.dt));
     const map = {};
@@ -4800,11 +4800,10 @@ function DebtNcc({ purchaseList = [] }) {
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const nccDebt = React.useMemo(() => {
-    const _pD = s => { if (!s) return new Date(0); const p = s.split(' ')[0].split('/'); return new Date(+p[2],+p[1]-1,+p[0]); };
     const _pISO = s => { const [y,m,d] = s.split('-'); return new Date(+y,+m-1,+d); };
     const fD = fromDate ? _pISO(fromDate) : null;
-    const tD = toDate   ? _pISO(toDate)   : null;
-    const inR = s => { const d = _pD(s); return (!fD || d >= fD) && (!tD || d <= tD); };
+    const tD = toDate   ? new Date(_pISO(toDate).setHours(23,59,59,999)) : null;
+    const inR = s => { const ms = parseViDate(s); if (!ms) return true; const d = new Date(ms); return (!fD || d >= fD) && (!tD || d <= tD); };
     const map = {};
     purchaseList.filter(r => inR(r.date)).forEach(r => {
       const key = r.supplier || "Không rõ";
