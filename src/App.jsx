@@ -1309,8 +1309,10 @@ function KhoModal({ order, onClose, onConfirm }) {
 
   // ── Actions ──────────────────────────────────────────────────────────────
   const doImport = () => {
-    const miss = importRows.filter(r => r.slNhap > 0 && (stockOf(r.name) || 0) === 0 && !r.nccIn.trim());
-    if (miss.length) { alert("Vui lòng nhập tên NCC cho: " + miss.map(r => r.name).join(", ")); return; }
+    const missNcc = importRows.filter(r => r.slNhap > 0 && (stockOf(r.name) || 0) === 0 && !r.nccIn.trim());
+    if (missNcc.length) { alert("Vui lòng nhập tên NCC cho: " + missNcc.map(r => r.name).join(", ")); return; }
+    const missGia = importRows.filter(r => r.slNhap > 0 && !(r.giaNhap > 0));
+    if (missGia.length) { alert("Vui lòng nhập giá nhập cho: " + missGia.map(r => r.name).join(", ")); return; }
     // Upsert từng dòng: cập nhật nếu tồn tại (lot, prod), thêm mới nếu chưa có
     const newLots = [];
     _setWhIn(prev => {
@@ -2232,6 +2234,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     compCosts,
     shippingFee,
     returnFee,
+    returns,
     note,
     delivery,
     orderStatus: cancelled ? "Huỷ" : "",
@@ -2533,7 +2536,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(discountExtra))),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Còn lại"),
-          /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-[#B91C1C]":"text-[#92400e]"}`}, vnd(remaining)))),
+          /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-[#B91C1C]":"text-[#92400e]"}`}, vnd(remaining) || "0"))),
       /*#__PURE__*/React.createElement("div", {className:"mt-5 flex gap-3"},
         /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal(true), className:"flex-1 rounded-xl bg-[#92400e] py-2 text-sm font-medium text-white hover:bg-[#78350f]"}, "Thanh toán")))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm"},
@@ -2800,6 +2803,7 @@ function PurchaseCreate({
   editRecord
 }) {
   const notify = useToast();
+  const {docNums, setDocNums} = useDocNum();
   const [supText, setSupText] = useState("");
   const [supId, setSupId] = useState("");
   const [note, setNote] = useState("");
@@ -2831,9 +2835,10 @@ function PurchaseCreate({
   const buildRecords = () => {
     const d = new Date();
     const dateStr = `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    const base = Date.now();
+    const pmRow = docNums.find(r => r.prefix === "PM");
+    const pmStart = pmRow ? pmRow.num : 1;
     return rows.filter(l => l.name).map((l, i) => ({
-      lot: `PM${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}_${String(base + i).slice(-4)}`,
+      lot: fmtDocId("PM", pmStart),
       date: dateStr,
       prod: l.name,
       store: "Kho HH",
@@ -2854,12 +2859,12 @@ function PurchaseCreate({
         /*#__PURE__*/React.createElement(FileText, {className: "h-6 w-6 text-slate-400"}), " Tạo phiếu mua hàng"),
       /*#__PURE__*/React.createElement("div", {className: "flex items-center gap-2"},
         /*#__PURE__*/React.createElement("button", {
-          onClick: () => { const recs = buildRecords(); if (onSave) onSave(recs); notify("Đã lưu phiếu mua hàng"); onBack(); },
+          onClick: () => { const recs = buildRecords(); if (onSave) onSave(recs); setDocNums(ds => ds.map(r => r.prefix === "PM" ? {...r, num: r.num + 1} : r)); notify("Đã lưu phiếu mua hàng"); onBack(); },
           disabled: subtotal === 0,
           className: outlineTealBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(Save, {className: "h-4 w-4"}), " Lưu"),
         /*#__PURE__*/React.createElement("button", {
-          onClick: () => { addLog("Tạo phiếu nhập", `${supText||""} — ${rows.filter(l=>l.name).length} sản phẩm — Tổng tiền: ${vnd(subtotal)}đ`); const recs = buildRecords(); if (onSave) onSave(recs); const slips = recs.map((r, i) => ({...r, lot: "PN" + r.lot.slice(2) + String(i), qtyNow: r.qtyIn, order: r.lot})); notify("Đã tạo phiếu nhập"); if (onImportToWh) onImportToWh(slips.length === 1 ? slips[0] : slips); else onBack(); },
+          onClick: () => { addLog("Tạo phiếu nhập", `${supText||""} — ${rows.filter(l=>l.name).length} sản phẩm — Tổng tiền: ${vnd(subtotal)}đ`); const recs = buildRecords(); if (onSave) onSave(recs); setDocNums(ds => ds.map(r => r.prefix === "PM" ? {...r, num: r.num + 1} : r)); const slips = recs.map((r, i) => ({...r, lot: r.lot.replace("PM","PN") + (recs.length > 1 ? String(i) : ""), qtyNow: r.qtyIn, order: r.lot})); notify("Đã tạo phiếu nhập"); if (onImportToWh) onImportToWh(slips.length === 1 ? slips[0] : slips); else onBack(); },
           disabled: subtotal === 0,
           className: blueBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo phiếu nhập"),
@@ -3728,7 +3733,7 @@ function Stock() {
     key: i,
     className: `border border-[#fed7aa] px-3 py-1.5 text-right ${bg}`
   }, h)))), /*#__PURE__*/React.createElement("tbody", {
-    className: "divide-y divide-slate-100"
+    className: "divide-y divide-slate-200"
   }, rows.map((r, i) => {
     const end = r.o + r.in - r.out;
     return /*#__PURE__*/React.createElement("tr", {
@@ -3737,34 +3742,34 @@ function Stock() {
     }, /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 font-medium text-slate-700"
     }, r.store.replace(/^Kho\s+/, "")), /*#__PURE__*/React.createElement("td", {
-      className: "border-l border-slate-100 px-3 py-3 text-xs text-slate-500"
+      className: "border-l border-slate-200 px-3 py-3 text-xs text-slate-500"
     }, /*#__PURE__*/React.createElement(Sku, {
       value: r.sku
     })), /*#__PURE__*/React.createElement("td", {
-      className: "border-l border-slate-100 px-3 py-3"
+      className: "border-l border-slate-200 px-3 py-3"
     }, /*#__PURE__*/React.createElement("button", {
       onClick: () => setDetail(r),
       className: "text-left text-[#92400e] underline-offset-2 hover:underline"
     }, r.name)), /*#__PURE__*/React.createElement("td", {
-      className: "border-l border-slate-100 px-3 py-3 text-slate-500"
+      className: "border-l border-slate-200 px-3 py-3 text-slate-500"
     }, r.unit), /*#__PURE__*/React.createElement("td", {
-      className: cell + " border-l border-slate-100 text-slate-700"
+      className: cell + " border-l border-slate-200 text-slate-700"
     }, num(r.price)), /*#__PURE__*/React.createElement("td", {
-      className: cell + " border-l border-slate-100 text-slate-600"
+      className: cell + " border-l border-slate-200 text-slate-600"
     }, r.o || ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + " border-l border-slate-100 text-slate-600"
+      className: cell + " border-l border-slate-200 text-slate-600"
     }, r.o ? num(r.o * r.price) : ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${r.in ? "text-[#92400e]" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-200 ${r.in ? "text-[#92400e]" : "text-[#94A3B8]"}`
     }, r.in || ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${r.in ? "text-[#92400e]" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-200 ${r.in ? "text-[#92400e]" : "text-[#94A3B8]"}`
     }, r.in ? num(r.in * r.price) : ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${r.out ? "text-[#D97706]" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-200 ${r.out ? "text-[#D97706]" : "text-[#94A3B8]"}`
     }, r.out || ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${r.out ? "text-[#D97706]" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-200 ${r.out ? "text-[#D97706]" : "text-[#94A3B8]"}`
     }, r.out ? num(r.out * r.price) : ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${end > 0 ? "text-[#92400e]" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-200 ${end > 0 ? "text-[#92400e]" : "text-[#94A3B8]"}`
     }, end || ""), /*#__PURE__*/React.createElement("td", {
-      className: cell + ` border-l border-slate-100 ${end > 0 ? "text-[#92400e]" : "text-[#94A3B8]"}`
+      className: cell + ` border-l border-slate-200 ${end > 0 ? "text-[#92400e]" : "text-[#94A3B8]"}`
     }, end ? num(end * r.price) : ""));
   }), (() => {
     const tO    = rows.reduce((s,r)=>s+(r.o||0),0);
@@ -4608,7 +4613,7 @@ function DebtCust({ orders = [] }) {
   }, /*#__PURE__*/React.createElement("table", {
     className: "w-full text-sm",
     style: {
-      minWidth: 820
+      minWidth: 1060
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
     className: "bg-[#ffedd5] text-xs font-semibold uppercase tracking-wide text-[#7c2d12]"
@@ -4616,6 +4621,9 @@ function DebtCust({ orders = [] }) {
     rowSpan: 2,
     className: "border border-[#fed7aa] px-3 py-2 text-left"
   }, "Tên khách hàng"), /*#__PURE__*/React.createElement("th", {
+    rowSpan: 2,
+    className: "border border-[#fed7aa] px-3 py-2 text-left"
+  }, "Địa chỉ"), /*#__PURE__*/React.createElement("th", {
     rowSpan: 2,
     className: "border border-[#fed7aa] px-3 py-2 text-left"
   }, "Điện thoại"), /*#__PURE__*/React.createElement("th", {
@@ -4647,6 +4655,8 @@ function DebtCust({ orders = [] }) {
       className: "text-left text-[#92400e] underline-offset-2 hover:underline"
     }, r.name)), /*#__PURE__*/React.createElement("td", {
       className: "border-l border-slate-100 px-3 py-3 text-xs text-slate-500"
+    }, r.addr || ""), /*#__PURE__*/React.createElement("td", {
+      className: "border-l border-slate-100 px-3 py-3 text-xs text-slate-500"
     }, /*#__PURE__*/React.createElement(Phone, {
       value: r.phone
     })), /*#__PURE__*/React.createElement("td", {
@@ -4661,7 +4671,7 @@ function DebtCust({ orders = [] }) {
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
     className: "bg-[#fed7aa] font-bold"
   }, /*#__PURE__*/React.createElement("td", {
-    colSpan: 2,
+    colSpan: 3,
     className: "px-3 py-3 text-center text-slate-800", style: {fontWeight:700}
   }, "TỔNG CỘNG"), /*#__PURE__*/React.createElement("td", {
     className: "border-l border-slate-100 px-3 py-3 text-right tabular-nums text-slate-800", style: {fontWeight:700}
@@ -4680,9 +4690,16 @@ function CustDebtDetail({
   const detailOrders = (row.orders || []).map(o => {
     const c = calc(o);
     const itemsTotal = (o.items||[]).reduce((s,it)=>s+it.price*it.qty,0);
-    return { id:o.id, date:o.dt, items:(o.items||[]).map(it=>({name:it.name,sku:it.sku||'',qty:it.qty,price:it.price,amount:it.price*it.qty})), payable:c.total, paid:o.paid||0, expense:Math.max(0,c.total-itemsTotal) };
+    const refund = (o.returns||[]).reduce((s,r)=>s+(r.amount||0),0);
+    return { id:o.id, date:o.dt, items:(o.items||[]).map(it=>({name:it.name,sku:it.sku||'',qty:it.qty,price:it.price,amount:it.price*it.qty})), payable:c.total, paid:o.paid||0, expense:Math.max(0,c.total-itemsTotal), refund };
   }).filter(o=>o.items.length>0);
   const close = row.open + row.ps - row.tt;
+  const totItems  = detailOrders.reduce((s,o)=>s+o.items.reduce((s2,it)=>s2+it.amount,0),0);
+  const totRefund = detailOrders.reduce((s,o)=>s+o.refund,0);
+  const totExp  = detailOrders.reduce((s,o)=>s+o.expense,0);
+  const totPay  = detailOrders.reduce((s,o)=>s+o.payable,0);
+  const totPaid = detailOrders.reduce((s,o)=>s+o.paid,0);
+  const totDebt = totPay - totPaid;
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
@@ -4699,31 +4716,31 @@ function CustDebtDetail({
   }))), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("h3", {
     className: "mb-4 text-[16px] font-semibold text-[#92400e]"
   }, "Thông tin khách hàng"), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-1 gap-y-2 text-sm sm:grid-cols-2"
+    className: "flex flex-wrap gap-x-8 gap-y-1 text-sm"
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "Địa chỉ:"), " ", /*#__PURE__*/React.createElement("b", {
-    className: "text-slate-800"
-  }, row.addr || "")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "text-slate-500"
   }, "Tên khách hàng:"), " ", /*#__PURE__*/React.createElement("b", {
     className: "text-slate-800"
   }, row.name)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "text-slate-500"
+  }, "Địa chỉ:"), " ", /*#__PURE__*/React.createElement("b", {
+    className: "text-slate-800"
+  }, row.addr || "")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+    className: "text-slate-500"
   }, "Số điện thoại:"), " ", /*#__PURE__*/React.createElement("b", {
     className: "text-slate-800"
-  }, row.phone)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+  }, row.phone)), /*#__PURE__*/React.createElement("p", {className: "ml-auto text-right"}, /*#__PURE__*/React.createElement("span", {
     className: "text-slate-500"
   }, "Tổng dư nợ:"), " ", /*#__PURE__*/React.createElement("b", {
     className: "text-[#B91C1C]"
   }, num(close))))), /*#__PURE__*/React.createElement(Card, {
-    title: "Danh sách đơn hàng còn nợ"
+    title: "Bảng kê chi tiết công nợ khách hàng"
   }, detailOrders.length > 0 ? /*#__PURE__*/React.createElement("div", {
     className: "-mx-5 -mb-5 overflow-x-auto"
   }, /*#__PURE__*/React.createElement("table", {
     className: "w-full text-sm",
     style: {
-      minWidth: 900
+      minWidth: 1020
     }
   }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
     className: "border-b border-[#fed7aa] bg-[#ffedd5] text-left text-xs uppercase tracking-wide text-[#7c2d12]"
@@ -4739,6 +4756,8 @@ function CustDebtDetail({
     className: "px-3 py-2.5 text-right"
   }, "Tiền hàng"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
+  }, "Hoàn tiền"), /*#__PURE__*/React.createElement("th", {
+    className: "px-3 py-2.5 text-right"
   }, "Chi phí"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
   }, "Phải thanh toán"), /*#__PURE__*/React.createElement("th", {
@@ -4746,12 +4765,13 @@ function CustDebtDetail({
   }, "Đã thanh toán"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
   }, "Còn nợ"))), /*#__PURE__*/React.createElement("tbody", {
-    className: "divide-y divide-slate-100"
-  }, detailOrders.map(o => {
+    className: "divide-y divide-slate-50"
+  }, detailOrders.map((o, oi) => {
     const debtO = o.payable - o.paid;
+    const td = "px-3 py-3 border-l border-slate-100";
     return o.items.map((it, k) => /*#__PURE__*/React.createElement("tr", {
       key: o.id + k,
-      className: "hover:bg-slate-50/60"
+      className: (k === 0 && oi > 0) ? "hover:bg-slate-50/60 border-t-2 border-t-slate-300" : "hover:bg-slate-50/60"
     }, k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
       className: "px-3 py-3 align-top"
@@ -4760,36 +4780,49 @@ function CustDebtDetail({
     }, o.id), /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
       className: "text-xs text-slate-400"
     }, o.date)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-slate-800"
+      className: td + " text-slate-800"
     }, it.name, /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
       className: "text-xs text-slate-400"
     }, it.sku)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-slate-600"
+      className: td + " text-right tabular-nums text-slate-600"
     }, it.qty), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-slate-600"
+      className: td + " text-right tabular-nums text-slate-600"
     }, num(it.price)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-slate-700"
+      className: td + " text-right tabular-nums text-slate-700"
     }, num(it.amount)), k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
-      className: "px-3 py-3 text-right align-middle tabular-nums text-slate-600"
+      className: td + " text-right align-middle tabular-nums text-[#b45309]"
+    }, o.refund > 0 ? num(o.refund) : ""), k === 0 && /*#__PURE__*/React.createElement("td", {
+      rowSpan: o.items.length,
+      className: td + " text-right align-middle tabular-nums text-slate-600"
     }, num(o.expense)), k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
-      className: "px-3 py-3 text-right align-middle tabular-nums text-slate-700"
+      className: td + " text-right align-middle tabular-nums text-slate-700"
     }, num(o.payable)), k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
-      className: "px-3 py-3 text-right align-middle tabular-nums text-[#92400e]"
+      className: td + " text-right align-middle tabular-nums text-[#92400e]"
     }, num(o.paid)), k === 0 && /*#__PURE__*/React.createElement("td", {
       rowSpan: o.items.length,
-      className: "px-3 py-3 text-right align-middle font-semibold tabular-nums text-[#B91C1C]"
+      className: td + " text-right align-middle font-semibold tabular-nums text-[#B91C1C]"
     }, num(debtO))));
   })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
-    className: "bg-slate-50 font-semibold"
+    className: "bg-slate-50 font-semibold border-t border-slate-200"
   }, /*#__PURE__*/React.createElement("td", {
-    colSpan: 8,
-    className: "px-3 py-3 text-right text-slate-600"
-  }, "Tổng dư nợ"), /*#__PURE__*/React.createElement("td", {
-    className: "px-3 py-3 text-right tabular-nums text-[#B91C1C]"
-  }, num(close)))))) : /*#__PURE__*/React.createElement(Empty, null, "Không có dữ liệu đơn hàng chi tiết cho khách này. Số dư nợ cuối kỳ: ", /*#__PURE__*/React.createElement("b", {
+    colSpan: 4,
+    className: "px-3 py-3 text-right text-slate-500 text-xs uppercase tracking-wide"
+  }, "Tổng cộng"), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-700 font-semibold"
+  }, num(totItems)), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#b45309]"
+  }, totRefund > 0 ? num(totRefund) : ""), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-600"
+  }, num(totExp)), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-700 font-semibold"
+  }, num(totPay)), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#92400e] font-semibold"
+  }, num(totPaid)), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#B91C1C] font-semibold"
+  }, num(totDebt)))))) : /*#__PURE__*/React.createElement(Empty, null, "Không có dữ liệu đơn hàng chi tiết cho khách này. Số dư nợ cuối kỳ: ", /*#__PURE__*/React.createElement("b", {
     className: "text-[#B91C1C]"
   }, num(close)))));
 }
@@ -4919,6 +4952,7 @@ function NccDebtDetail({
   onBack
 }) {
   const lots = sup.lots || [];
+  const close = (sup.open||0) + (sup.ps||0) - (sup.tt||0);
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("button", {
@@ -4929,29 +4963,17 @@ function NccDebtDetail({
   }), " Quay lại báo cáo tổng hợp"), /*#__PURE__*/React.createElement(Card, null, /*#__PURE__*/React.createElement("h3", {
     className: "mb-4 text-[16px] font-semibold text-[#92400e]"
   }, "Thông tin nhà cung cấp"), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-1 gap-y-2 text-sm sm:grid-cols-2"
+    className: "flex flex-wrap gap-x-8 gap-y-1 text-sm"
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "Mã NCC:"), " ", /*#__PURE__*/React.createElement("b", {
-    className: "text-slate-800"
-  }, sup.code)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "Địa chỉ:"), " ", /*#__PURE__*/React.createElement("b", {
-    className: "text-slate-800"
-  }, sup.addr || "")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "text-slate-500"
   }, "Tên nhà cung cấp:"), " ", /*#__PURE__*/React.createElement("b", {
     className: "text-slate-800"
-  }, sup.name)), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
-    className: "text-slate-500"
-  }, "Điện thoại:"), " ", /*#__PURE__*/React.createElement("b", {
-    className: "text-slate-800"
-  }, sup.phone || "")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+  }, sup.name)), /*#__PURE__*/React.createElement("p", {className: "ml-auto text-right"}, /*#__PURE__*/React.createElement("span", {
     className: "text-slate-500"
   }, "Tổng dư nợ:"), " ", /*#__PURE__*/React.createElement("b", {
     className: "text-[#B91C1C]"
-  }, num(sup.open))))), /*#__PURE__*/React.createElement(Card, {
-    title: "Danh sách lô hàng có dư nợ / thanh toán dư"
+  }, num(close))))), /*#__PURE__*/React.createElement(Card, {
+    title: "Bảng kê chi tiết lô hàng"
   }, lots.length ? /*#__PURE__*/React.createElement("div", {
     className: "-mx-5 -mb-5 overflow-x-auto"
   }, /*#__PURE__*/React.createElement("table", {
@@ -4965,60 +4987,71 @@ function NccDebtDetail({
     className: "px-3 py-2.5"
   }, "Ngày nhập"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5"
-  }, "Mã phiếu nhập"), /*#__PURE__*/React.createElement("th", {
-    className: "px-3 py-2.5"
-  }, "Mã lô"), /*#__PURE__*/React.createElement("th", {
+  }, "Số phiếu nhập"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5"
   }, "Sản phẩm"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
   }, "SL"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
-  }, "Giá nhập"), /*#__PURE__*/React.createElement("th", {
+  }, "Đơn giá"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
-  }, "Tổng tiền"), /*#__PURE__*/React.createElement("th", {
+  }, "Tiền hàng"), /*#__PURE__*/React.createElement("th", {
+    className: "px-3 py-2.5 text-right"
+  }, "Chi phí"), /*#__PURE__*/React.createElement("th", {
+    className: "px-3 py-2.5 text-right"
+  }, "Phải thanh toán"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
   }, "Đã thanh toán"), /*#__PURE__*/React.createElement("th", {
     className: "px-3 py-2.5 text-right"
-  }, "Còn nợ"), /*#__PURE__*/React.createElement("th", {
-    className: "px-3 py-2.5"
-  }, "Trạng thái"), /*#__PURE__*/React.createElement("th", {
-    className: "px-3 py-2.5"
-  }, "Người tạo"))), /*#__PURE__*/React.createElement("tbody", {
-    className: "divide-y divide-slate-100"
-  }, lots.map((l, i) => {
-    const tot = l.cost * l.qty;
+  }, "Còn nợ"))), /*#__PURE__*/React.createElement("tbody", {
+    className: "divide-y divide-slate-50"
+  }, lots.map((l, li) => {
+    const tienHang = (l.qtyIn||0)*(l.costNcc||0);
+    const chiPhi = l.fee||0;
+    const tot = tienHang + chiPhi;
+    const paidAmt = l.paid || (l.pay==="Đã thanh toán" ? tot : 0);
+    const con = tot - paidAmt;
+    const td = "px-3 py-3 border-l border-slate-100";
     return /*#__PURE__*/React.createElement("tr", {
-      key: i,
+      key: li,
       className: "hover:bg-slate-50/60"
     }, /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-slate-500"
+      className: "px-3 py-3 text-slate-500 whitespace-nowrap"
     }, l.date), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 font-mono text-xs text-slate-600"
-    }, l.slip), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 font-mono text-xs text-slate-500"
     }, l.lot), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-slate-800"
-    }, l.prod, /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("span", {
-      className: "text-xs text-slate-400"
-    }, l.sku)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-slate-600"
-    }, l.qty), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-slate-600"
-    }, num(l.cost)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right font-medium tabular-nums text-slate-800"
+      className: td + " text-slate-800"
+    }, l.prod), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums text-slate-600"
+    }, l.qtyIn||0), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums text-slate-600"
+    }, num(l.costNcc)), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums text-slate-700 font-medium"
+    }, num(tienHang)), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums text-slate-600"
+    }, chiPhi > 0 ? num(chiPhi) : ""), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums text-slate-700 font-semibold"
     }, num(tot)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right tabular-nums text-[#92400e]"
-    }, num(l.paid)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-right font-semibold tabular-nums text-[#B91C1C]"
-    }, num(tot - l.paid)), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3"
-    }, /*#__PURE__*/React.createElement(Pill, {
-      map: PAY_NCC,
-      value: l.pay
-    })), /*#__PURE__*/React.createElement("td", {
-      className: "px-3 py-3 text-slate-500"
-    }, l.staff));
-  })))) : /*#__PURE__*/React.createElement(Empty, null, "Không có dữ liệu lô hàng chi tiết. Tổng dư nợ cuối kỳ: ", /*#__PURE__*/React.createElement("b", {
+      className: td + " text-right tabular-nums text-[#92400e] font-semibold"
+    }, paidAmt > 0 ? num(paidAmt) : ""), /*#__PURE__*/React.createElement("td", {
+      className: td + " text-right tabular-nums font-semibold " + (con > 0 ? "text-[#B91C1C]" : "text-slate-400")
+    }, num(con)||"0"));
+  })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
+    className: "bg-slate-50 font-semibold border-t border-slate-200"
+  }, /*#__PURE__*/React.createElement("td", {
+    colSpan: 5,
+    className: "px-3 py-3 text-right text-slate-500 text-xs uppercase tracking-wide"
+  }, "Tổng cộng"), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-700 font-semibold"
+  }, num(lots.reduce((s,l)=>(l.qtyIn||0)*(l.costNcc||0)+s,0))), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-600"
+  }, lots.reduce((s,l)=>s+(l.fee||0),0)>0 ? num(lots.reduce((s,l)=>s+(l.fee||0),0)) : ""), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-slate-700 font-semibold"
+  }, num(lots.reduce((s,l)=>s+(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0),0))), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#92400e] font-semibold"
+  }, num(lots.reduce((s,l)=>{ const t=(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0); return s+(l.paid||(l.pay==="Đã thanh toán"?t:0)); },0))), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-right tabular-nums border-l border-slate-100 text-[#B91C1C] font-semibold"
+  }, num(lots.reduce((s,l)=>{ const t=(l.qtyIn||0)*(l.costNcc||0)+(l.fee||0); const p=l.paid||(l.pay==="Đã thanh toán"?t:0); return s+t-p; },0))))))) : /*#__PURE__*/React.createElement(Empty, null, "Không có dữ liệu lô hàng chi tiết. Tổng dư nợ cuối kỳ: ", /*#__PURE__*/React.createElement("b", {
     className: "text-[#B91C1C]"
   }, num(sup.open)))));
 }
