@@ -5,21 +5,27 @@ import {
   onSnapshot, writeBatch
 } from "firebase/firestore";
 
-// Hook đọc realtime 1 collection, trả về [items, loaded]
+// Hook đọc realtime 1 collection, trả về [items, loaded, error]
 export function useCollection(colName, fallback = []) {
   const [items, setItems] = useState(fallback);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, colName), snap => {
       const data = snap.docs.map(d => d.data());
       setItems(data);
       setLoaded(true);
-    }, err => { console.error(colName, err); setLoaded(true); });
+      setError(null);
+    }, err => {
+      console.error(colName, err);
+      setError(err.message || err.code || "Lỗi kết nối Firestore");
+      setLoaded(true);
+    });
     return unsub;
   }, [colName]);
 
-  return [items, loaded];
+  return [items, loaded, error];
 }
 
 // Lưu 1 document (tạo mới hoặc ghi đè theo id)

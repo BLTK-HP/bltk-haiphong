@@ -16,9 +16,9 @@ export const ROLES = {
 
 // Màn hình nào role nào được xem
 export const ALLOWED = {
-  manager:   ["sales_orders","sales_draft","sales_create","purchase","wh_in","wh_out","wh_stock","products","customers","finance","report","settings","settings_payment","settings_numformat","settings_docnum","users","dashboard","rp_sales","rp_preorder","rp_staff"],
-  sales:     ["sales_orders","sales_draft","sales_create","products","customers","dashboard"],
-  warehouse: ["wh_in","wh_out","wh_stock","purchase","products","customers","dashboard"],
+  manager:   ["sales_orders","sales_draft","sales_create","purchase","wh_in","wh_out","wh_stock","pc_products","pc_customers","pc_suppliers","finance","settings","settings_payment","settings_numformat","settings_docnum","users","dashboard","rp_sales","rp_preorder","rp_staff","debt_cust","debt_ncc"],
+  sales:     ["sales_orders","sales_draft","sales_create","pc_products","pc_customers","dashboard"],
+  warehouse: ["wh_in","wh_out","wh_stock","purchase","pc_products","pc_customers","pc_suppliers","dashboard"],
 };
 
 export const AuthCtx = createContext(null);
