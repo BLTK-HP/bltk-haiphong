@@ -148,3 +148,16 @@ body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
+
+/* ──────────────────────────────── */
+/*  In ấn (@media print)           */
+/* ──────────────────────────────── */
+@media print {
+  body { background: #fff !important; font-size: 12px; }
+  nav, aside, [data-no-print], .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  main, #root { width: 100% !important; padding: 0 !important; margin: 0 !important; }
+  table { page-break-inside: avoid; }
+  @page { margin: 15mm; }
+}
+.print-only { display: none; }

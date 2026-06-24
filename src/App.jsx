@@ -375,6 +375,9 @@ const NAV = [{
     key: "settings_numformat",
     label: "Định dạng số"
   }, {
+    key: "settings_print",
+    label: "Cấu hình mẫu in"
+  }, {
     key: "settings_docnum",
     label: "Quy tắc đánh số chứng từ"
   }, {
@@ -407,6 +410,7 @@ const LABELS = {
   settings_payment: "Cài đặt thanh toán",
   settings_numformat: "Định dạng số",
   settings_docnum: "Quy tắc đánh số chứng từ",
+  settings_print: "Cấu hình mẫu in",
   admin_clear: "Xóa dữ liệu test"
 };
 
@@ -5972,6 +5976,8 @@ function Screen({
       return /*#__PURE__*/React.createElement(SettingsNumFormat, null);
     case "settings_docnum":
       return /*#__PURE__*/React.createElement(SettingsDocNum, null);
+    case "settings_print":
+      return /*#__PURE__*/React.createElement(SettingsPrint, null);
     case "admin_clear":
       return /*#__PURE__*/React.createElement(AdminClearData, null);
     case "users":
@@ -6461,6 +6467,54 @@ function SettingsDocNum() {
       )
     )
   );
+}
+
+function SettingsPrint() {
+  const notify = useToast();
+  const [cfgItems, , ] = useCollection("config");
+  const cfg = cfgItems.find(c => c.id === "print_template") || {};
+  const [form, setForm] = useState({
+    companyName: "", address: "", phone: "", taxCode: "", email: "", website: "", footer: "", logoUrl: "",
+    ...cfg
+  });
+  React.useEffect(() => {
+    if (cfg && cfg.id) setForm(f => ({...f, companyName:"",address:"",phone:"",taxCode:"",email:"",website:"",footer:"",logoUrl:"",...cfg}));
+  }, [JSON.stringify(cfg)]);
+  const set = (k,v) => setForm(f => ({...f, [k]:v}));
+  const save = async () => {
+    await saveDoc("config", "print_template", {...form, id:"print_template"});
+    notify("Đã lưu cấu hình mẫu in");
+  };
+
+  const LabelInput = ({label, k, ph, multi}) => /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, label),
+    multi
+      ? /*#__PURE__*/React.createElement("textarea", {rows:3, value:form[k]||"", onChange:e=>set(k,e.target.value), placeholder:ph||"", className:`${field} w-full`})
+      : /*#__PURE__*/React.createElement("input", {type:"text", value:form[k]||"", onChange:e=>set(k,e.target.value), placeholder:ph||"", className:`${field} w-full`}));
+
+  return /*#__PURE__*/React.createElement("div", {className:"max-w-2xl space-y-4"},
+    /*#__PURE__*/React.createElement("h2", {className:"text-[16px] font-semibold text-[#92400e]"}, "Cấu hình mẫu in"),
+    /*#__PURE__*/React.createElement(Card, {title:"Thông tin công ty"},
+      /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-1 gap-3 sm:grid-cols-2"},
+        LabelInput({label:"Tên công ty", k:"companyName", ph:"BLTK Hải Phòng"}),
+        LabelInput({label:"Mã số thuế", k:"taxCode", ph:"0123456789"}),
+        LabelInput({label:"Địa chỉ", k:"address", ph:"Số X, đường Y, phường Z, Hải Phòng"}),
+        LabelInput({label:"Điện thoại", k:"phone", ph:"0901 234 567"}),
+        LabelInput({label:"Email", k:"email", ph:"info@bltk.vn"}),
+        LabelInput({label:"Website", k:"website", ph:"www.bltk.vn"}),
+        LabelInput({label:"URL Logo", k:"logoUrl", ph:"https://... (để trống nếu không có)"}),
+        LabelInput({label:"Ghi chú cuối phiếu", k:"footer", ph:"Cảm ơn quý khách đã tin dùng sản phẩm!", multi:true}))),
+    form.companyName && /*#__PURE__*/React.createElement(Card, {title:"Xem trước phần đầu phiếu in"},
+      /*#__PURE__*/React.createElement("div", {className:"rounded border border-slate-200 bg-white p-4 text-sm"},
+        /*#__PURE__*/React.createElement("div", {className:"flex items-start gap-4"},
+          form.logoUrl && /*#__PURE__*/React.createElement("img", {src:form.logoUrl, alt:"logo", className:"h-14 w-auto object-contain"}),
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("div", {className:"text-base font-bold text-slate-800"}, form.companyName),
+            form.taxCode && /*#__PURE__*/React.createElement("div", {className:"text-xs text-slate-500"}, "MST: ", form.taxCode),
+            form.address && /*#__PURE__*/React.createElement("div", {className:"text-xs text-slate-500"}, form.address),
+            form.phone && /*#__PURE__*/React.createElement("div", {className:"text-xs text-slate-500"}, "ĐT: ", form.phone))))),
+    /*#__PURE__*/React.createElement("div", {className:"flex justify-end"},
+      /*#__PURE__*/React.createElement("button", {onClick:save, className:blueBtn}, "Lưu cấu hình")));
 }
 
 /* ───────── TEMP: Xóa dữ liệu test ───────── */
