@@ -3167,14 +3167,28 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrder}) {
+function WhIn({whInItems: items, setWhInItems: setItems, orders = [], purchaseList = [], setPurchaseList, onOpenOrder}) {
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
+  const [nccReturnModal, setNccReturnModal] = useState(null);
   const [fSup, setFSup] = useState("Tất cả");
   const [fProd, setFProd] = useState("Tất cả");
   const setKho = (lot, kho) => setItems(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
+  const doReturnNcc = (rec, ret) => {
+    const d = new Date(), pad = n=>String(n).padStart(2,"0");
+    const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+    setItems(xs => xs.map(r => r.lot === rec.lot && r.prod === rec.prod
+      ? {...r, qtyRemaining: Math.max(0, (r.qtyRemaining ?? r.qtyNow ?? 0) - ret.qty), qtyNow: Math.max(0, (r.qtyNow ?? 0) - ret.qty)}
+      : r));
+    if (setPurchaseList) {
+      setPurchaseList(xs => xs.map(r => (r.lot === rec.order || r.lot === rec.lot) && r.prod === rec.prod
+        ? {...r, returns: [...(r.returns||[]), {...ret, date: dateStr}]}
+        : r));
+    }
+    setNccReturnModal(null);
+  };
   const supNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.supplier).filter(Boolean)))];
   const prodNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.prod).filter(Boolean)))];
   const rows = items.filter(r =>
@@ -3272,11 +3286,17 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     className: "px-4 py-3 text-slate-500"
   }, r.staff), /*#__PURE__*/React.createElement("td", {
     className: "px-2 py-2 text-center"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => setSlipModal(r),
-    title: "In phiếu nhập",
-    className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-  }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"}))))),
+  }, /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-1 justify-center"},
+    /*#__PURE__*/React.createElement("button", {
+      onClick: () => setSlipModal(r),
+      title: "In phiếu nhập",
+      className: "inline-flex items-center rounded border border-slate-200 bg-white p-1.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+    }, /*#__PURE__*/React.createElement(Printer, {className: "h-3.5 w-3.5"})),
+    r.source !== "hoankh" && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setNccReturnModal(r),
+      title: "Trả hàng NCC",
+      className: "inline-flex items-center gap-1 rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-[#92400e] hover:bg-amber-100"
+    }, /*#__PURE__*/React.createElement(RotateCcw, {className:"h-3 w-3"}), "Trả"))))),
   /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa]"},
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 6}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-3 text-right tabular-nums ${rows.reduce((s,r)=>s+r.qtyIn,0)<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qtyIn,0)),
@@ -3287,6 +3307,13 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], onOpenOrde
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums text-[#B91C1C]", style:{fontWeight:700}}, vnd(rows.reduce((s,r)=>s+(r.costNcc+(r.fee||0))*r.qtyIn,0))),
     /*#__PURE__*/React.createElement("td", {colSpan: 3}))),
   doc && /*#__PURE__*/React.createElement(DocModal, {doc: doc, onClose: () => setDoc(null)}),
+  nccReturnModal && /*#__PURE__*/React.createElement(NccReturnModal, {
+    lot: nccReturnModal.lot,
+    prod: nccReturnModal.prod,
+    costNcc: nccReturnModal.costNcc || 0,
+    onClose: () => setNccReturnModal(null),
+    onSave: ret => doReturnNcc(nccReturnModal, ret)
+  }),
   slipModal && /*#__PURE__*/React.createElement(Modal, {
     title: `Phiếu nhập kho — ${impCode(slipModal.lot)}`,
     maxW: "max-w-lg",
@@ -5795,7 +5822,7 @@ function Screen({
     case "purchase":
       return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList, setActive});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
+      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders, purchaseList, setPurchaseList, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         whOutItems: whOutItems,
