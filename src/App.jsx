@@ -108,7 +108,9 @@ const INIT_ORDERS = [];
 
 /* derived order fields */
 function calc(o) {
-  const total = (o.items||[]).reduce((s, l) => s + Math.max(0, l.price * l.qty - (l.disc || 0)), 0);
+  const subtotal = (o.items||[]).reduce((s, l) => s + Math.max(0, l.price * l.qty - (l.disc || 0)), 0);
+  const custExpTotal = (o.custExpenses||[]).reduce((s,e) => s+(e.amount||0), 0) + (o.shippingFee||0) + (o.returnFee||0);
+  const total = subtotal + custExpTotal;
   const totalCost = (o.items||[]).reduce((s, l) => s + (l.cost||0) * l.qty, 0);
   const remaining = total - (o.paid||0);
   const payDone = total > 0 && remaining <= 0;
@@ -3998,7 +4000,9 @@ function ProductForm({
 function ProductsTab() {
   const notify = useToast();
   const [itemsFS, prodsLoaded, prodsError] = useCollection("products");
-  const items = itemsFS;
+  const [localItems, setLocalItems] = React.useState(null);
+  React.useEffect(() => { if (prodsLoaded) setLocalItems(itemsFS); }, [itemsFS, prodsLoaded]);
+  const items = localItems ?? itemsFS;
   // Seed Firestore lần đầu nếu còn trống
   useEffect(() => {
     if (prodsLoaded && !prodsError && itemsFS.length === 0) {
@@ -4007,6 +4011,7 @@ function ProductsTab() {
   }, [prodsLoaded, prodsError]);
   const setItems = (updater) => {
     const next = typeof updater === 'function' ? updater(items) : updater;
+    setLocalItems(next);
     const prevMap = Object.fromEntries(items.map(p => [p.sku, p]));
     const nextMap = Object.fromEntries(next.map(p => [p.sku, p]));
     Object.entries(nextMap).forEach(([id, p]) => {
