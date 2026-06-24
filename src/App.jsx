@@ -360,6 +360,9 @@ const NAV = [{
   }, {
     key: "rp_staff",
     label: "Báo cáo nhân viên"
+  }, {
+    key: "rp_finance",
+    label: "Báo cáo tài chính"
   }]
 }, {
   key: "settings",
@@ -399,6 +402,7 @@ const LABELS = {
   rp_sales: "Báo cáo bán hàng",
   rp_preorder: "Báo cáo sản phẩm đặt hàng",
   rp_staff: "Báo cáo nhân viên",
+  rp_finance: "Báo cáo tài chính",
   settings: "Cài đặt",
   settings_payment: "Cài đặt thanh toán",
   settings_numformat: "Định dạng số",
@@ -5694,6 +5698,121 @@ function ReportPreorder() {
     }, r.orders > 0 ? r.orders : ""));
   })));
 }
+function ReportFinance({orders = []}) {
+  const {txns = []} = useTxns() || {};
+  const [fromDate, setFromDate] = useState(localMonthStart());
+  const [toDate, setToDate] = useState(localToday());
+  const [cfgItems, , ] = useCollection("config");
+  const openCfg = cfgItems.find(c => c.id === "finance_open") || {};
+  const [openRevEdit, setOpenRevEdit] = useState(false);
+  const [openExpEdit, setOpenExpEdit] = useState(false);
+  const [openRevVal, setOpenRevVal] = useState("");
+  const [openExpVal, setOpenExpVal] = useState("");
+
+  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
+  const parseD = s => { if (!s) return new Date(0); const p = s.split(' ')[0].split('/'); return new Date(+p[2],+p[1]-1,+p[0]); };
+  const fromD = fromDate ? _pISO(fromDate) : null;
+  const toD   = toDate   ? _pISO(toDate)   : null;
+  const inR = s => { const d = parseD(s); return (!fromD || d >= fromD) && (!toD || d <= new Date(toD.setHours(23,59,59))); };
+
+  const fOrders = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && inR(o.dt));
+  const fTxns   = txns.filter(t => inR(t.date));
+
+  const revenue  = fOrders.reduce((s,o) => s + calc(o).total, 0);
+  const cogs     = fOrders.reduce((s,o) => s + calc(o).totalCost, 0);
+  const grossPft = revenue - cogs;
+  const expenses = fTxns.filter(t => t.amount < 0).reduce((s,t) => s + Math.abs(t.amount), 0);
+  const netPft   = grossPft - expenses;
+
+  const openRev = openCfg.openRev || 0;
+  const openExp = openCfg.openExp || 0;
+
+  const saveOpen = (field, val) => {
+    const n = parseFloat(val.replace(/[^0-9.-]/g,"")) || 0;
+    saveDoc("config", "finance_open", {...openCfg, id:"finance_open", [field]: n}).catch(console.error);
+  };
+
+  const onExport = () => exportCSV("bao-cao-tai-chinh",
+    ["Chỉ tiêu","Số đầu kỳ","Phát sinh kỳ","Lũy kế"],
+    [
+      ["Doanh thu", openRev, revenue, openRev+revenue],
+      ["Giá vốn hàng bán", "", cogs, cogs],
+      ["Lợi nhuận gộp", openRev, grossPft, openRev+grossPft],
+      ["Chi phí phát sinh", openExp, expenses, openExp+expenses],
+      ["Lợi nhuận ròng", openRev-openExp, netPft, openRev-openExp+netPft],
+    ]);
+
+  const rows2 = [
+    {label:"Doanh thu (DT)", open:openRev, period:revenue, cumul:openRev+revenue, bold:false},
+    {label:"Giá vốn hàng bán (COGS)", open:0, period:cogs, cumul:cogs, bold:false, neg:true},
+    {label:"Lợi nhuận gộp", open:openRev, period:grossPft, cumul:openRev+grossPft, bold:true, sep:true},
+    {label:"Chi phí phát sinh", open:openExp, period:expenses, cumul:openExp+expenses, bold:false, neg:true},
+    {label:"Lợi nhuận ròng", open:openRev-openExp, period:netPft, cumul:openRev-openExp+netPft, bold:true, sep:true},
+  ];
+
+  const thC = "border border-[#fed7aa] px-3 py-2 text-center";
+  const thL = "border border-[#fed7aa] px-3 py-2 text-left";
+  const tdV = (v, neg, bold) => /*#__PURE__*/React.createElement("td", {className:`border border-slate-100 px-3 py-2.5 text-right tabular-nums${bold?" font-bold":""} ${v<0||neg?"text-[#B91C1C]":v>0?"text-slate-800":"text-slate-400"}`}, v?vnd(v):"—");
+
+  return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
+    /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap items-end gap-2"},
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Từ ngày"),
+        /*#__PURE__*/React.createElement("input", {type:"date", value:fromDate, onChange:e=>setFromDate(e.target.value), className:field})),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Đến ngày"),
+        /*#__PURE__*/React.createElement("input", {type:"date", value:toDate, onChange:e=>setToDate(e.target.value), className:field})),
+      /*#__PURE__*/React.createElement("div", {className:"flex items-end gap-2"},
+        /*#__PURE__*/React.createElement(PrintBtn, null),
+        /*#__PURE__*/React.createElement(ExportBtn, {onClick:onExport}))),
+    /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-4 lg:grid-cols-4"},
+      /*#__PURE__*/React.createElement(StatCard, {label:"Doanh thu kỳ", value:vnd(revenue), tone:"accent"}),
+      /*#__PURE__*/React.createElement(StatCard, {label:"Giá vốn", value:vnd(cogs)}),
+      /*#__PURE__*/React.createElement(StatCard, {label:"Chi phí phát sinh", value:vnd(expenses), tone:"neg"}),
+      /*#__PURE__*/React.createElement(StatCard, {label:"Lợi nhuận ròng", value:vnd(netPft), tone:netPft>=0?"pos":"neg"})),
+    /*#__PURE__*/React.createElement(Card, {title:"Kết quả hoạt động kinh doanh"},
+      /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5 overflow-x-auto"},
+        /*#__PURE__*/React.createElement("table", {className:"w-full text-sm", style:{minWidth:720}},
+          /*#__PURE__*/React.createElement("thead", null,
+            /*#__PURE__*/React.createElement("tr", {className:"bg-[#ffedd5] text-xs font-semibold uppercase tracking-wide text-[#7c2d12]"},
+              /*#__PURE__*/React.createElement("th", {className:thL, style:{minWidth:240}}, "Chỉ tiêu"),
+              /*#__PURE__*/React.createElement("th", {className:thC, style:{width:200}},
+                /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-center gap-1"}, "Số đầu kỳ",
+                  /*#__PURE__*/React.createElement("span", {className:"text-[10px] font-normal text-[#c2410c] opacity-70"}, "(nhập tay)"))),
+              /*#__PURE__*/React.createElement("th", {className:thC, style:{width:200}}, "Phát sinh kỳ"),
+              /*#__PURE__*/React.createElement("th", {className:thC, style:{width:200}}, "Lũy kế"))),
+          /*#__PURE__*/React.createElement("tbody", null,
+            rows2.map((r,i) => /*#__PURE__*/React.createElement("tr", {key:i, className:`${r.sep?"border-t-2 border-[#fdba74] bg-[#fffbf5]":"hover:bg-slate-50/60"}`},
+              /*#__PURE__*/React.createElement("td", {className:`border border-slate-100 px-3 py-2.5 text-slate-700${r.bold?" font-bold":""}`}, r.label),
+              /*#__PURE__*/React.createElement("td", {className:"border border-slate-100 px-3 py-2.5 text-center"},
+                (r.label.startsWith("Doanh") || r.label.startsWith("Chi phí"))
+                  ? (openRevEdit && r.label.startsWith("Doanh") ?
+                      /*#__PURE__*/React.createElement("span", {className:"flex items-center gap-1"},
+                        /*#__PURE__*/React.createElement("input", {autoFocus:true, className:"w-28 rounded border border-slate-300 px-2 py-0.5 text-right text-xs tabular-nums", value:openRevVal, onChange:e=>setOpenRevVal(e.target.value),
+                          onBlur:()=>{saveOpen("openRev",openRevVal);setOpenRevEdit(false);},
+                          onKeyDown:e=>{if(e.key==="Enter"){saveOpen("openRev",openRevVal);setOpenRevEdit(false);} if(e.key==="Escape")setOpenRevEdit(false);}
+                        }))
+                    : openExpEdit && r.label.startsWith("Chi phí") ?
+                      /*#__PURE__*/React.createElement("span", {className:"flex items-center gap-1"},
+                        /*#__PURE__*/React.createElement("input", {autoFocus:true, className:"w-28 rounded border border-slate-300 px-2 py-0.5 text-right text-xs tabular-nums", value:openExpVal, onChange:e=>setOpenExpVal(e.target.value),
+                          onBlur:()=>{saveOpen("openExp",openExpVal);setOpenExpEdit(false);},
+                          onKeyDown:e=>{if(e.key==="Enter"){saveOpen("openExp",openExpVal);setOpenExpEdit(false);} if(e.key==="Escape")setOpenExpEdit(false);}
+                        }))
+                    : /*#__PURE__*/React.createElement("button", {
+                        onClick:()=>{
+                          if(r.label.startsWith("Doanh")){setOpenRevVal(String(openRev));setOpenRevEdit(true);}
+                          else{setOpenExpVal(String(openExp));setOpenExpEdit(true);}
+                        },
+                        className:"group flex items-center gap-1 rounded px-2 py-0.5 hover:bg-amber-50",
+                        title:"Nhấn để chỉnh sửa"
+                      },
+                      /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-slate-700"}, r.open?vnd(r.open):"—"),
+                      /*#__PURE__*/React.createElement(Pencil, {className:"h-3 w-3 text-slate-400 opacity-0 group-hover:opacity-100"})))
+                  : tdV(r.open, false, r.bold)),
+              tdV(r.period, r.neg, r.bold),
+              tdV(r.cumul, false, r.bold))))))));
+}
+
 function ReportStaff() {
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
@@ -5845,6 +5964,8 @@ function Screen({
       return /*#__PURE__*/React.createElement(ReportPreorder, null);
     case "rp_staff":
       return /*#__PURE__*/React.createElement(ReportStaff, null);
+    case "rp_finance":
+      return /*#__PURE__*/React.createElement(ReportFinance, {orders});
     case "settings_payment":
       return /*#__PURE__*/React.createElement(SettingsPayment, null);
     case "settings_numformat":
