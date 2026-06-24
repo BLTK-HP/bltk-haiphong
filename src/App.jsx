@@ -5243,6 +5243,20 @@ function NccDebtDetail({
 }
 
 /* ───────── Finance ───────── */
+function HuyGiaoDichModal({onClose, onConfirm}) {
+  const [reason, setReason] = useState("");
+  const canConfirm = reason.trim().length > 0;
+  return /*#__PURE__*/React.createElement(Modal, {title:"Huỷ giao dịch", onClose, maxW:"max-w-sm",
+    footer: /*#__PURE__*/React.createElement(React.Fragment, null,
+      /*#__PURE__*/React.createElement("button", {onClick:onClose, className:ghostBtn}, "Đóng"),
+      /*#__PURE__*/React.createElement("button", {onClick:()=>onConfirm(reason.trim()), disabled:!canConfirm, className:"rounded-lg px-4 py-2 text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed"}, "Xác nhận huỷ"))},
+    /*#__PURE__*/React.createElement("div", {className:"space-y-3"},
+      /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-600"}, "Giao dịch bị huỷ sẽ không tính vào thu/chi nhưng vẫn lưu lại để tra cứu."),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Lý do huỷ ", /*#__PURE__*/React.createElement("span", {className:"text-[#B91C1C]"}, "*")),
+        /*#__PURE__*/React.createElement("input", {autoFocus:true, value:reason, onChange:e=>setReason(e.target.value), placeholder:"Nhập lý do...", className:inputF}))));
+}
+
 function PhieuThuModal({onClose, onSave, nextId}) {
   const {bankAccounts} = useBankAccounts();
   const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
@@ -5390,6 +5404,7 @@ function EditTxnModal({txn, onClose, onSave}) {
 }
 function Finance({setActive, onOpenOrder}) {
   const notify = useToast();
+  const { profile } = useAuth();
   const {bankAccounts} = useBankAccounts();
   const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
   const {txns, setTxns}       = useTxns();
@@ -5400,6 +5415,7 @@ function Finance({setActive, onOpenOrder}) {
   const [fDir, setFDir]       = useState("Tất cả");
   const [fAccDetail, setFAccDetail] = useState(null);
   const [modal, setModal]     = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
   const [editTxn, setEditTxn] = useState(null);
   const [txnPage, setTxnPage] = useState(1);
   const [detailPage, setDetailPage] = useState(1);
@@ -5474,8 +5490,15 @@ function Finance({setActive, onOpenOrder}) {
     setTxns(p=>[t,...p]); notify("Đã lưu phiếu chi"); setModal(null);
   };
   const addXfer = ts => { setTxns(p=>[...ts,...p]); notify("Đã chuyển tiền nội bộ"); setModal(null); };
-  const cancelTxn  = id => { if(window.confirm("Huỷ giao dịch này? Sẽ không tính vào thu/chi nhưng vẫn lưu lại.")){setTxns(p=>p.map(t=>t.id===id?{...t,cancelled:true}:t)); notify("Đã huỷ giao dịch"); }};
-  const restoreTxn = id => { setTxns(p=>p.map(t=>t.id===id?{...t,cancelled:false}:t)); notify("Đã khôi phục giao dịch"); };
+  const cancelTxn  = (id, reason) => {
+    const now = new Date();
+    const stamp = now.toLocaleDateString('vi-VN') + " " + now.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+    setTxns(p=>p.map(t=>t.id===id?{...t,cancelled:true,cancelReason:reason,cancelledBy:profile?.name||profile?.email||"",cancelledAt:stamp}:t));
+    notify("Đã huỷ giao dịch");
+    setCancelTarget(null);
+  };
+  const restoreTxn = id => { setTxns(p=>p.map(t=>t.id===id?{...t,cancelled:false,cancelReason:undefined,cancelledBy:undefined,cancelledAt:undefined}:t)); notify("Đã khôi phục giao dịch"); };
+  const saveTxnEdit = updated => { setTxns(p=>p.map(t=>t.id===updated.id?updated:t)); setEditTxn(null); notify("Đã cập nhật giao dịch"); };
   const toggleCheck = id => setTxns(p=>p.map(t=>t.id===id?{...t,checked:!t.checked}:t));
   const resetFilter = () => { setQ(""); setFAcc("Tất cả"); setFKind("Tất cả"); setFAccDetail(null); };
   const onExportTxn = () => exportCSV("lich-su-giao-dich", ["Ngày","Số phiếu","Số đơn hàng","Đối tượng","Loại GD","Tài khoản","Số tiền","Nội dung","Người tạo"],
@@ -5522,30 +5545,17 @@ function Finance({setActive, onOpenOrder}) {
   const thuGroups = [...thuOrdered, ...thuOther];
   const totalThu = thuGroups.reduce((s,g)=>s+g.total,0);
 
-  const CHI_GROUP_DEF = [
-    {label:"Chi phí bán hàng", kinds:["Chi trả tiền hàng NCC","Trả tiền Grap","Trả tiền hoàn đơn hàng","Trả tiền lắp đặt","Chi phí","Chi vận chuyển"]},
-    {label:"Chi phí vận hành", kinds:["Trả tiền nhà","Trả tiền điện, nước","Trả tiền nước uống"]},
-  ];
-  const knownChiKinds = new Set(CHI_GROUP_DEF.flatMap(g=>g.kinds));
-  const chiGroupRows = CHI_GROUP_DEF.map(g=>{
-    const items = g.kinds.filter(k=>chiKinds[k]>0).map(k=>({kind:k,total:chiKinds[k]}));
-    return {label:g.label, items, subtotal:items.reduce((s,i)=>s+i.total,0)};
-  }).filter(g=>g.items.length>0);
-  const otherChiItems = Object.entries(chiKinds).filter(([k])=>!knownChiKinds.has(k)).map(([kind,total])=>({kind,total}));
-  const otherChiTotal = otherChiItems.reduce((s,i)=>s+i.total,0);
+  const chiMainItems = Object.entries(chiKinds).filter(([,v])=>v>=200000).map(([kind,total])=>({kind,total}));
+  const chiSmallItems = Object.entries(chiKinds).filter(([,v])=>v<200000).map(([kind,total])=>({kind,total}));
+  const chiSmallTotal = chiSmallItems.reduce((s,i)=>s+i.total,0);
   const totalChi = Object.values(chiKinds).reduce((s,v)=>s+v,0);
 
-  const grpHd = (key,label,sub) => /*#__PURE__*/React.createElement("tr",{key,className:"bg-amber-50"},
-    /*#__PURE__*/React.createElement("td",{className:"px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500"},label),
-    /*#__PURE__*/React.createElement("td",{className:tdR+" text-xs text-[#B91C1C] font-semibold"},vnd(sub)));
   const subRow = (key,label,total) => /*#__PURE__*/React.createElement("tr",{key},
     /*#__PURE__*/React.createElement("td",{className:tdC},label),
     /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#B91C1C]"},vnd(total)));
-  const chiKhacLabel = /*#__PURE__*/React.createElement("tr",{key:"g_other_lbl"},
-    /*#__PURE__*/React.createElement("td",{colSpan:2,className:"px-3 pt-3 pb-1 text-xs text-slate-400 font-medium"},"Chi phí khác (< 200k)"));
   const chiTableRows = [
-    ...chiGroupRows.flatMap(g=>g.items.map(i=>subRow(i.kind,i.kind,i.total))),
-    ...(otherChiItems.length>0?[chiKhacLabel,...otherChiItems.map(i=>subRow(i.kind,i.kind,i.total))]:[]),
+    ...chiMainItems.map(i=>subRow(i.kind,i.kind,i.total)),
+    ...(chiSmallTotal>0?[subRow("chi_khac","Chi phí khác",chiSmallTotal)]:[]),
     /*#__PURE__*/React.createElement("tr",{key:"tong",className:"bg-[#fed7aa]"},
       /*#__PURE__*/React.createElement("td",{className:tdC+" text-slate-800",style:{fontWeight:700}},"Tổng"),
       /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#B91C1C]",style:{fontWeight:700}},vnd(totalChi))),
@@ -5577,8 +5587,14 @@ function Finance({setActive, onOpenOrder}) {
     const pagedAccTxns = accTxns.slice((detailPage-1)*ACC_PER_PAGE, detailPage*ACC_PER_PAGE);
     return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between flex-wrap gap-2"},
-        /*#__PURE__*/React.createElement("button", {onClick:()=>setFAccDetail(null), className:"inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"},
-          /*#__PURE__*/React.createElement(ArrowLeft, {className:"h-4 w-4"}), " Quay lại sổ quỹ"),
+        /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-3"},
+          /*#__PURE__*/React.createElement("button", {onClick:()=>setFAccDetail(null), className:"inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"},
+            /*#__PURE__*/React.createElement(ArrowLeft, {className:"h-4 w-4"}), " Quay lại sổ quỹ"),
+          accD && /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-2"},
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "|"),
+            /*#__PURE__*/React.createElement("span", {className:"font-semibold text-slate-800"}, accD.bank),
+            /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-500 bg-slate-100 rounded px-1.5 py-0.5"}, accD.account),
+            )),
         /*#__PURE__*/React.createElement("div", {className:"flex gap-2"},
           /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("thu"), className:"inline-flex items-center gap-1.5 rounded-lg bg-[#b45309] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#92400e]"},
             /*#__PURE__*/React.createElement(Plus,{className:"h-4 w-4"}), "Lập phiếu thu"),
@@ -5646,8 +5662,10 @@ function Finance({setActive, onOpenOrder}) {
                   t.checked&&/*#__PURE__*/React.createElement(Check,{className:"h-3 w-3 stroke-[3]"}))),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
                 t.cancelled
-                  ?/*#__PURE__*/React.createElement("button",{onClick:()=>restoreTxn(t.id),className:"rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"},"Khôi phục")
-                  :/*#__PURE__*/React.createElement("button",{onClick:()=>cancelTxn(t.id),className:"rounded px-2 py-0.5 text-xs font-medium bg-red-50 text-[#B91C1C] hover:bg-red-100"},"Huỷ"))))))),
+                  ?/*#__PURE__*/React.createElement("button",{onClick:()=>restoreTxn(t.id),title:t.cancelReason?"Lý do: "+t.cancelReason+(t.cancelledBy?" · "+t.cancelledBy:""):"",className:"rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"},"Khôi phục")
+                  :!t.orderId&&/*#__PURE__*/React.createElement("div",{className:"flex items-center gap-1 justify-center"},
+                      /*#__PURE__*/React.createElement("button",{onClick:()=>setEditTxn(t),className:"rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-700"},"Sửa"),
+                      /*#__PURE__*/React.createElement("button",{onClick:()=>setCancelTarget(t.id),className:"rounded px-2 py-0.5 text-xs font-medium bg-red-50 text-[#B91C1C] hover:bg-red-100"},"Huỷ")))))))),
       totalAccPages>1 && /*#__PURE__*/React.createElement("div",{className:"flex items-center justify-between gap-3 pt-3 px-1 flex-wrap"},
         /*#__PURE__*/React.createElement("span",{className:"text-xs text-slate-500"},`${(detailPage-1)*ACC_PER_PAGE+1}–${Math.min(detailPage*ACC_PER_PAGE,accTxns.length)} / ${accTxns.length} giao dịch`),
         /*#__PURE__*/React.createElement("div",{className:"flex items-center gap-1"},
@@ -5656,7 +5674,9 @@ function Finance({setActive, onOpenOrder}) {
           /*#__PURE__*/React.createElement("button",{disabled:detailPage===totalAccPages,onClick:()=>setDetailPage(p=>Math.min(totalAccPages,p+1)),className:"rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-30"},"Sau"))),
       modal==="thu" && /*#__PURE__*/React.createElement(PhieuThuModal,{onClose:()=>setModal(null),onSave:addTxn,nextId}),
       modal==="chi" && /*#__PURE__*/React.createElement(PhieuChiModal,{onClose:()=>setModal(null),onSave:addChi,nextId}),
-      modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null),onSave:addXfer,nextId}));
+      modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null),onSave:addXfer,nextId}),
+      cancelTarget && /*#__PURE__*/React.createElement(HuyGiaoDichModal,{onClose:()=>setCancelTarget(null),onConfirm:reason=>cancelTxn(cancelTarget,reason)}),
+      editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}));
   }
 
   return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
@@ -5714,7 +5734,7 @@ function Finance({setActive, onOpenOrder}) {
               thuGroups.map(g=>/*#__PURE__*/React.createElement("tr",{key:g.kind},
                 /*#__PURE__*/React.createElement("td",{className:tdC},g.kind),
                 /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#047857]"},vnd(g.total)))))),
-          /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
+          /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list mt-auto"},
             /*#__PURE__*/React.createElement("tbody", null,
               /*#__PURE__*/React.createElement("tr",{className:"bg-[#fed7aa]"},
                 /*#__PURE__*/React.createElement("td",{className:tdC+" text-slate-800",style:{fontWeight:700}},"Tổng thu"),
@@ -5724,20 +5744,13 @@ function Finance({setActive, onOpenOrder}) {
             /*#__PURE__*/React.createElement("span", {className:"inline-flex items-center rounded-full bg-[#fef9f0] px-3 py-1 text-sm font-semibold text-[#92400e] ring-1 ring-[#b45309]/40"}, "Phân loại chi")),
           /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
             /*#__PURE__*/React.createElement("tbody", null,
-              chiGroupRows.flatMap(g=>[
-                /*#__PURE__*/React.createElement("tr",{key:"h_"+g.label,className:"bg-amber-50"},
-                  /*#__PURE__*/React.createElement("td",{className:"px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500"},g.label),
-                  /*#__PURE__*/React.createElement("td",{className:tdR+" text-xs text-[#B91C1C] font-semibold"},vnd(g.subtotal))),
-                ...g.items.map(i=>/*#__PURE__*/React.createElement("tr",{key:i.kind},
-                  /*#__PURE__*/React.createElement("td",{className:tdC+" pl-5"},i.kind),
-                  /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#B91C1C]"},vnd(i.total))))
-              ]),
-              otherChiItems.length>0&&/*#__PURE__*/React.createElement("tr",{key:"g_other_lbl"},
-                /*#__PURE__*/React.createElement("td",{colSpan:2,className:"px-3 pt-3 pb-1 text-xs text-slate-400 font-medium"},"Chi phí khác")),
-              ...otherChiItems.map(i=>/*#__PURE__*/React.createElement("tr",{key:i.kind},
+              ...chiMainItems.map(i=>/*#__PURE__*/React.createElement("tr",{key:i.kind},
                 /*#__PURE__*/React.createElement("td",{className:tdC},i.kind),
-                /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#B91C1C]"},vnd(i.total)))))),
-          /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
+                /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#B91C1C]"},vnd(i.total)))),
+              chiSmallTotal>0&&/*#__PURE__*/React.createElement("tr",{key:"chi_khac"},
+                /*#__PURE__*/React.createElement("td",{className:tdC+" text-slate-500"},"Chi phí khác"),
+                /*#__PURE__*/React.createElement("td",{className:tdR+" text-[#B91C1C]"},vnd(chiSmallTotal))))),
+          /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list mt-auto"},
             /*#__PURE__*/React.createElement("tbody", null,
               /*#__PURE__*/React.createElement("tr",{className:"bg-[#fed7aa]"},
                 /*#__PURE__*/React.createElement("td",{className:tdC+" text-slate-800",style:{fontWeight:700}},"Tổng chi"),
@@ -5822,7 +5835,9 @@ function Finance({setActive, onOpenOrder}) {
 
     modal==="thu"    && /*#__PURE__*/React.createElement(PhieuThuModal,  {onClose:()=>setModal(null), onSave:addTxn,  nextId}),
     modal==="chi"    && /*#__PURE__*/React.createElement(PhieuChiModal,  {onClose:()=>setModal(null), onSave:addChi,  nextId}),
-    modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null), onSave:addXfer, nextId}));
+    modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null), onSave:addXfer, nextId}),
+    cancelTarget && /*#__PURE__*/React.createElement(HuyGiaoDichModal,{onClose:()=>setCancelTarget(null),onConfirm:reason=>cancelTxn(cancelTarget,reason)}),
+    editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}));
 }
 
 /* ───────── Reports ───────── */
