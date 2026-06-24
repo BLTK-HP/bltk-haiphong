@@ -299,6 +299,9 @@ const NAV = [{
   }, {
     key: "sales_orders",
     label: "Danh sách đơn hàng"
+  }, {
+    key: "contracts",
+    label: "Hợp đồng"
   }]
 }, {
   key: "purchase",
@@ -401,6 +404,7 @@ const LABELS = {
   pc_suppliers: "Danh sách nhà cung cấp",
   debt_cust: "Công nợ khách hàng",
   debt_ncc: "Công nợ nhà cung cấp",
+  contracts: "Hợp đồng",
   dashboard: "Tổng quan",
   rp_sales: "Báo cáo bán hàng",
   rp_preorder: "Báo cáo sản phẩm đặt hàng",
@@ -5900,6 +5904,144 @@ function ReportStaff() {
     className: `px-4 py-3 text-right tabular-nums ${s.remain > 0 ? "text-[#B91C1C]" : "text-slate-300"}`
   }, s.remain > 0 ? vnd(s.remain) : "")))));
 }
+function Contracts({orders = []}) {
+  const notify = useToast();
+  const [contracts, , ] = useCollection("contracts");
+  const [showForm, setShowForm] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [q, setQ] = useState("");
+  const emptyForm = {contractNum:"", custName:"", signDate:"", value:0, orderIds:[], fileUrl:"", fileName:"", note:""};
+  const [form, setForm] = useState(emptyForm);
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const openNew = () => { setForm(emptyForm); setEditId(null); setShowForm(true); };
+  const openEdit = c => { setForm({...emptyForm,...c}); setEditId(c.id); setShowForm(true); };
+
+  const uploadFile = async (file) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { storage } = await import('./firebase.js');
+      const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+      const storageRef = ref(storage, `contracts/${Date.now()}_${file.name}`);
+      const snap = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snap.ref);
+      set("fileUrl", url);
+      set("fileName", file.name);
+      notify("Đã tải lên: " + file.name);
+    } catch(e) {
+      notify("Lỗi tải lên: " + (e.message||e));
+    } finally { setUploading(false); }
+  };
+
+  const save = async () => {
+    if (!form.contractNum) { notify("Vui lòng nhập số hợp đồng"); return; }
+    const id = editId || ("HD" + Date.now());
+    await saveDoc("contracts", id, {...form, id}).catch(console.error);
+    notify(editId ? "Đã cập nhật hợp đồng" : "Đã lưu hợp đồng");
+    setShowForm(false);
+  };
+
+  const del = async (id) => {
+    if (!window.confirm("Xóa hợp đồng này?")) return;
+    await deleteDocument("contracts", id).catch(console.error);
+    notify("Đã xóa hợp đồng");
+  };
+
+  const custNames = [...new Set(orders.filter(o=>!o.draft).map(o=>o.name))].filter(Boolean).sort();
+  const custOrders = orders.filter(o => !o.draft && (!form.custName || o.name === form.custName));
+
+  const filtered = contracts.filter(c => !q || `${c.contractNum} ${c.custName}`.toLowerCase().includes(q.toLowerCase()));
+
+  const tblHead = /*#__PURE__*/React.createElement(React.Fragment, null,
+    /*#__PURE__*/React.createElement(Th, {style:{minWidth:120}}, "Số HĐ"),
+    /*#__PURE__*/React.createElement(Th, {style:{minWidth:160}}, "Khách hàng"),
+    /*#__PURE__*/React.createElement(Th, {style:{minWidth:90}}, "Ngày ký"),
+    /*#__PURE__*/React.createElement(Th, {right:true, style:{width:130}}, "Giá trị HĐ"),
+    /*#__PURE__*/React.createElement(Th, {style:{minWidth:160}}, "Đơn hàng liên kết"),
+    /*#__PURE__*/React.createElement(Th, {style:{minWidth:100}}, "File HĐ"),
+    /*#__PURE__*/React.createElement(Th, {style:{minWidth:80}}, "Ghi chú"),
+    /*#__PURE__*/React.createElement(Th, {center:true, style:{width:80}}, ""));
+
+  return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
+    /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap items-center gap-2"},
+      /*#__PURE__*/React.createElement("div", {className:"relative flex-1 min-w-[200px]"},
+        /*#__PURE__*/React.createElement(Search, {className:"absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"}),
+        /*#__PURE__*/React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm số HĐ, khách hàng…", className:`${field} w-full pl-8`})),
+      /*#__PURE__*/React.createElement("button", {onClick:openNew, className:blueBtn},
+        /*#__PURE__*/React.createElement(Plus, {className:"h-4 w-4"}), " Thêm hợp đồng")),
+    /*#__PURE__*/React.createElement(TableShell, {minW:"900px", head:tblHead},
+      filtered.length === 0
+        ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {colSpan:8, className:"px-4 py-8 text-center text-slate-400"}, "Chưa có hợp đồng nào"))
+        : filtered.map(c => /*#__PURE__*/React.createElement("tr", {key:c.id, className:"hover:bg-slate-50/60"},
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 font-medium text-[#92400e]"}, c.contractNum),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3"}, c.custName),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 text-slate-500"}, c.signDate),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 text-right tabular-nums font-medium"}, c.value?vnd(c.value):""),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3"},
+              /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap gap-1"},
+                (c.orderIds||[]).map(id => /*#__PURE__*/React.createElement("span", {key:id, className:"inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium bg-[#fef9f0] text-[#92400e] ring-1 ring-inset ring-[#b45309]"}, id)))),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3"},
+              c.fileUrl
+                ? /*#__PURE__*/React.createElement("a", {href:c.fileUrl, target:"_blank", rel:"noopener noreferrer", className:"inline-flex items-center gap-1 text-[#92400e] underline-offset-2 hover:underline text-xs"},
+                    /*#__PURE__*/React.createElement(FileText, {className:"h-3.5 w-3.5"}), c.fileName || "Xem HĐ")
+                : /*#__PURE__*/React.createElement("span", {className:"text-slate-300 text-xs"}, "Chưa có file")),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 text-xs text-slate-500"}, c.note||""),
+            /*#__PURE__*/React.createElement("td", {className:"px-3 py-3 text-center"},
+              /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-center gap-1"},
+                /*#__PURE__*/React.createElement(IconBtn, {icon:Pencil, title:"Sửa", onClick:()=>openEdit(c)}),
+                /*#__PURE__*/React.createElement(IconBtn, {icon:Trash2, tone:"danger", title:"Xóa", onClick:()=>del(c.id)})))))),
+    showForm && /*#__PURE__*/React.createElement(Modal, {
+      title: editId ? "Sửa hợp đồng" : "Thêm hợp đồng",
+      maxW: "max-w-lg",
+      onClose: () => setShowForm(false),
+      footer: /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement("button", {onClick:save, className:blueBtn, disabled:uploading}, uploading?"Đang tải lên…":"Lưu"),
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setShowForm(false), className:ghostBtn}, "Huỷ"))},
+      /*#__PURE__*/React.createElement("div", {className:"space-y-3 text-sm"},
+        /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-3"},
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "Số hợp đồng *"),
+            /*#__PURE__*/React.createElement("input", {type:"text", value:form.contractNum, onChange:e=>set("contractNum",e.target.value), placeholder:"HĐ-2026-001", className:`${field} w-full`})),
+          /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "Ngày ký"),
+            /*#__PURE__*/React.createElement("input", {type:"date", value:form.signDate, onChange:e=>set("signDate",e.target.value), className:`${field} w-full`}))),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "Khách hàng"),
+          /*#__PURE__*/React.createElement("select", {value:form.custName, onChange:e=>{set("custName",e.target.value); set("orderIds",[]);}, className:`${field} w-full`},
+            /*#__PURE__*/React.createElement("option", {value:""}, "— Chọn khách hàng —"),
+            custNames.map(n => /*#__PURE__*/React.createElement("option", {key:n, value:n}, n)))),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "Giá trị hợp đồng"),
+          /*#__PURE__*/React.createElement("input", {type:"number", value:form.value||"", onChange:e=>set("value",parseFloat(e.target.value)||0), placeholder:"0", className:`${field} w-full`})),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "Đơn hàng liên kết"),
+          custOrders.length === 0
+            ? /*#__PURE__*/React.createElement("p", {className:"text-xs text-slate-400"}, "Chọn khách hàng trước để lọc đơn hàng")
+            : /*#__PURE__*/React.createElement("div", {className:"max-h-36 overflow-y-auto rounded border border-slate-200 p-2 space-y-1"},
+                custOrders.map(o => {
+                  const checked = (form.orderIds||[]).includes(o.id);
+                  return /*#__PURE__*/React.createElement("label", {key:o.id, className:"flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded px-1 py-0.5"},
+                    /*#__PURE__*/React.createElement("input", {type:"checkbox", checked, onChange:()=>set("orderIds", checked?(form.orderIds||[]).filter(x=>x!==o.id):[...(form.orderIds||[]),o.id])}),
+                    /*#__PURE__*/React.createElement("span", {className:"text-xs font-medium text-[#92400e]"}, o.id),
+                    /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-500"}, o.dt?.split(" ")[0]||""),
+                    /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-700 truncate"}, vnd(calc(o).total)+"đ"));
+                }))),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "File hợp đồng (PDF/Word)"),
+          form.fileUrl
+            ? /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-2"},
+                /*#__PURE__*/React.createElement("a", {href:form.fileUrl, target:"_blank", rel:"noopener noreferrer", className:"text-xs text-[#92400e] underline"}, form.fileName||"Xem file"),
+                /*#__PURE__*/React.createElement("button", {onClick:()=>{set("fileUrl","");set("fileName","");}, className:"text-xs text-slate-400 hover:text-red-500"}, "✕ Xóa"))
+            : /*#__PURE__*/React.createElement("input", {type:"file", accept:".pdf,.doc,.docx,.xlsx", disabled:uploading,
+                onChange:e=>e.target.files?.[0] && uploadFile(e.target.files[0]),
+                className:"block w-full text-sm text-slate-600 file:mr-3 file:rounded file:border-0 file:bg-[#ffedd5] file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-[#92400e] hover:file:bg-amber-100"})),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-600"}, "Ghi chú"),
+          /*#__PURE__*/React.createElement("textarea", {rows:2, value:form.note||"", onChange:e=>set("note",e.target.value), placeholder:"Ghi chú thêm…", className:`${field} w-full`})))));
+}
+
 function Screen({
   active,
   setActive,
@@ -5956,6 +6098,8 @@ function Screen({
       return /*#__PURE__*/React.createElement(CustomersTab, null);
     case "pc_suppliers":
       return /*#__PURE__*/React.createElement(Suppliers, null);
+    case "contracts":
+      return /*#__PURE__*/React.createElement(Contracts, {orders});
     case "debt_cust":
       return /*#__PURE__*/React.createElement(DebtCust, {orders});
     case "debt_ncc":
