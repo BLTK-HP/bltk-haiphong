@@ -3399,9 +3399,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   const [doc, setDoc] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
   const [fProd, setFProd] = useState("Tất cả");
-  const [fSup, setFSup] = useState("Tất cả");
   const prodList = ["Tất cả", ...new Set(items.map(r => r.prod))];
-  const supList = ["Tất cả", ...new Set(items.map(r => r.supplier))];
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
@@ -3409,7 +3407,6 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   const rows = items.filter(r => {
     if (!_inR(r.dt, fromDate, toDate)) return false;
     if (fProd !== "Tất cả" && r.prod !== fProd) return false;
-    if (fSup !== "Tất cả" && r.supplier !== fSup) return false;
     if (q && !`${r.order} ${r.prod} ${r.cust} ${r.sku}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }).sort((a,b) => parseViDate(b.dt) - parseViDate(a.dt));
@@ -3437,14 +3434,6 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     onChange: e => setFProd(e.target.value),
     className: `${field} max-w-[180px]`
   }, prodList.map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-[13px] font-medium text-slate-500"
-  }, "Nhà cung cấp"), /*#__PURE__*/React.createElement("select", {
-    value: fSup,
-    onChange: e => setFSup(e.target.value),
-    className: `${field} max-w-[170px]`
-  }, supList.map(s => /*#__PURE__*/React.createElement("option", {
     key: s
   }, s)))), /*#__PURE__*/React.createElement("div", {
     className: "relative min-w-[200px] flex-1"
@@ -4163,7 +4152,7 @@ function ProductsTab() {
       }
     }, "Hình ảnh"), /*#__PURE__*/React.createElement(Th, {
       style: {
-        width: 190
+        width: 240
       }
     }, "Mã SP"), /*#__PURE__*/React.createElement(Th, {
       style: {
@@ -4707,9 +4696,9 @@ function DebtCust({ orders = [] }) {
     className: "bg-[#ffedd5] text-xs font-semibold uppercase tracking-wide text-[#7c2d12]"
   }, /*#__PURE__*/React.createElement("th", {
     className: "border border-[#fed7aa] px-3 py-1.5 text-right"
-  }, "Số phát sinh"), /*#__PURE__*/React.createElement("th", {
+  }, "Phải TT"), /*#__PURE__*/React.createElement("th", {
     className: "border border-[#fed7aa] px-3 py-1.5 text-right"
-  }, "Thanh toán"))), /*#__PURE__*/React.createElement("tbody", {
+  }, "Đã TT"))), /*#__PURE__*/React.createElement("tbody", {
     className: "divide-y divide-slate-100"
   }, custDebt.map((r, i) => {
     const close = r.open + r.ps - r.tt;
@@ -5394,6 +5383,8 @@ function Finance({setActive, onOpenOrder}) {
   const delTxn    = id => { if(window.confirm("Xóa giao dịch này?")){ setTxns(p=>p.filter(t=>t.id!==id)); notify("Đã xóa giao dịch"); }};
   const saveEdit  = t  => { setTxns(p=>p.map(x=>x.id===t.id?t:x)); notify("Đã cập nhật giao dịch"); setEditTxn(null); };
   const resetFilter = () => { setQ(""); setFAcc("Tất cả"); setFKind("Tất cả"); setFAccDetail(null); };
+  const onExportTxn = () => exportCSV("lich-su-giao-dich", ["Ngày","Số phiếu","Số đơn hàng","Đối tượng","Loại GD","Tài khoản","Số tiền","Nội dung","Người tạo"],
+    visibleTxns.map(t => [t.date, fmtDocId(t.amount>=0?"PT":"PC",t.id), t.orderId||"", t.entity||"", t.kind||"", t.acc||"", t.amount, t.note||"", t.staff||""]));
 
   const THU = "bg-[#dcfce7] text-[#047857]";
   const CHI = "bg-[#fee2e2] text-[#B91C1C]";
@@ -5469,7 +5460,9 @@ function Finance({setActive, onOpenOrder}) {
         /*#__PURE__*/React.createElement("select", {value:fAcc, onChange:e=>{ setFAcc(e.target.value); setFAccDetail(null); }, className:`${field} py-1.5 text-sm`},
           allAccs.map(a=>/*#__PURE__*/React.createElement("option",{key:a},a))),
         /*#__PURE__*/React.createElement("select", {value:fDir, onChange:e=>setFDir(e.target.value), className:`${field} py-1.5 text-sm`},
-          ["Tất cả","Thu","Chi"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k))))},
+          ["Tất cả","Thu","Chi"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k))),
+        /*#__PURE__*/React.createElement(PrintBtn, null),
+        /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExportTxn}))},
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
         /*#__PURE__*/React.createElement(TableShell, {minW:"1100px",
           head:/*#__PURE__*/React.createElement(React.Fragment,null,
