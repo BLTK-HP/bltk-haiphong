@@ -3179,7 +3179,7 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn({whInItems: items, setWhInItems: setItems, orders = [], purchaseList = [], setPurchaseList, onOpenOrder}) {
+function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders = [], purchaseList = [], setPurchaseList, onOpenOrder}) {
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
@@ -3191,6 +3191,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], purchaseLi
   const doReturnNcc = (rec, ret) => {
     const d = new Date(), pad = n=>String(n).padStart(2,"0");
     const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+    const dt = dateStr + " " + `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     setItems(xs => xs.map(r => r.lot === rec.lot && r.prod === rec.prod
       ? {...r, qtyRemaining: Math.max(0, (r.qtyRemaining ?? r.qtyNow ?? 0) - ret.qty), qtyNow: Math.max(0, (r.qtyNow ?? 0) - ret.qty)}
       : r));
@@ -3198,6 +3199,17 @@ function WhIn({whInItems: items, setWhInItems: setItems, orders = [], purchaseLi
       setPurchaseList(xs => xs.map(r => (r.lot === rec.order || r.lot === rec.lot) && r.prod === rec.prod
         ? {...r, returns: [...(r.returns||[]), {...ret, date: dateStr}]}
         : r));
+    }
+    if (setWhOutItems) {
+      const slip = "HNN" + String(Date.now()).slice(-8);
+      setWhOutItems(xs => [{
+        slip, dt, order: rec.lot || "", prod: rec.prod,
+        lot: rec.lot || "", qty: ret.qty, sale: 0, unitCost: rec.costNcc || 0,
+        cust: rec.supplier || "NCC", phone: "", addr: "",
+        store: rec.store || "Kho HH", orderStatus: "Hoàn NCC",
+        delivery: "Hoàn NCC", staff: rec.staff || "PAT",
+        source: "hoanncc", note: ret.note || ""
+      }, ...xs]);
     }
     setNccReturnModal(null);
   };
@@ -4897,7 +4909,7 @@ function CustDebtDetail({
 }
 
 /* ───────── Công nợ NCC (tổng hợp → chi tiết) ───────── */
-function DebtNcc({ purchaseList = [], setPurchaseList }) {
+function DebtNcc({ purchaseList = [], setPurchaseList, setWhInItems }) {
   const [detail, setDetail] = useState(null);
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
@@ -4922,6 +4934,7 @@ function DebtNcc({ purchaseList = [], setPurchaseList }) {
     sup: detail,
     purchaseList,
     setPurchaseList,
+    setWhInItems,
     onBack: () => setDetail(null)
   });
   const onExport = () => exportCSV("cong-no-nha-cung-cap", ["Tên nhà cung cấp", "Dư nợ đầu kỳ", "Phát sinh", "Thanh toán", "Dư nợ cuối kỳ"], nccDebt.map(s => [s.name, s.open, s.ps, s.tt, s.open + s.ps - s.tt]));
@@ -5047,6 +5060,7 @@ function NccDebtDetail({
   sup,
   purchaseList,
   setPurchaseList,
+  setWhInItems,
   onBack
 }) {
   const lots = sup.lots || [];
@@ -5060,6 +5074,11 @@ function NccDebtDetail({
   const doReturn = (rec, ret) => {
     if (!setPurchaseList) return;
     setPurchaseList(xs => xs.map(r => (r.lot===rec.lot&&r.prod===rec.prod) ? {...r, returns:[...(r.returns||[]),ret]} : r));
+    if (setWhInItems) {
+      setWhInItems(xs => xs.map(r => (r.lot===rec.lot&&r.prod===rec.prod)
+        ? {...r, qtyRemaining: Math.max(0,(r.qtyRemaining??r.qtyNow??0)-ret.qty), qtyNow: Math.max(0,(r.qtyNow??0)-ret.qty)}
+        : r));
+    }
     setReturnModal(null);
   };
   return /*#__PURE__*/React.createElement("div", {
@@ -6083,7 +6102,7 @@ function Screen({
     case "purchase":
       return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList, setActive});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, orders, purchaseList, setPurchaseList, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
+      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, setWhOutItems, orders, purchaseList, setPurchaseList, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         whOutItems: whOutItems,
@@ -6103,7 +6122,7 @@ function Screen({
     case "debt_cust":
       return /*#__PURE__*/React.createElement(DebtCust, {orders});
     case "debt_ncc":
-      return /*#__PURE__*/React.createElement(DebtNcc, {purchaseList, setPurchaseList});
+      return /*#__PURE__*/React.createElement(DebtNcc, {purchaseList, setPurchaseList, setWhInItems});
     case "dashboard":
       return /*#__PURE__*/React.createElement(Dashboard, {orders});
     case "rp_sales":
