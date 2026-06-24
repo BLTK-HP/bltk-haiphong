@@ -5786,7 +5786,7 @@ function Finance({setActive, onOpenOrder}) {
 }
 
 /* ───────── Reports ───────── */
-function ReportSales({orders = []}) {
+function ReportSales({orders = [], onOpenOrder}) {
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
@@ -5808,24 +5808,29 @@ function ReportSales({orders = []}) {
   const tUndelivered = undelivered.reduce((s,o) => s + calc(o).total, 0);
   const tDeposit     = undelivered.reduce((s,o) => s + (o.paid||0), 0);
   const tUndelivRem  = tUndelivered - tDeposit;
-  const tDelivered   = delivered.reduce((s,o) => s + calc(o).total, 0);
-  const tReceivable  = delivered.reduce((s,o) => s + Math.max(0, calc(o).remaining), 0);
+  const tDelivered    = delivered.reduce((s,o) => s + calc(o).total, 0);
+  const tDeliveredPaid = delivered.reduce((s,o) => s + (o.paid||0), 0);
+  const tReceivable   = delivered.reduce((s,o) => s + Math.max(0, calc(o).remaining), 0);
   const tTotal       = tUndelivered + tDelivered;
+  const tTotalPaid   = tDeliveredPaid + tDeposit;
+  const tTotalRem    = tTotal - tTotalPaid;
 
   const rows = [...filtered].sort((a,b) => parseViDate(b.dt) - parseViDate(a.dt));
 
   const onExport = () => exportCSV("bao-cao-ban-hang",
     ["Ngày","Số đơn","Khách hàng","Doanh thu","Giá vốn","CPBH","Lãi/Lỗ","%","Đã thu","Còn lại"],
     rows.map(o => {
-      const c = calc(o); const cpbh = o.cpbh||0;
+      const c = calc(o);
+      const cpbh = (o.compCosts||[]).filter(x=>["Chi phí Ship hàng","Chi phí hoa hồng","Chi phí lắp đặt"].includes(x.type)).reduce((s,x)=>s+(x.amount||0),0);
       const laiLo = c.total - c.totalCost - cpbh;
       const pct = c.total ? (laiLo/c.total*100).toFixed(1) : "0.0";
-      return [(o.dt||"").split(" ")[0], o.id, o.cust, c.total, c.totalCost, cpbh, laiLo, pct, o.paid||0, Math.max(0,c.remaining)];
+      const dtPart = String(o.dt||"").split(" ").find(p=>p.includes("/"))||"";
+      return [dtPart.replace(",",""), o.id, o.name, c.total, c.totalCost, cpbh, laiLo, pct, o.paid||0, Math.max(0,c.remaining)];
     }));
 
   const totRevenue = rows.reduce((s,o)=>s+calc(o).total,0);
   const totCost    = rows.reduce((s,o)=>s+calc(o).totalCost,0);
-  const totCpbh    = rows.reduce((s,o)=>s+(o.cpbh||0),0);
+  const totCpbh    = rows.reduce((s,o)=>{const cpbh=(o.compCosts||[]).filter(x=>["Chi phí Ship hàng","Chi phí hoa hồng","Chi phí lắp đặt"].includes(x.type)).reduce((s2,x)=>s2+(x.amount||0),0); return s+cpbh;},0);
   const totLai     = totRevenue - totCost - totCpbh;
   const totPaid    = rows.reduce((s,o)=>s+(o.paid||0),0);
   const totRem     = rows.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
@@ -5846,14 +5851,16 @@ function ReportSales({orders = []}) {
     ? /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {colSpan:10, className:"px-4 py-8 text-center text-slate-400"}, "Không có dữ liệu trong khoảng thời gian này"))
     : /*#__PURE__*/React.createElement(React.Fragment, null,
         rows.map(o => {
-          const c = calc(o); const cpbh = o.cpbh||0;
+          const c = calc(o);
+          const cpbh = (o.compCosts||[]).filter(x=>["Chi phí Ship hàng","Chi phí hoa hồng","Chi phí lắp đặt"].includes(x.type)).reduce((s,x)=>s+(x.amount||0),0);
           const laiLo = c.total - c.totalCost - cpbh;
           const pct = c.total ? (laiLo/c.total*100).toFixed(1) : "0.0";
+          const dtPart = String(o.dt||"").split(" ").find(p=>p.includes("/"))||"";
           return /*#__PURE__*/React.createElement("tr", {key:o.id, className:"hover:bg-slate-50/60"},
-            /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-slate-500 whitespace-nowrap text-sm"}, (o.dt||"").split(" ")[0]),
+            /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-slate-500 whitespace-nowrap text-sm"}, dtPart.replace(",","")),
             /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 whitespace-nowrap"},
-              /*#__PURE__*/React.createElement("span", {className:"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#ffedd5] text-[#7c2d12] ring-[#fed7aa]"}, o.id)),
-            /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-slate-800"}, o.cust),
+              /*#__PURE__*/React.createElement("button", {onClick:()=>onOpenOrder&&onOpenOrder(o.id), className:"inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#ffedd5] text-[#7c2d12] ring-[#fed7aa] hover:bg-[#fed7aa]"}, o.id)),
+            /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-slate-800"}, o.name),
             /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-medium text-slate-800"}, vnd(c.total)),
             /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-slate-500"}, vnd(c.totalCost)),
             /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-slate-500"}, cpbh?vnd(cpbh):""),
@@ -5863,14 +5870,14 @@ function ReportSales({orders = []}) {
             /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-medium "+(c.remaining>0?"text-[#B91C1C]":"text-slate-400")}, c.remaining>0?vnd(c.remaining):""));
         }),
         /*#__PURE__*/React.createElement("tr", {className:"border-t-2 border-[#fdba74] bg-[#fed7aa]"},
-          /*#__PURE__*/React.createElement("td", {colSpan:3, className:"px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-800"}, "TỔNG"),
-          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(totRevenue)),
-          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, vnd(totCost)),
-          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-bold text-slate-800"}, totCpbh?vnd(totCpbh):""),
-          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-bold "+(totLai>=0?"text-[#047857]":"text-[#B91C1C]")}, vnd(totLai)),
+          /*#__PURE__*/React.createElement("td", {colSpan:3, className:"px-4 py-3 text-sm text-slate-800", style:{fontWeight:700}}, "TỔNG CỘNG"),
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-sm text-slate-800", style:{fontWeight:700}}, vnd(totRevenue)),
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-sm text-slate-800", style:{fontWeight:700}}, vnd(totCost)),
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-sm text-slate-800", style:{fontWeight:700}}, totCpbh?vnd(totCpbh):""),
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-sm "+(totLai>=0?"text-[#047857]":"text-[#B91C1C]"), style:{fontWeight:700}}, vnd(totLai)),
           /*#__PURE__*/React.createElement("td", {className:"px-4 py-3"}),
-          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-bold text-[#92400e]"}, vnd(totPaid)),
-          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums font-bold "+(totRem>0?"text-[#B91C1C]":"text-slate-400")}, totRem>0?vnd(totRem):"")));
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-sm text-[#92400e]", style:{fontWeight:700}}, vnd(totPaid)),
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-3 text-right tabular-nums text-sm "+(totRem>0?"text-[#B91C1C]":"text-slate-400"), style:{fontWeight:700}}, totRem>0?vnd(totRem):"")));
 
   return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
     /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap items-end gap-2"},
@@ -5883,15 +5890,41 @@ function ReportSales({orders = []}) {
       /*#__PURE__*/React.createElement("div", {className:"flex items-end gap-2"},
         /*#__PURE__*/React.createElement(PrintBtn, null),
         /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExport}))),
-    /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-3 lg:grid-cols-4"},
-      /*#__PURE__*/React.createElement(StatCard, {label:"Đơn chưa giao", value:vnd(tUndelivered)}),
-      /*#__PURE__*/React.createElement(StatCard, {label:"Tiền đặt cọc", value:vnd(tDeposit), tone:"accent"}),
-      /*#__PURE__*/React.createElement(StatCard, {label:"Tiền chưa giao", value:vnd(tUndelivRem), tone:"neg"}),
-      /*#__PURE__*/React.createElement(StatCard, {label:"Đơn đã giao", value:vnd(tDelivered), tone:"pos"})),
-    /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-3 lg:grid-cols-3"},
-      /*#__PURE__*/React.createElement(StatCard, {label:"Công nợ phải thu", value:vnd(tReceivable), tone:"neg"}),
-      /*#__PURE__*/React.createElement(StatCard, {label:"Tổng hợp", value:vnd(tTotal), tone:"accent"}),
-      /*#__PURE__*/React.createElement(StatCard, {label:"Số đơn (chưa / đã giao)", value:undelivered.length+" / "+delivered.length})),
+    /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-3 gap-3"},
+      /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4 shadow-sm"},
+        /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-slate-500"}, "Đơn đã giao"),
+        /*#__PURE__*/React.createElement("span", {className:"mt-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500"}, delivered.length+" đơn"),
+        /*#__PURE__*/React.createElement("p", {className:"mt-2 text-2xl font-semibold tabular-nums text-right text-[#047857]"}, vnd(tDelivered))),
+      /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col justify-center gap-3"},
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-right text-slate-500"}, "Tiền đã thu"),
+          /*#__PURE__*/React.createElement("p", {className:"mt-1 text-xl font-semibold tabular-nums text-right text-[#047857]"}, vnd(tDeliveredPaid))),
+        /*#__PURE__*/React.createElement("div", {className:"border-t border-slate-100 pt-3"},
+          /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-right text-slate-500"}, "Tiền phải thu"),
+          /*#__PURE__*/React.createElement("p", {className:"mt-1 text-xl font-semibold tabular-nums text-right text-[#B91C1C]"}, vnd(tReceivable)))),
+      /*#__PURE__*/React.createElement("div", {className:"row-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-center items-end"},
+        /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-1.5"},
+          /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-slate-500"}, "Tổng giá trị đơn hàng"),
+          /*#__PURE__*/React.createElement("span", {className:"rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500"}, (delivered.length+undelivered.length)+" đơn")),
+        /*#__PURE__*/React.createElement("p", {className:"mt-2 text-3xl font-bold tabular-nums text-right text-[#92400e]"}, vnd(tTotal)),
+        /*#__PURE__*/React.createElement("div", {className:"mt-4 w-full border-t border-slate-100 pt-3 flex flex-col gap-2"},
+          /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between"},
+            /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-500"}, "Tổng đã thu"),
+            /*#__PURE__*/React.createElement("span", {className:"text-sm font-semibold tabular-nums text-[#047857]"}, vnd(tTotalPaid))),
+          /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between"},
+            /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-500"}, "Còn lại"),
+            /*#__PURE__*/React.createElement("span", {className:"text-sm font-semibold tabular-nums "+(tTotalRem>0?"text-[#B91C1C]":"text-slate-400")}, vnd(tTotalRem))))),
+      /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4 shadow-sm"},
+        /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-slate-500"}, "Đơn chưa giao"),
+        /*#__PURE__*/React.createElement("span", {className:"mt-1 inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500"}, undelivered.length+" đơn"),
+        /*#__PURE__*/React.createElement("p", {className:"mt-2 text-2xl font-semibold tabular-nums text-right text-[#B91C1C]"}, vnd(tUndelivered))),
+      /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col justify-center gap-3"},
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-right text-slate-500"}, "Tiền đặt cọc"),
+          /*#__PURE__*/React.createElement("p", {className:"mt-1 text-xl font-semibold tabular-nums text-right text-[#92400e]"}, vnd(tDeposit))),
+        /*#__PURE__*/React.createElement("div", {className:"border-t border-slate-100 pt-3"},
+          /*#__PURE__*/React.createElement("p", {className:"text-xs font-medium uppercase tracking-wide text-right text-slate-500"}, "Tiền chưa thu"),
+          /*#__PURE__*/React.createElement("p", {className:"mt-1 text-xl font-semibold tabular-nums text-right text-[#B91C1C]"}, vnd(tUndelivRem))))),
     /*#__PURE__*/React.createElement(Card, {title:"Chi tiết theo đơn hàng"},
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
         /*#__PURE__*/React.createElement(TableShell, {head: tblHead}, tblBody))));
@@ -6260,7 +6293,7 @@ function Screen({
     case "dashboard":
       return /*#__PURE__*/React.createElement(Dashboard, {orders});
     case "rp_sales":
-      return /*#__PURE__*/React.createElement(ReportSales, {orders});
+      return /*#__PURE__*/React.createElement(ReportSales, {orders, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "rp_preorder":
       return /*#__PURE__*/React.createElement(ReportPreorder, null);
     case "rp_staff":
