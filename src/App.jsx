@@ -119,7 +119,9 @@ function calc(o) {
     : "Đã đặt cọc";
   const khoXong = !!(o.imported && o.exported);
   const isCancel = o.orderStatus === "Huỷ" || o.orderStatus === "Hủy";
+  const hasReturn = (o.returns||[]).length > 0;
   const orderStatus = isCancel ? "Huỷ"
+    : hasReturn ? "Hoàn hàng"
     : (payDone && khoXong) ? "Hoàn thành"
     : o.deliveryConfirmed ? "Chờ xử lý"
     : "Chờ giao hàng";
@@ -1128,7 +1130,7 @@ function SalesModule({
   }), current && modal.mode === "return" && /*#__PURE__*/React.createElement(ReturnModal, {
     order: current,
     onClose: () => setModal(null),
-    onConfirm: () => {
+    onConfirm: ({rows}) => {
       applyReturn(current.id);
       setModal(null);
     }
@@ -1564,16 +1566,19 @@ function KhoModal({ order, onClose, onConfirm }) {
 }
 function ReturnModal({
   order,
+  accounts,
   onClose,
   onConfirm
 }) {
   const [rows, setRows] = useState(order.items.map(it => ({
     name: it.name,
     price: it.price,
+    cost: it.cost || 0,
     max: it.qty,
     qty: 0
   })));
   const [reason, setReason] = useState("");
+  const [acc, setAcc] = useState(accounts?.[0]?.key || "");
   const set = (i, p) => setRows(xs => xs.map((x, k) => k === i ? {
     ...x,
     ...p
@@ -1592,7 +1597,7 @@ function ReturnModal({
       onClick: onClose,
       className: "rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50"
     }, "Hủy"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => onConfirm({rows, reason}),
+      onClick: () => onConfirm({rows, reason, acc}),
       disabled: total === 0,
       className: "rounded-lg bg-[#92400e] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:bg-slate-300"
     }, "Xác nhận hoàn hàng"))
@@ -1620,7 +1625,18 @@ function ReturnModal({
     onChange: e => set(i, {
       qty: Math.min(r.max, Math.max(0, +e.target.value))
     })
-  }))))));
+  })))),
+  accounts && accounts.length > 0 && /*#__PURE__*/React.createElement("div", {className:"mt-3"},
+    /*#__PURE__*/React.createElement("label", {className:"block text-xs text-slate-500 mb-1"}, "Tài khoản trả"),
+    /*#__PURE__*/React.createElement("select", {value:acc, onChange:e=>setAcc(e.target.value), className:sm},
+      accounts.map(a => /*#__PURE__*/React.createElement("option", {key:a.key, value:a.key}, a.label||a.bank)))),
+  /*#__PURE__*/React.createElement("div", {className:"mt-3"},
+    /*#__PURE__*/React.createElement("label", {className:"block text-xs text-slate-500 mb-1"}, "Lý do"),
+    /*#__PURE__*/React.createElement("input", {
+      value: reason, onChange: e=>setReason(e.target.value),
+      placeholder:"Nhập lý do hoàn hàng...",
+      className:sm
+    }))));
 }
 function OrderTable({
   orders,
@@ -2476,9 +2492,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
             /*#__PURE__*/React.createElement("th", {className: "px-3 py-2 border-b border-slate-200", colSpan:9},
               /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-end"},
                 /*#__PURE__*/React.createElement("button", {
-                  onClick: () => setShowReturnModal(true),
-                  className: "flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
-                }, /*#__PURE__*/React.createElement(RotateCcw, {className: "h-3 w-3"}), " Hoàn hàng")))),
+                  onClick: () => returns.length === 0 && setShowReturnModal(true),
+                  disabled: returns.length > 0,
+                  className: returns.length > 0 ? "flex items-center gap-1 rounded-md border border-slate-100 bg-slate-50 text-slate-300 px-2.5 py-1 text-xs font-medium cursor-not-allowed" : "flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
+                }, /*#__PURE__*/React.createElement(RotateCcw, {className: "h-3 w-3"}), returns.length > 0 ? " Đã hoàn" : " Hoàn hàng")))),
           /*#__PURE__*/React.createElement("tr", {className: "bg-white text-left text-xs font-medium text-slate-400"},
             /*#__PURE__*/React.createElement("th", {className: "px-3 py-1.5 border-b border-slate-100"}, "Tên sản phẩm"),
             /*#__PURE__*/React.createElement("th", {className: "px-3 py-1.5 border-b border-slate-100 text-center"}, "ĐVT"),
@@ -2726,10 +2743,30 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   })
   ),
   showReturnModal && /*#__PURE__*/React.createElement(ReturnModal, {
-    order: {id: effectiveOrderId, items: lines.filter(l=>l.name).map(l=>({name:l.name, price:l.price, qty:l.qty}))},
+    order: {id: effectiveOrderId, items: lines.filter(l=>l.name).map(l=>({name:l.name, price:l.price, qty:l.qty, cost:l.cost||0}))},
+    accounts: bankAccounts,
     onClose: () => setShowReturnModal(false),
-    onConfirm: ({rows, reason}) => {
-      setReturns(rows.filter(r=>r.qty>0).map(r=>({prod:r.name, date:"", qty:r.qty, amount:r.price*r.qty, fee:0, note:reason||""})));
+    onConfirm: ({rows, reason, acc}) => {
+      const activeRows = rows.filter(r=>r.qty>0);
+      if (!activeRows.length) { setShowReturnModal(false); return; }
+      const now = new Date(), pad = n=>String(n).padStart(2,"0");
+      const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
+      const dt = dateStr + " " + `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      const returnTotal = activeRows.reduce((s,r)=>s+r.price*r.qty,0);
+      const base = now.toISOString().slice(0,10).replace(/-/g,"");
+      setReturns(activeRows.map(r=>({prod:r.name, date:dateStr, qty:r.qty, amount:r.price*r.qty, fee:0, note:reason||""})));
+      setPayments(xs=>[...xs,{kind:"Tiền hàng trả lại",amount:returnTotal,datetime:dt,date:dateStr,staff:"PAT",account:acc||""}]);
+      setPaid(v=>Math.max(0,v-returnTotal));
+      if (onImportKho) onImportKho(activeRows.map((r,i)=>({
+        lot:"HOANKH_"+(effectiveOrderId||base)+"_"+i,
+        date:dateStr, prod:r.name, store:"Kho HH",
+        qtyIn:r.qty, qtyNow:r.qty, qtyRemaining:r.qty,
+        costNcc:r.cost||0, unitCost:r.cost||0,
+        fee:0, supplier:"", order:effectiveOrderId||"",
+        staff:"PAT", source:"hoankh", pay:"Không cần TT"
+      })));
+      autoAddChi("Hoàn tiền hàng", returnTotal, acc||"");
+      addLog("return_confirmed", `Hoàn hàng ${activeRows.length} SP, tổng: ${vnd(returnTotal)}đ`, "PAT");
       setShowReturnModal(false);
     }
   })
