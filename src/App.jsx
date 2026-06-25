@@ -2047,6 +2047,256 @@ function DraftTable({
     onClose: () => setDoc(null)
   }));
 }
+function numToWordVN(amount) {
+  if (!amount || amount === 0) return "Không đồng";
+  const n = Math.round(Math.abs(amount));
+  const ones = ["","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+  function readGroup(x) {
+    if (x === 0) return "";
+    if (x < 10) return ones[x];
+    const t = Math.floor(x/10), u = x%10;
+    const ts = t === 1 ? "mười" : ones[t]+" mươi";
+    if (u === 0) return ts;
+    if (u === 1 && t > 1) return ts+" mốt";
+    if (u === 5) return ts+" lăm";
+    return ts+" "+ones[u];
+  }
+  function readH(x, isFirst) {
+    if (x === 0) return "";
+    const h = Math.floor(x/100), r = x%100;
+    if (h > 0) {
+      const hs = ones[h]+" trăm";
+      if (r === 0) return hs;
+      if (r < 10) return hs+" lẻ "+ones[r];
+      return hs+" "+readGroup(r);
+    }
+    if (isFirst) return readGroup(r);
+    if (r < 10) return "lẻ "+ones[r];
+    return "không trăm "+readGroup(r);
+  }
+  const ty = Math.floor(n/1e9), tr = Math.floor(n%1e9/1e6), ng = Math.floor(n%1e6/1e3), un = n%1e3;
+  const parts = [];
+  if (ty) parts.push(readH(ty,true)+" tỷ");
+  if (tr) parts.push(readH(tr,!parts.length)+" triệu");
+  if (ng) parts.push(readH(ng,!parts.length)+" nghìn");
+  if (un) parts.push(readH(un,!parts.length));
+  if (!parts.length) return "Không đồng";
+  const s = parts.join(" ").replace(/\s+/g," ").trim();
+  return s[0].toUpperCase()+s.slice(1)+" đồng";
+}
+
+function buildPrintHTML(order, type, cfg, products) {
+  const fmt = n => (n == null || n === 0) ? "0" : new Intl.NumberFormat("vi-VN").format(Math.round(n));
+  const compName = cfg.companyName || "CÔNG TY TNHH BÁN LẺ TẠI KHO HẢI PHÒNG";
+  const compAddr = cfg.address || "LK-10, Số 384 Lê Thánh Tông, Phường Ngô Quyền, Thành phố Hải Phòng";
+  const compPhone = cfg.phone || "033 5252 225";
+  const logoUrl = cfg.logoUrl || "/logo.png";
+  const bankNo = cfg.bankNo || "202252225";
+  const bankCode = cfg.bankCode || "TCB";
+  const bankOwner = cfg.bankOwner || "BAN LE TAI KHO HAI PHONG";
+  const bankName = cfg.bankName || "TECHCOMBANK (Ngân hàng TMCP Kỳ Thương Việt Nam)";
+
+  const fmtDt = s => {
+    if (!s) return "";
+    const m = String(s).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    return m ? String(m[1]).padStart(2,"0")+"/"+String(m[2]).padStart(2,"0")+"/"+m[3] : String(s);
+  };
+  const orderDate = fmtDt(order.dt) || new Date().toLocaleDateString("vi-VN");
+  const now = new Date();
+  const nowStr = String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0")+" "+now.toLocaleDateString("vi-VN");
+
+  const prodMap = {};
+  (products||[]).forEach(p => { if (p.name) prodMap[p.name] = p; });
+
+  const items = order.items || [];
+  const subtotal = items.reduce((s,l) => s+Math.max(0,l.price*l.qty-(l.disc||0)),0);
+  const custExp = ((order.custExpenses||[]).reduce((s,e)=>s+(e.amount||0),0))+(order.shippingFee||0)+(order.returnFee||0);
+  const total = subtotal + custExp;
+  const paid = order.paid || 0;
+  const remaining = Math.max(0, total - paid);
+  const payments = (order.payments||[]).filter(p => p.kind !== "Tiền hàng trả lại");
+
+  const showLogo = type !== "phieu-giao-no-logo";
+  const showPrice = type === "bao-gia" || type === "xac-nhan";
+  const isDelivery = type === "phieu-giao" || type === "phieu-giao-no-logo";
+  const TITLE = {"bao-gia":"BÁO GIÁ","xac-nhan":"ĐƠN XÁC NHẬN ĐẶT HÀNG","phieu-giao":"PHIẾU GIAO HÀNG","phieu-giao-no-logo":"PHIẾU GIAO HÀNG"}[type]||"PHIẾU";
+
+  const qrUrl = bankNo ? "https://img.vietqr.io/image/"+bankCode+"-"+bankNo+"-qr_only.png?amount="+remaining+"&addInfo="+encodeURIComponent(order.id||"")+"&accountName="+encodeURIComponent(bankOwner) : "";
+
+  const productRows = items.map((item,idx) => {
+    const prod = prodMap[item.name] || {};
+    const sku = prod.sku || "";
+    const imgTag = prod.img ? '<img src="'+prod.img+'" style="width:72px;height:72px;object-fit:contain;">' : "";
+    const listPrice = prod.list || item.price;
+    const lineTotal = Math.max(0, item.price*item.qty-(item.disc||0));
+    const priceAfter = item.qty>0 ? Math.round(lineTotal/item.qty) : item.price;
+    const discPct = (listPrice>0 && priceAfter<listPrice) ? "-"+((listPrice-priceAfter)/listPrice*100).toFixed(1)+"%" : "";
+    if (showPrice) {
+      const td = "padding:8px 6px;border-bottom:0.7px solid #444;border-right:0.7px solid #444;";
+      const tdL = "padding:8px 6px;border-bottom:0.7px solid #444;";
+      return "<tr>"
+        +"<td style='"+td+"text-align:center;'>"+(idx+1)+"</td>"
+        +"<td style='"+td+"text-align:left;'>"+sku+"</td>"
+        +"<td style='"+td+"'>"+item.name+"</td>"
+        +"<td style='"+td+"text-align:center;'>"+imgTag+"</td>"
+        +"<td style='"+td+"text-align:center;'>Cái</td>"
+        +"<td style='"+td+"text-align:center;'>"+item.qty+"</td>"
+        +"<td style='"+td+"text-align:right;'>"+fmt(listPrice)+"</td>"
+        +"<td style='"+td+"text-align:center;'>"+discPct+"</td>"
+        +"<td style='"+td+"text-align:right;'>"+fmt(priceAfter)+"</td>"
+        +"<td style='"+tdL+"text-align:right;font-weight:600;'>"+fmt(lineTotal)+"</td>"
+        +"</tr>";
+    }
+    {
+      const isLast = idx === items.length - 1;
+      const bb = isLast ? "" : "border-bottom:1px solid #555;";
+      const td = "padding:10px 6px;"+bb+"border-right:1px solid #555;";
+      const tdL = "padding:10px 6px;"+bb;
+      return "<tr>"
+        +"<td style='"+td+"text-align:center;'>"+(idx+1)+"</td>"
+        +"<td style='"+td+"text-align:left;'>"+sku+"</td>"
+        +"<td style='"+td+"'>"+item.name+"</td>"
+        +"<td style='"+td+"text-align:center;'>"+imgTag+"</td>"
+        +"<td style='"+td+"text-align:center;'>Cái</td>"
+        +"<td style='"+tdL+"text-align:center;'>"+item.qty+"</td>"
+        +"</tr>";
+    }
+  }).join("");
+
+  const summarySection = showPrice ? (
+    "<tr><td colspan='10' style='border:none;height:13px;padding:0;'></td></tr>"+
+    (type!=="bao-gia"?
+      "<tr><td colspan='6' style='border:none;'></td>"+
+      "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;'>Cộng tiền hàng (Đã trừ CK):</td>"+
+      "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;'>"+fmt(subtotal)+"</td></tr>"
+    :"")+
+    "<tr><td colspan='6' style='border:none;'></td>"+
+    "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;font-weight:600;'>Tổng cộng:</td>"+
+    "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;font-weight:700;color:#16a34a;'>"+fmt(total)+"</td></tr>"+
+    payments.map(p=>
+      "<tr><td colspan='6' style='border:none;'></td>"+
+      "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;'>Thanh toán: <span style='color:#6b7280;'>"+(p.date||"")+"</span></td>"+
+      "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;color:#dc2626;'>-"+fmt(p.amount)+"</td></tr>"
+    ).join("")+
+    (type!=="bao-gia"?
+      "<tr><td colspan='6' style='border:none;'></td>"+
+      "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;font-weight:600;'>Còn lại:</td>"+
+      "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;font-weight:700;'>"+(remaining===0?"0":fmt(remaining))+"</td></tr>"
+    :"")+
+    "<tr><td colspan='10' style='border:none;border-top:0.7px solid #444;padding:7px 10px;font-size:12px;'>Số tiền bằng chữ:&nbsp;&nbsp;<strong>"+numToWordVN(type==="bao-gia"?total:remaining)+"</strong></td></tr>"
+  ) : "";
+
+  const headerHtml = showLogo ? (
+    "<table style='width:100%;border-collapse:collapse;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid #e2e8f0;'><tr>"+
+    "<td style='width:99px;text-align:right;vertical-align:middle;border:none;'>"+
+    "<img src='"+logoUrl+"' alt='logo' style='width:90px;height:auto;' onerror=\"this.style.display='none'\"></td>"+
+    "<td style='vertical-align:middle;padding-left:10px;line-height:1.7;border:none;text-align:left;'>"+
+    "<div style='font-size:15px;font-weight:700;text-transform:uppercase;'>"+compName+"</div>"+
+    "<div style='font-size:12px;color:#475569;'>Địa Chỉ: "+compAddr+"</div>"+
+    "<div style='font-size:12px;color:#475569;'>Hotline: "+compPhone+"</div>"+
+    "</td></tr></table>"
+  ) : "";
+
+  const timeStampHtml = showPrice ? "<div style='text-align:right;font-size:10.5px;color:#94a3b8;margin-bottom:4px;'>"+nowStr+"&nbsp;&nbsp;&nbsp;"+(order.id||"")+"</div>" : "";
+
+  const custInfoHtml = "<div style='display:flex;justify-content:space-between;margin-bottom:14px;font-size:12px;'>"
+    +"<div style='line-height:2;'>"
+    +"<div><strong>Khách hàng:</strong> "+(order.name||"")+" "+(order.phone||"")+"</div>"
+    +"<div><strong>Địa chỉ:</strong> "+(order.addr||"")+"</div>"
+    +"<div><strong>Diễn giải:</strong> "+(order.note||"")+"</div>"
+    +"</div>"
+    +"<div style='text-align:left;line-height:2;margin-right:1cm;'>"
+    +"<div><strong>Ngày tháng:</strong> "+orderDate+"</div>"
+    +"<div><strong>Số đơn:</strong> "+(order.id||"")+"</div>"
+    +"<div><strong>Loại tiền:</strong> VNĐ</div>"
+    +"</div></div>";
+
+  const thPriceStyle = "style='background:#bfdbfe;padding:8px 6px;font-size:12px;font-weight:600;border:1px solid #444;'";
+  const tableHeaderHtml = showPrice
+    ? (()=>{
+      const th = "background:#bfdbfe;padding:6px 4px;font-size:10px;font-weight:600;border-bottom:1px solid #444;border-right:0.7px solid #444;";
+      const thL = "background:#bfdbfe;padding:6px 4px;font-size:10px;font-weight:600;border-bottom:1px solid #444;";
+      return "<thead><tr>"
+        +"<th style='"+th+"text-align:center;white-space:nowrap;'>STT</th>"
+        +"<th style='"+th+"text-align:center;white-space:nowrap;'>Mã sản phẩm</th>"
+        +"<th style='"+th+"text-align:center;'>Tên sản phẩm</th>"
+        +"<th style='"+th+"text-align:center;white-space:nowrap;'>Hình ảnh</th>"
+        +"<th style='"+th+"text-align:center;white-space:nowrap;'>ĐVT</th>"
+        +"<th style='"+th+"text-align:center;white-space:nowrap;'>SL</th>"
+        +"<th style='"+th+"text-align:right;white-space:nowrap;'>Giá niêm yết</th>"
+        +"<th style='"+th+"text-align:center;white-space:nowrap;'>CK</th>"
+        +"<th style='"+th+"text-align:right;white-space:nowrap;'>Giá bán sau CK</th>"
+        +"<th style='"+thL+"text-align:center;white-space:nowrap;'>Thành tiền</th>"
+        +"</tr></thead>";
+    })()
+    : (()=>{
+      const th = "background:#bfdbfe;padding:6px 4px;font-size:10px;font-weight:600;border-bottom:1px solid #555;border-right:1px solid #555;text-align:center;white-space:nowrap;";
+      const thL = "background:#bfdbfe;padding:6px 4px;font-size:10px;font-weight:600;border-bottom:1px solid #555;text-align:center;white-space:nowrap;";
+      return "<thead><tr>"
+        +"<th style='"+th+"'>STT</th>"
+        +"<th style='"+th+"'>Mã sản phẩm</th>"
+        +"<th style='"+th+"'>Tên sản phẩm</th>"
+        +"<th style='"+th+"'>Hình ảnh</th>"
+        +"<th style='"+th+"'>ĐVT</th>"
+        +"<th style='"+thL+"'>SL</th>"
+        +"</tr></thead>";
+    })();
+
+  const termsHtml = type === "bao-gia"
+    ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div>1) Báo giá có hiệu lực trong ngày hoặc đến khi hết khuyến mại, có thể thay đổi mà không báo trước.</div><div style='margin-top:5px;'>2) Báo giá chưa bao gồm lắp đặt. Miễn phí vận chuyển đến tầng 1 trong nội thành Hải Phòng.</div><div style='margin-top:5px;'>3) Đặt cọc 50% giá trị đơn hàng, quyết toán vào đợt giao hàng cuối. Huỷ đơn hoặc không nhận hàng sẽ mất cọc.</div><div style='margin-top:5px;'>4) Đổi trả trong vòng 15 ngày kể từ ngày giao hàng. Đối với đơn hàng nhiều sản phẩm, số lượng đổi trả không vượt quá 20% giá trị đơn. Không áp dụng cho hàng nhập khẩu, hàng chuyên biệt và hàng đặt theo yêu cầu.</div></div>"
+    : type === "xac-nhan"
+    ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1) Đơn giá KHÔNG bao gồm chi phí lắp đặt. Miễn phí vận chuyển đến tầng 01 của công trình tại nội thành Hải Phòng.</div><div style='margin-top:5px;'>2) Khách hàng đặt cọc 50% giá trị đơn hàng. Tiền cọc sẽ được quyết toán vào đợt giao hàng sau cùng. Trong trường hợp khách hàng huỷ đơn hàng hoặc không nhận hàng sẽ chịu mất cọc.</div><div style='margin-top:5px;'>3) Điều kiện đổi trả hàng: Trong vòng 15 ngày kể từ khi giao hàng. Đối với đơn hàng nhiều sản phẩm đổi trả không vượt quá 20% giá trị đơn hàng (hàng hóa thông thường). KHÔNG nhận đổi trả đối với trường hợp hàng hoá nhập khẩu, hàng chuyên biệt, hàng đặt theo yêu cầu riêng của khách hàng.</div></div>"
+    : (type === "phieu-giao" || type === "phieu-giao-no-logo")
+    ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1. Khách hàng đã nhận đầy đủ số lượng (phụ kiện đi kèm) và kiểm tra đúng tên hàng hóa ghi trên Phiếu Giao Hàng.</div><div style='margin-top:5px;'>2. Hàng hóa được giao đến chân công trình tình trạng nguyên vẹn, không bể vỡ, móp méo. Công ty không chịu trách nhiệm về các vấn đề phát sinh do bên thứ ba hoặc do khách hàng gây ra trong quá trình lắp đặt, thi công.</div><div style='margin-top:5px;'>3. Khách hàng có trách nhiệm thanh toán số tiền còn lại ngay sau khi nhận hàng.</div></div>"
+    : "";
+
+  const bankHtml = (showPrice && bankNo)
+    ? "<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-top:20px;'><div style='font-size:12.5px;line-height:1.9;'><div style='font-weight:700;'>"+bankOwner+"</div><div>Số tài khoản: <strong>"+bankNo+"</strong></div><div>"+bankName+"</div></div>"+(qrUrl?"<img src='"+qrUrl+"' alt='QR' style='width:90px;height:90px;object-fit:contain;margin-right:5cm;'>":"")+"</div>"
+    : "";
+
+  const signatureHtml = isDelivery
+    ? "<hr style='border:none;border-top:1px solid #1e293b;margin:20px 0 30px;'><div style='display:flex;justify-content:space-around;text-align:center;'><div><div style='font-weight:700;font-size:13px;'>Người giao hàng</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div><div><div style='font-weight:700;font-size:13px;'>Khách hàng</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div></div>"
+    : "<div style='display:flex;justify-content:space-around;margin-top:50px;text-align:center;'><div><div style='font-weight:700;font-size:13px;'>Người lập phiếu</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div><div><div style='font-weight:700;font-size:13px;'>Khách hàng</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div></div>";
+
+  const colGroupPrice = "<colgroup><col style='width:34px'><col style='width:134px'><col><col style='width:78px'><col style='width:36px'><col style='width:32px'><col style='width:50px'><col style='width:46px'><col style='width:50px'><col style='width:50px'></colgroup>";
+  const colGroupDelivery = "<colgroup><col style='width:38px'><col style='width:4cm'><col><col style='width:4.5cm'><col style='width:1.6cm'><col style='width:1.4cm'></colgroup>";
+
+  return "<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'><title>"+TITLE+" - "+(order.id||"")+"</title><style>"
+    +"*{box-sizing:border-box;margin:0;padding:0;}"
+    +"body{font-family:Arial,sans-serif;font-size:12px;color:#1e293b;background:#e8edf2;}"
+    +".no-print{padding:12px 20px;display:flex;gap:10px;background:#fff;border-bottom:1px solid #444;position:sticky;top:0;z-index:10;}"
+    +".page{background:#fff;width:210mm;min-height:297mm;padding:14mm 8mm;margin:20px auto;box-shadow:0 2px 20px rgba(0,0,0,.15);}"
+    +"table{border-collapse:separate;border-spacing:0;width:100%;font-size:11.5px;}"
+    +"td,th{border:none;vertical-align:middle;}"
+    +"@media print{"
+    +".no-print{display:none!important;}"
+    +"body{background:#fff;}"
+    +".page{width:100%;min-height:auto;padding:0;box-shadow:none;margin:0;}"
+    +"@page{size:A4;margin:14mm 8mm;}"
+    +"}"
+    +"</style></head><body>"
+    +"<div class='no-print'><button onclick='window.print()' style='padding:7px 18px;background:#1e293b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;'>🖨 In đơn hàng</button><button onclick='window.close()' style='padding:7px 18px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:13px;'>← Quay lại</button></div>"
+    +"<div class='page'>"
+    +timeStampHtml
+    +headerHtml
+    +"<div style='text-align:center;font-size:17px;font-weight:700;letter-spacing:1px;margin:14px 0 16px;'>"+TITLE+"</div>"
+    +custInfoHtml
+    +"<div style='margin-top:0.5cm;border:1px solid #444;border-radius:8px;overflow:hidden;'>"
+    +"<table>"+(showPrice?colGroupPrice:colGroupDelivery)+tableHeaderHtml+"<tbody>"+productRows+summarySection+"</tbody></table></div>"
+    +termsHtml
+    +bankHtml
+    +signatureHtml
+    +"</div></body></html>";
+}
+
+function openPrint(order, type, cfg, products) {
+  const w = window.open("", "_blank");
+  if (!w) { alert("Vui lòng cho phép mở cửa sổ mới (popup) trong trình duyệt"); return; }
+  w.document.write(buildPrintHTML(order, type, cfg, products));
+  w.document.close();
+  w.focus();
+}
+
 function CreateOrder({
   onBack,
   onSave,
@@ -2064,6 +2314,8 @@ function CreateOrder({
   const isEdit = !!editOrder;
   const [prodsFS] = useCollection("products");
   const prods = prodsFS.length ? prodsFS : PRODUCTS;
+  const [cfgItems] = useCollection("config");
+  const printCfg = cfgItems.find(c => c.id === "print_template") || {};
   const [cust, setCust] = useState({
     phone: editOrder?.phone || "",
     name: editOrder?.name || "",
@@ -2278,6 +2530,12 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   };
   const addrDetailed = cust.addr.trim() && !addrIsVague(cust.addr);
   const custValidFull = custValid && addrDetailed;
+  const handlePrint = (type) => {
+    setSaveTried(true);
+    if (!custValidFull) { notify("⚠️ Địa chỉ giao hàng chưa đủ chi tiết để in đơn"); return; }
+    openPrint({...build(), dt: editOrder?.dt || dt}, type, printCfg, prods);
+    setShowPrintMenu(false);
+  };
   const phoneQuery = cust.phone.trim();
   const dupCust = phoneQuery && phoneQuery !== (editOrder?.phone || "")
     ? (() => {
@@ -2352,12 +2610,14 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           disabled: subtotal === 0,
           className: blueBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo đơn hàng"),
-        /*#__PURE__*/React.createElement("div", {className: "relative"},
-          /*#__PURE__*/React.createElement("button", {onClick: () => { setSaveTried(true); if (!custValidFull) { notify("⚠️ Địa chỉ giao hàng chưa đủ chi tiết để in đơn"); return; } setShowPrintMenu(v => !v); }, className: ghostBtn},
-            /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
-          showPrintMenu && /*#__PURE__*/React.createElement("div", {className: "absolute right-0 top-full z-20 mt-1 min-w-[140px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
-            /*#__PURE__*/React.createElement("button", {onClick: () => { window.print(); setShowPrintMenu(false); }, className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "In đơn hàng"),
-            /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(false), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Xuất PDF"))),
+        isEdit && isBaoGia && /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("bao-gia"), className: ghostBtn}, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Báo Giá"),
+        isEdit && !isBaoGia && !deliveryConfirmed && /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("xac-nhan"), className: ghostBtn}, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Đơn XN ĐH"),
+        isEdit && !isBaoGia && deliveryConfirmed && /*#__PURE__*/React.createElement("div", {className: "relative"},
+          /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: ghostBtn},
+            /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Phiếu Giao ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
+          showPrintMenu && /*#__PURE__*/React.createElement("div", {className: "absolute right-0 top-full z-20 mt-1 min-w-[210px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
+            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu Giao Hàng"),
+            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao-no-logo"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu GH Không Logo"))),
         /*#__PURE__*/React.createElement("button", {onClick: () => { if (hasPaidOnBaoGia) { notify("⚠️ Đã có thanh toán — bắt buộc phải tạo đơn hàng trước khi quay lại"); return; } onBack(); }, className: backBtn},
           /*#__PURE__*/React.createElement(ArrowLeft, {className: "h-4 w-4"}), " Quay lại")),
       /*#__PURE__*/React.createElement("input", {type: "datetime-local", value: dt, onChange: e => setDt(e.target.value), className: field}))),
@@ -6856,12 +7116,23 @@ function SettingsPrint() {
   const notify = useToast();
   const [cfgItems, , ] = useCollection("config");
   const cfg = cfgItems.find(c => c.id === "print_template") || {};
-  const [form, setForm] = useState({
-    companyName: "", address: "", phone: "", taxCode: "", email: "", website: "", footer: "", logoUrl: "",
-    ...cfg
-  });
+  const PRINT_DEFAULTS = {
+    companyName: "CÔNG TY TNHH BÁN LẺ TẠI KHO HẢI PHÒNG",
+    address: "LK-10, Số 384 Lê Thánh Tông, Phường Ngô Quyền, Thành phố Hải Phòng",
+    phone: "033 5252 225",
+    taxCode: "0202252225",
+    email: "vat.banletaikhohaiphong@gmail.com",
+    website: "",
+    footer: "",
+    logoUrl: "/logo.png",
+    bankNo: "202252225",
+    bankCode: "TCB",
+    bankOwner: "BAN LE TAI KHO HAI PHONG",
+    bankName: "TECHCOMBANK (Ngân hàng TMCP Kỳ Thương Việt Nam)",
+  };
+  const [form, setForm] = useState({...PRINT_DEFAULTS, ...cfg});
   React.useEffect(() => {
-    if (cfg && cfg.id) setForm(f => ({...f, companyName:"",address:"",phone:"",taxCode:"",email:"",website:"",footer:"",logoUrl:"",...cfg}));
+    if (cfg && cfg.id) setForm(f => ({...f, ...PRINT_DEFAULTS, ...cfg}));
   }, [JSON.stringify(cfg)]);
   const set = (k,v) => setForm(f => ({...f, [k]:v}));
   const save = async () => {
@@ -6887,6 +7158,12 @@ function SettingsPrint() {
         LabelInput({label:"Website", k:"website", ph:"www.bltk.vn"}),
         LabelInput({label:"URL Logo", k:"logoUrl", ph:"https://... (để trống nếu không có)"}),
         LabelInput({label:"Ghi chú cuối phiếu", k:"footer", ph:"Cảm ơn quý khách đã tin dùng sản phẩm!", multi:true}))),
+    /*#__PURE__*/React.createElement(Card, {title:"Thông tin ngân hàng (QR VietQR)"},
+      /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-1 gap-3 sm:grid-cols-2"},
+        LabelInput({label:"Số tài khoản", k:"bankNo", ph:"202252225"}),
+        LabelInput({label:"Mã ngân hàng VietQR", k:"bankCode", ph:"TCB / VCB / MB / ACB..."}),
+        LabelInput({label:"Tên tài khoản (in trên phiếu)", k:"bankOwner", ph:"BAN LE TAI KHO HAI PHONG"}),
+        LabelInput({label:"Tên ngân hàng (in trên phiếu)", k:"bankName", ph:"TECHCOMBANK (NH TMCP Kỳ Thương VN)"}))),
     form.companyName && /*#__PURE__*/React.createElement(Card, {title:"Xem trước phần đầu phiếu in"},
       /*#__PURE__*/React.createElement("div", {className:"rounded border border-slate-200 bg-white p-4 text-sm"},
         /*#__PURE__*/React.createElement("div", {className:"flex items-start gap-4"},
