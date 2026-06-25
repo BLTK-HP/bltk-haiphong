@@ -2126,7 +2126,7 @@ function buildPrintHTML(order, type, cfg, products) {
   const productRows = items.map((item,idx) => {
     const prod = prodMap[item.name] || {};
     const sku = prod.sku || "";
-    const imgTag = prod.img ? '<img src="'+prod.img+'" style="width:72px;height:72px;object-fit:contain;">' : "";
+    const imgTag = prod.img ? '<img src="'+prod.img+'" style="width:100%;max-height:72px;object-fit:contain;display:block;">' : "";
     const listPrice = prod.list || item.price;
     const lineTotal = Math.max(0, item.price*item.qty-(item.disc||0));
     const priceAfter = item.qty>0 ? Math.round(lineTotal/item.qty) : item.price;
@@ -2141,7 +2141,7 @@ function buildPrintHTML(order, type, cfg, products) {
         +"<td style='"+td+"text-align:center;'>"+imgTag+"</td>"
         +"<td style='"+td+"text-align:center;'>Cái</td>"
         +"<td style='"+td+"text-align:center;'>"+item.qty+"</td>"
-        +"<td style='"+td+"text-align:right;'>"+fmt(listPrice)+"</td>"
+        +"<td style='"+td+"text-align:center;'>"+fmt(listPrice)+"</td>"
         +"<td style='"+td+"text-align:center;'>"+discPct+"</td>"
         +"<td style='"+td+"text-align:right;'>"+fmt(priceAfter)+"</td>"
         +"<td style='"+tdL+"text-align:right;font-weight:600;'>"+fmt(lineTotal)+"</td>"
@@ -2223,10 +2223,10 @@ function buildPrintHTML(order, type, cfg, products) {
         +"<th style='"+th+"text-align:center;white-space:nowrap;'>Hình ảnh</th>"
         +"<th style='"+th+"text-align:center;white-space:nowrap;'>ĐVT</th>"
         +"<th style='"+th+"text-align:center;white-space:nowrap;'>SL</th>"
-        +"<th style='"+th+"text-align:right;white-space:nowrap;'>Giá niêm yết</th>"
-        +"<th style='"+th+"text-align:center;white-space:nowrap;'>CK</th>"
-        +"<th style='"+th+"text-align:right;white-space:nowrap;'>Giá bán sau CK</th>"
-        +"<th style='"+thL+"text-align:center;white-space:nowrap;'>Thành tiền</th>"
+        +"<th style='"+th+"text-align:right;'>Giá niêm yết</th>"
+        +"<th style='"+th+"text-align:center;'>CK</th>"
+        +"<th style='"+th+"text-align:right;'>Giá bán sau CK</th>"
+        +"<th style='"+thL+"text-align:center;'>Thành tiền</th>"
         +"</tr></thead>";
     })()
     : (()=>{
@@ -2245,7 +2245,7 @@ function buildPrintHTML(order, type, cfg, products) {
   const termsHtml = type === "bao-gia"
     ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div>1) Báo giá có hiệu lực trong ngày hoặc đến khi hết khuyến mại, có thể thay đổi mà không báo trước.</div><div style='margin-top:5px;'>2) Báo giá chưa bao gồm lắp đặt. Miễn phí vận chuyển đến tầng 1 trong nội thành Hải Phòng.</div><div style='margin-top:5px;'>3) Đặt cọc 50% giá trị đơn hàng, quyết toán vào đợt giao hàng cuối. Huỷ đơn hoặc không nhận hàng sẽ mất cọc.</div><div style='margin-top:5px;'>4) Đổi trả trong vòng 15 ngày kể từ ngày giao hàng. Đối với đơn hàng nhiều sản phẩm, số lượng đổi trả không vượt quá 20% giá trị đơn. Không áp dụng cho hàng nhập khẩu, hàng chuyên biệt và hàng đặt theo yêu cầu.</div></div>"
     : type === "xac-nhan"
-    ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1) Đơn giá KHÔNG bao gồm chi phí lắp đặt. Miễn phí vận chuyển đến tầng 01 của công trình tại nội thành Hải Phòng.</div><div style='margin-top:5px;'>2) Khách hàng đặt cọc 50% giá trị đơn hàng. Tiền cọc sẽ được quyết toán vào đợt giao hàng sau cùng. Trong trường hợp khách hàng huỷ đơn hàng hoặc không nhận hàng sẽ chịu mất cọc.</div><div style='margin-top:5px;'>3) Điều kiện đổi trả hàng: Trong vòng 15 ngày kể từ khi giao hàng. Đối với đơn hàng nhiều sản phẩm đổi trả không vượt quá 20% giá trị đơn hàng (hàng hóa thông thường). KHÔNG nhận đổi trả đối với trường hợp hàng hoá nhập khẩu, hàng chuyên biệt, hàng đặt theo yêu cầu riêng của khách hàng.</div></div>"
+    ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1) Đơn giá chưa bao gồm lắp đặt. Miễn phí vận chuyển đến tầng 1 trong nội thành Hải Phòng.</div><div style='margin-top:5px;'>2) Đặt cọc 50% giá trị đơn hàng, quyết toán vào đợt giao hàng cuối. Huỷ đơn hoặc không nhận hàng sẽ mất cọc.</div><div style='margin-top:5px;'>3) Đổi trả trong vòng 15 ngày kể từ ngày giao hàng. Đối với đơn hàng nhiều sản phẩm, số lượng đổi trả không vượt quá 20% giá trị đơn. Không áp dụng cho hàng nhập khẩu, hàng chuyên biệt và hàng đặt theo yêu cầu.</div></div>"
     : (type === "phieu-giao" || type === "phieu-giao-no-logo")
     ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1. Khách hàng đã nhận đầy đủ số lượng (phụ kiện đi kèm) và kiểm tra đúng tên hàng hóa ghi trên Phiếu Giao Hàng.</div><div style='margin-top:5px;'>2. Hàng hóa được giao đến chân công trình tình trạng nguyên vẹn, không bể vỡ, móp méo. Công ty không chịu trách nhiệm về các vấn đề phát sinh do bên thứ ba hoặc do khách hàng gây ra trong quá trình lắp đặt, thi công.</div><div style='margin-top:5px;'>3. Khách hàng có trách nhiệm thanh toán số tiền còn lại ngay sau khi nhận hàng.</div></div>"
     : "";
@@ -2258,31 +2258,31 @@ function buildPrintHTML(order, type, cfg, products) {
     ? "<hr style='border:none;border-top:1px solid #1e293b;margin:20px 0 30px;'><div style='display:flex;justify-content:space-around;text-align:center;'><div><div style='font-weight:700;font-size:13px;'>Người giao hàng</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div><div><div style='font-weight:700;font-size:13px;'>Khách hàng</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div></div>"
     : "<div style='display:flex;justify-content:space-around;margin-top:50px;text-align:center;'><div><div style='font-weight:700;font-size:13px;'>Người lập phiếu</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div><div><div style='font-weight:700;font-size:13px;'>Khách hàng</div><div style='font-style:italic;color:#64748b;font-size:12px;margin-top:4px;'>(Ký, họ tên)</div></div></div>";
 
-  const colGroupPrice = "<colgroup><col style='width:34px'><col style='width:134px'><col><col style='width:78px'><col style='width:36px'><col style='width:32px'><col style='width:50px'><col style='width:46px'><col style='width:50px'><col style='width:50px'></colgroup>";
+  const colGroupPrice = "<colgroup><col style='width:0.7cm'><col style='width:3cm'><col><col style='width:2cm'><col style='width:0.9cm'><col style='width:0.7cm'><col style='width:2.2cm'><col style='width:1.4cm'><col style='width:2.2cm'><col style='width:2.2cm'></colgroup>";
   const colGroupDelivery = "<colgroup><col style='width:38px'><col style='width:4cm'><col><col style='width:4.5cm'><col style='width:1.6cm'><col style='width:1.4cm'></colgroup>";
 
   return "<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'><title>"+TITLE+" - "+(order.id||"")+"</title><style>"
     +"*{box-sizing:border-box;margin:0;padding:0;}"
     +"body{font-family:Arial,sans-serif;font-size:12px;color:#1e293b;background:#e8edf2;}"
     +".no-print{padding:12px 20px;display:flex;gap:10px;background:#fff;border-bottom:1px solid #444;position:sticky;top:0;z-index:10;}"
-    +".page{background:#fff;width:210mm;min-height:297mm;padding:14mm 8mm;margin:20px auto;box-shadow:0 2px 20px rgba(0,0,0,.15);}"
+    +".page{background:#fff;width:210mm;min-height:297mm;padding:8mm;margin:20px auto;box-shadow:0 2px 20px rgba(0,0,0,.15);}"
     +"table{border-collapse:separate;border-spacing:0;width:100%;font-size:11.5px;}"
     +"td,th{border:none;vertical-align:middle;}"
     +"@media print{"
     +".no-print{display:none!important;}"
     +"body{background:#fff;}"
-    +".page{width:100%;min-height:auto;padding:0;box-shadow:none;margin:0;}"
-    +"@page{size:A4;margin:14mm 8mm;}"
+    +".page{width:210mm;min-height:auto;padding:8mm;box-shadow:none;margin:0;}"
+    +"@page{size:A4;margin:0;}"
     +"}"
     +"</style></head><body>"
-    +"<div class='no-print'><button onclick='window.print()' style='padding:7px 18px;background:#1e293b;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;'>🖨 In đơn hàng</button><button onclick='window.close()' style='padding:7px 18px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:13px;'>← Quay lại</button></div>"
+    +"<div class='no-print'><button onclick='window.print()' style='padding:7px 18px;background:#bfdbfe;color:#1e3a8a;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;'>🖨 In đơn hàng</button><button onclick='window.close()' style='padding:7px 18px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:13px;'>← Quay lại</button></div>"
     +"<div class='page'>"
     +timeStampHtml
     +headerHtml
     +"<div style='text-align:center;font-size:17px;font-weight:700;letter-spacing:1px;margin:14px 0 16px;'>"+TITLE+"</div>"
     +custInfoHtml
     +"<div style='margin-top:0.5cm;border:1px solid #444;border-radius:8px;overflow:hidden;'>"
-    +"<table>"+(showPrice?colGroupPrice:colGroupDelivery)+tableHeaderHtml+"<tbody>"+productRows+summarySection+"</tbody></table></div>"
+    +"<table style='table-layout:fixed;'>"+(showPrice?colGroupPrice:colGroupDelivery)+tableHeaderHtml+"<tbody>"+productRows+summarySection+"</tbody></table></div>"
     +termsHtml
     +bankHtml
     +signatureHtml
@@ -2610,10 +2610,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           disabled: subtotal === 0,
           className: blueBtn + " disabled:cursor-not-allowed disabled:opacity-50"
         }, /*#__PURE__*/React.createElement(ShoppingCart, {className: "h-4 w-4"}), " Tạo đơn hàng"),
-        isEdit && isBaoGia && /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("bao-gia"), className: ghostBtn}, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Báo Giá"),
-        isEdit && !isBaoGia && !deliveryConfirmed && /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("xac-nhan"), className: ghostBtn}, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Đơn XN ĐH"),
+        isEdit && isBaoGia && /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("bao-gia"), className: "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-[#bfdbfe] px-3 py-1.5 text-[14px] text-[#1e3a8a] hover:bg-[#93c5fd]"}, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Báo Giá"),
+        isEdit && !isBaoGia && !deliveryConfirmed && /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("xac-nhan"), className: "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-[#bfdbfe] px-3 py-1.5 text-[14px] text-[#1e3a8a] hover:bg-[#93c5fd]"}, /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Đơn XN ĐH"),
         isEdit && !isBaoGia && deliveryConfirmed && /*#__PURE__*/React.createElement("div", {className: "relative"},
-          /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: ghostBtn},
+          /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-[#bfdbfe] px-3 py-1.5 text-[14px] text-[#1e3a8a] hover:bg-[#93c5fd]"},
             /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Phiếu Giao ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
           showPrintMenu && /*#__PURE__*/React.createElement("div", {className: "absolute right-0 top-full z-20 mt-1 min-w-[210px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
             /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu Giao Hàng"),
