@@ -2117,9 +2117,9 @@ function buildPrintHTML(order, type, cfg, products) {
   const payments = (order.payments||[]).filter(p => p.kind !== "Tiền hàng trả lại");
 
   const showLogo = type !== "phieu-giao-no-logo";
-  const showPrice = type === "bao-gia" || type === "xac-nhan";
+  const showPrice = type === "bao-gia" || type === "xac-nhan" || type === "phieu-giao-gia";
   const isDelivery = type === "phieu-giao" || type === "phieu-giao-no-logo";
-  const TITLE = {"bao-gia":"BÁO GIÁ","xac-nhan":"ĐƠN XÁC NHẬN ĐẶT HÀNG","phieu-giao":"PHIẾU GIAO HÀNG","phieu-giao-no-logo":"PHIẾU GIAO HÀNG"}[type]||"PHIẾU";
+  const TITLE = {"bao-gia":"BÁO GIÁ","xac-nhan":"ĐƠN XÁC NHẬN ĐẶT HÀNG","phieu-giao":"PHIẾU GIAO HÀNG","phieu-giao-no-logo":"PHIẾU GIAO HÀNG","phieu-giao-gia":"PHIẾU GIAO HÀNG"}[type]||"PHIẾU";
 
   const qrUrl = bankNo ? "https://img.vietqr.io/image/"+bankCode+"-"+bankNo+"-qr_only.png?amount="+remaining+"&addInfo="+encodeURIComponent(order.id||"")+"&accountName="+encodeURIComponent(bankOwner) : "";
 
@@ -2181,7 +2181,7 @@ function buildPrintHTML(order, type, cfg, products) {
     mkSumRow("Tổng cộng:", fmt(total), true, "#16a34a")+
     (depositPrint > 0 ? mkSumRow("Đã đặt cọc:", fmt(depositPrint), false, "") : "")+
     (paidOnlyPrint > 0 ? mkSumRow("Đã thanh toán:", fmt(paidOnlyPrint), false, "") : "")+
-    (type!=="bao-gia" ? mkSumRow("Còn lại:", remaining===0?"0":fmt(remaining), true, "") : "")+
+    (type!=="bao-gia" ? mkSumRow("Còn lại:", remaining===0?"0":fmt(remaining), true, "#dc2626") : "")+
     "<tr><td colspan='10' style='border:none;border-top:0.7px solid #444;padding:7px 10px;font-size:12px;'>Số tiền bằng chữ:&nbsp;&nbsp;<strong>"+numToWordVN(type==="bao-gia"?total:remaining)+"</strong></td></tr>"
   ) : "";
 
@@ -2243,7 +2243,7 @@ function buildPrintHTML(order, type, cfg, products) {
 
   const termsHtml = type === "bao-gia"
     ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div>1) Báo giá có hiệu lực trong ngày hoặc đến khi hết khuyến mại, có thể thay đổi mà không báo trước.</div><div style='margin-top:5px;'>2) Báo giá chưa bao gồm lắp đặt. Miễn phí vận chuyển đến tầng 1 trong nội thành Hải Phòng.</div><div style='margin-top:5px;'>3) Đặt cọc 50% giá trị đơn hàng, quyết toán vào đợt giao hàng cuối. Huỷ đơn hoặc không nhận hàng sẽ mất cọc.</div><div style='margin-top:5px;'>4) Đổi trả trong vòng 15 ngày kể từ ngày giao hàng. Đối với đơn hàng nhiều sản phẩm, số lượng đổi trả không vượt quá 20% giá trị đơn. Không áp dụng cho hàng nhập khẩu, hàng chuyên biệt và hàng đặt theo yêu cầu.</div></div>"
-    : type === "xac-nhan"
+    : (type === "xac-nhan" || type === "phieu-giao-gia")
     ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1) Đơn giá chưa bao gồm lắp đặt. Miễn phí vận chuyển đến tầng 1 trong nội thành Hải Phòng.</div><div style='margin-top:5px;'>2) Đặt cọc 50% giá trị đơn hàng, quyết toán vào đợt giao hàng cuối. Huỷ đơn hoặc không nhận hàng sẽ mất cọc.</div><div style='margin-top:5px;'>3) Đổi trả trong vòng 15 ngày kể từ ngày giao hàng. Đối với đơn hàng nhiều sản phẩm, số lượng đổi trả không vượt quá 20% giá trị đơn. Không áp dụng cho hàng nhập khẩu, hàng chuyên biệt và hàng đặt theo yêu cầu.</div></div>"
     : (type === "phieu-giao" || type === "phieu-giao-no-logo")
     ? "<div style='margin-top:18px;font-size:11.5px;line-height:1.85;color:#1e293b;'><div style='font-weight:600;margin-bottom:6px;'>Khách hàng vui lòng kiểm tra và xác nhận các nội dung dưới đây:</div><div>1. Khách hàng đã nhận đầy đủ số lượng (phụ kiện đi kèm) và kiểm tra đúng tên hàng hóa ghi trên Phiếu Giao Hàng.</div><div style='margin-top:5px;'>2. Hàng hóa được giao đến chân công trình tình trạng nguyên vẹn, không bể vỡ, móp méo. Công ty không chịu trách nhiệm về các vấn đề phát sinh do bên thứ ba hoặc do khách hàng gây ra trong quá trình lắp đặt, thi công.</div><div style='margin-top:5px;'>3. Khách hàng có trách nhiệm thanh toán số tiền còn lại ngay sau khi nhận hàng.</div></div>"
@@ -2615,8 +2615,9 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("button", {onClick: () => setShowPrintMenu(v => !v), className: "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-[#bfdbfe] px-3 py-1.5 text-[14px] text-[#1e3a8a] hover:bg-[#93c5fd]"},
             /*#__PURE__*/React.createElement(Printer, {className: "h-4 w-4"}), " In Phiếu Giao ", /*#__PURE__*/React.createElement(ChevronDown, {className: "h-3.5 w-3.5"})),
           showPrintMenu && /*#__PURE__*/React.createElement("div", {className: "absolute right-0 top-full z-20 mt-1 min-w-[210px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
-            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu Giao Hàng"),
-            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao-no-logo"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu GH Không Logo"))),
+            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao-gia"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu giao hàng"),
+            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu giao hàng không giá"),
+            /*#__PURE__*/React.createElement("button", {onClick: () => handlePrint("phieu-giao-no-logo"), className: "block w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"}, "Phiếu giao hàng không logo"))),
         /*#__PURE__*/React.createElement("button", {onClick: () => { if (hasPaidOnBaoGia) { notify("⚠️ Đã có thanh toán — bắt buộc phải tạo đơn hàng trước khi quay lại"); return; } onBack(); }, className: backBtn},
           /*#__PURE__*/React.createElement(ArrowLeft, {className: "h-4 w-4"}), " Quay lại")),
       /*#__PURE__*/React.createElement("input", {type: "datetime-local", value: dt, onChange: e => setDt(e.target.value), className: field}))),
