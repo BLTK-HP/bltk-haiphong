@@ -2141,8 +2141,8 @@ function buildPrintHTML(order, type, cfg, products) {
         +"<td style='"+td+"text-align:center;'>"+imgTag+"</td>"
         +"<td style='"+td+"text-align:center;'>Cái</td>"
         +"<td style='"+td+"text-align:center;'>"+item.qty+"</td>"
-        +"<td style='"+td+"text-align:center;'>"+fmt(listPrice)+"</td>"
-        +"<td style='"+td+"text-align:center;'>"+discPct+"</td>"
+        +"<td style='"+td+"text-align:right;'>"+fmt(listPrice)+"</td>"
+        +"<td style='"+td+"text-align:right;'>"+discPct+"</td>"
         +"<td style='"+td+"text-align:right;'>"+fmt(priceAfter)+"</td>"
         +"<td style='"+tdL+"text-align:right;font-weight:600;'>"+fmt(lineTotal)+"</td>"
         +"</tr>";
@@ -2163,26 +2163,25 @@ function buildPrintHTML(order, type, cfg, products) {
     }
   }).join("");
 
+  const sfPrint = order.shippingFee || 0;
+  const rfPrint = order.returnFee || 0;
+  const depositPrint = payments.filter(p => p.kind === "Đặt cọc").reduce((s,p) => s + p.amount, 0);
+  const paidOnlyPrint = payments.filter(p => p.kind === "Thanh toán").reduce((s,p) => s + p.amount, 0);
+  const rStyle = "padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;";
+  const mkSumRow = (label, value, bold, color) =>
+    "<tr><td colspan='6' style='border:none;'></td>"+
+    "<td colspan='3' style='"+rStyle+"text-align:left;"+(bold?"font-weight:600;":"")+"'>"+label+"</td>"+
+    "<td style='"+rStyle+"text-align:right;"+(bold?"font-weight:700;":"")+(color?"color:"+color+";":"")+"'>"+value+"</td></tr>";
+
   const summarySection = showPrice ? (
     "<tr><td colspan='10' style='border:none;height:13px;padding:0;'></td></tr>"+
-    (type!=="bao-gia"?
-      "<tr><td colspan='6' style='border:none;'></td>"+
-      "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;'>Cộng tiền hàng (Đã trừ CK):</td>"+
-      "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;'>"+fmt(subtotal)+"</td></tr>"
-    :"")+
-    "<tr><td colspan='6' style='border:none;'></td>"+
-    "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;font-weight:600;'>Tổng cộng:</td>"+
-    "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;font-weight:700;color:#16a34a;'>"+fmt(total)+"</td></tr>"+
-    payments.map(p=>
-      "<tr><td colspan='6' style='border:none;'></td>"+
-      "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;'>Thanh toán: <span style='color:#6b7280;'>"+(p.date||"")+"</span></td>"+
-      "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;color:#dc2626;'>-"+fmt(p.amount)+"</td></tr>"
-    ).join("")+
-    (type!=="bao-gia"?
-      "<tr><td colspan='6' style='border:none;'></td>"+
-      "<td colspan='3' style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:left;font-weight:600;'>Còn lại:</td>"+
-      "<td style='padding:5px 8px;font-size:11.5px;white-space:nowrap;border:none;text-align:right;font-weight:700;'>"+(remaining===0?"0":fmt(remaining))+"</td></tr>"
-    :"")+
+    (type!=="bao-gia" ? mkSumRow("Cộng tiền hàng (Đã trừ CK):", fmt(subtotal), false, "") : "")+
+    (sfPrint > 0 ? mkSumRow("CP giao hàng >15km:", fmt(sfPrint), false, "") : "")+
+    (rfPrint > 0 ? mkSumRow("CP đổi trả:", fmt(rfPrint), false, "") : "")+
+    mkSumRow("Tổng cộng:", fmt(total), true, "#16a34a")+
+    (depositPrint > 0 ? mkSumRow("Đã đặt cọc:", fmt(depositPrint), false, "") : "")+
+    (paidOnlyPrint > 0 ? mkSumRow("Đã thanh toán:", fmt(paidOnlyPrint), false, "") : "")+
+    (type!=="bao-gia" ? mkSumRow("Còn lại:", remaining===0?"0":fmt(remaining), true, "") : "")+
     "<tr><td colspan='10' style='border:none;border-top:0.7px solid #444;padding:7px 10px;font-size:12px;'>Số tiền bằng chữ:&nbsp;&nbsp;<strong>"+numToWordVN(type==="bao-gia"?total:remaining)+"</strong></td></tr>"
   ) : "";
 
@@ -2223,9 +2222,9 @@ function buildPrintHTML(order, type, cfg, products) {
         +"<th style='"+th+"text-align:center;white-space:nowrap;'>Hình ảnh</th>"
         +"<th style='"+th+"text-align:center;white-space:nowrap;'>ĐVT</th>"
         +"<th style='"+th+"text-align:center;white-space:nowrap;'>SL</th>"
-        +"<th style='"+th+"text-align:right;'>Giá niêm yết</th>"
+        +"<th style='"+th+"text-align:center;'>Giá niêm yết</th>"
         +"<th style='"+th+"text-align:center;'>CK</th>"
-        +"<th style='"+th+"text-align:right;'>Giá bán sau CK</th>"
+        +"<th style='"+th+"text-align:center;'>Giá bán sau CK</th>"
         +"<th style='"+thL+"text-align:center;'>Thành tiền</th>"
         +"</tr></thead>";
     })()
