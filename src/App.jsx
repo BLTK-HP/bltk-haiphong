@@ -895,7 +895,12 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const totalNccDebt = Object.values(nccDebt).reduce((s,v) => s+v, 0);
 
   // ── HOÀN HÀNG ─────────────────────────────────────────────────────────────
-  const returnedOrders = allActive.filter(o => (o.returns||[]).length > 0 || o.returned);
+  const returnedOrders  = allActive.filter(o => (o.returns||[]).some(r => !r.cancelled));
+  const allRetItems     = returnedOrders.flatMap(o => (o.returns||[]).filter(r => !r.cancelled));
+  const totalReturnVal  = allRetItems.reduce((s,r) => s + (r.amount||0), 0);
+  const alreadyRefunded = returnedOrders.reduce((s,o) => s + (o.payments||[]).filter(p => p.kind==="Tiền hàng trả lại").reduce((ps,p) => ps+p.amount, 0), 0);
+  const pendingRefund   = Math.max(0, totalReturnVal - alreadyRefunded);
+  const importedToStock = allRetItems.reduce((s,r) => s + (r.amount||0), 0);
   const nccRetItems    = fWhIn.filter(r => (plMap[r.lot+"__"+r.prod]?.returns||[]).length > 0);
   const nccRetLots     = new Set(nccRetItems.map(r => r.lot)).size;
   const nccRetVal      = nccRetItems.reduce((s,r) => {
@@ -1169,23 +1174,41 @@ function Dashboard({ orders = [], purchaseList = [] }) {
 
         /* KH trả hàng */
         /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4"},
-          /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"},
+          /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-rose-600"},
             /*#__PURE__*/React.createElement(RotateCcw, {className:"h-3.5 w-3.5"}), "Khách hàng trả hàng"
           ),
-          /*#__PURE__*/React.createElement("div", {className:"flex items-baseline gap-2"},
-            /*#__PURE__*/React.createElement("span", {className:"text-2xl font-bold text-slate-800"}, returnedOrders.length),
-            /*#__PURE__*/React.createElement("span", {className:"text-sm text-slate-500"}, "đơn trong kỳ")
+          /*#__PURE__*/React.createElement("div", {className:"mb-3 grid grid-cols-2 gap-3 border-b border-slate-100 pb-3"},
+            /*#__PURE__*/React.createElement("div", null,
+              /*#__PURE__*/React.createElement("p", {className:"text-[11px] text-slate-400 mb-0.5"}, "Số đơn hoàn"),
+              /*#__PURE__*/React.createElement("p", {className:"text-2xl font-bold text-slate-800"}, returnedOrders.length, /*#__PURE__*/React.createElement("span", {className:"text-sm font-normal text-slate-500 ml-1"}, "đơn"))
+            ),
+            /*#__PURE__*/React.createElement("div", null,
+              /*#__PURE__*/React.createElement("p", {className:"text-[11px] text-slate-400 mb-0.5"}, "Giá trị hoàn"),
+              totalReturnVal > 0
+                ? /*#__PURE__*/React.createElement("p", {className:"text-lg font-bold tabular-nums text-rose-600"}, vnd(totalReturnVal))
+                : /*#__PURE__*/React.createElement("span", {className:"text-slate-300 text-lg"}, "—")
+            )
           ),
-          returnedOrders.length > 0
-            ? /*#__PURE__*/React.createElement("div", {className:"mt-3 space-y-1.5"},
-                returnedOrders.slice(0,4).map(o =>
-                  /*#__PURE__*/React.createElement("div", {key:o.id||o._id, className:"flex justify-between text-xs"},
-                    /*#__PURE__*/React.createElement("span", {className:"text-slate-600 truncate max-w-[55%]"}, o.name||"—"),
-                    /*#__PURE__*/React.createElement("span", {className:"text-slate-400"}, o.dt||"")
-                  )
-                )
-              )
-            : /*#__PURE__*/React.createElement("p", {className:"mt-2 text-xs text-slate-400"}, "Không có đơn hoàn trong kỳ")
+          /*#__PURE__*/React.createElement("div", {className:"space-y-2"},
+            /*#__PURE__*/React.createElement("div", {className:"flex justify-between items-center text-sm"},
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Đã hoàn tiền KH"),
+              alreadyRefunded > 0
+                ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-medium text-rose-600"}, vnd(alreadyRefunded))
+                : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+            ),
+            /*#__PURE__*/React.createElement("div", {className:"flex justify-between items-center text-sm"},
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Chờ xử lý"),
+              pendingRefund > 0
+                ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-medium text-amber-700"}, vnd(pendingRefund))
+                : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+            ),
+            /*#__PURE__*/React.createElement("div", {className:"flex justify-between items-center text-sm"},
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Hàng nhập lại kho"),
+              importedToStock > 0
+                ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-medium text-blue-600"}, vnd(importedToStock))
+                : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+            )
+          )
         ),
 
         /* Trả hàng NCC */
