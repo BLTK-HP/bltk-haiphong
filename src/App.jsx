@@ -7205,7 +7205,7 @@ function Contracts({orders = []}) {
         /* Section 2: Contract info */
         /*#__PURE__*/React.createElement("div", {className:sec},
           /*#__PURE__*/React.createElement(SecHd, {n:"2", title:"Thông tin hợp đồng"}),
-          /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-3 gap-3 mb-3"},
+          /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-3 gap-3"},
             /*#__PURE__*/React.createElement("div", null,
               /*#__PURE__*/React.createElement(Lbl, null, "Số hợp đồng"),
               /*#__PURE__*/React.createElement("input", {value:form.contractNum, onChange:e=>set("contractNum",e.target.value), placeholder:"HĐ-TBVS 01", className:iF})),
@@ -7215,14 +7215,6 @@ function Contracts({orders = []}) {
             /*#__PURE__*/React.createElement("div", null,
               /*#__PURE__*/React.createElement(Lbl, null, "Thời hạn"),
               /*#__PURE__*/React.createElement("input", {value:form.duration, onChange:e=>set("duration",e.target.value), placeholder:"12 tháng", className:iF}))
-          ),
-          /*#__PURE__*/React.createElement("div", {className:"flex gap-3"},
-            /*#__PURE__*/React.createElement("div", {className:"flex-[5]"},
-              /*#__PURE__*/React.createElement(Lbl, null, "Địa điểm giao hàng"),
-              /*#__PURE__*/React.createElement("input", {value:form.deliveryAddr||"", onChange:e=>set("deliveryAddr",e.target.value), placeholder:"Địa điểm nhận hàng của khách…", className:iF})),
-            /*#__PURE__*/React.createElement("div", {className:"flex-[4]"},
-              /*#__PURE__*/React.createElement(Lbl, null, "Số tiền đặt cọc lần 1 (VNĐ)"),
-              /*#__PURE__*/React.createElement("input", {type:"number", value:form.deposit||"", onChange:e=>set("deposit",parseFloat(e.target.value)||0), placeholder:"0", className:iF}))
           )
         ),
 
@@ -7261,9 +7253,25 @@ function Contracts({orders = []}) {
           )
         ),
 
-        /* Section 4: Appendix */
+        /* Section 4: Địa điểm giao hàng */
         /*#__PURE__*/React.createElement("div", {className:sec},
-          /*#__PURE__*/React.createElement(SecHd, {n:"4", title:"Phụ lục hợp đồng", note:"dữ liệu tự kéo từ đơn đặt hàng"}),
+          /*#__PURE__*/React.createElement(SecHd, {n:"4", title:"Địa điểm giao hàng"}),
+          /*#__PURE__*/React.createElement("input", {value:form.deliveryAddr||"", onChange:e=>set("deliveryAddr",e.target.value), placeholder:"Địa điểm nhận hàng của khách…", className:`${iF} w-full`})
+        ),
+
+        /* Section 5: Đặt cọc */
+        /*#__PURE__*/React.createElement("div", {className:sec},
+          /*#__PURE__*/React.createElement(SecHd, {n:"5", title:"Số tiền đặt cọc lần 1"}),
+          /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-3"},
+            /*#__PURE__*/React.createElement("input", {type:"number", value:form.deposit||"", onChange:e=>set("deposit",parseFloat(e.target.value)||0), placeholder:"0", className:`${iF} w-60`}),
+            /*#__PURE__*/React.createElement("span", {className:"text-sm text-slate-500"}, "VNĐ"),
+            form.deposit>0 && /*#__PURE__*/React.createElement("span", {className:"text-sm font-semibold text-[#B45309]"}, "= ", new Intl.NumberFormat("vi-VN").format(form.deposit), " đ")
+          )
+        ),
+
+        /* Section 6: Appendix */
+        /*#__PURE__*/React.createElement("div", {className:sec},
+          /*#__PURE__*/React.createElement(SecHd, {n:"6", title:"Phụ lục hợp đồng", note:"dữ liệu tự kéo từ đơn đặt hàng"}),
 
           /* Order selector row */
           /*#__PURE__*/React.createElement("div", {className:"mb-3 flex flex-wrap items-center gap-2"},
