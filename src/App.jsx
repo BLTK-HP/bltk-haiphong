@@ -2646,6 +2646,157 @@ function openPrint(order, type, cfg, products) {
   w.focus();
 }
 
+function printContract(form, items, totalValue) {
+  const SUBJECT_MAP = {
+    "HĐMB-TBVS":     "Cung cấp thiết bị vệ sinh",
+    "HĐMB-TBB":      "Cung cấp thiết bị bếp",
+    "HĐMB-TBVS-TBB": "Cung cấp thiết bị vệ sinh và thiết bị bếp",
+  };
+  const subject = SUBJECT_MAP[form.template] || "Cung cấp thiết bị";
+  const fmtV = n => n ? new Intl.NumberFormat("vi-VN").format(Math.round(n)) : "0";
+  const [dd, mm, yyyy] = (form.signDate || "").split("/");
+  const dateStr = dd ? `ngày ${dd} tháng ${mm} năm ${yyyy}` : "..... tháng ..... năm .....";
+
+  const productRows = items.length
+    ? items.map((it, i) =>
+        `<tr>
+          <td style="text-align:center;border:1px solid #333;padding:4px 6px;">${i+1}</td>
+          <td style="border:1px solid #333;padding:4px 6px;">${it.name||""}</td>
+          <td style="text-align:center;border:1px solid #333;padding:4px 6px;">${it.unit||"Cái"}</td>
+          <td style="text-align:center;border:1px solid #333;padding:4px 6px;">${it.qty||0}</td>
+          <td style="text-align:right;border:1px solid #333;padding:4px 6px;">${fmtV(it.price)}</td>
+          <td style="text-align:right;border:1px solid #333;padding:4px 6px;">${fmtV((it.price||0)*(it.qty||0))}</td>
+        </tr>`).join("")
+    : `<tr><td colspan="6" style="text-align:center;border:1px solid #333;padding:8px;">(Theo bảng kê đính kèm)</td></tr>`;
+
+  const html = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8">
+<title>Hợp đồng ${form.contractNum||""}</title>
+<style>
+*{box-sizing:border-box;}
+body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;}
+.page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm 25mm 20mm 30mm;}
+h1{font-size:16pt;font-weight:bold;text-align:center;margin:12px 0 4px;letter-spacing:1px;}
+.sub{text-align:center;font-style:italic;margin-bottom:16px;}
+.lb{font-style:italic;margin-bottom:6px;}
+.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;}
+.pr{display:flex;margin-bottom:4px;}
+.pl{width:130px;flex-shrink:0;}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12pt;}
+th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
+.at{font-weight:bold;margin:14px 0 6px;}
+ul{margin:4px 0 4px 18px;}li{margin-bottom:3px;}
+.sig{display:flex;justify-content:space-between;margin-top:40px;text-align:center;}
+.sc{width:45%;}
+.np{text-align:center;padding:12px;background:#f1f5f9;}
+@media print{.np{display:none!important;}.page{padding:20mm 25mm 20mm 30mm;}@page{size:A4;margin:0;}}
+</style></head><body>
+<div class="np">
+  <button onclick="window.print()" style="padding:7px 18px;background:#bfdbfe;color:#1e3a8a;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">🖨 In / Xuất PDF</button>
+  <button onclick="window.close()" style="margin-left:8px;padding:7px 18px;background:#e2e8f0;color:#1e293b;border:none;border-radius:6px;cursor:pointer;font-size:13px;">← Quay lại</button>
+</div>
+<div class="page">
+<div style="text-align:center;font-weight:bold;margin-bottom:2px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+<div style="text-align:center;font-weight:bold;text-decoration:underline;margin-bottom:20px;">Độc lập - Tự do - Hạnh phúc</div>
+<h1>HỢP ĐỒNG MUA BÁN</h1>
+<div style="text-align:center;margin-bottom:4px;">Số: ${form.contractNum||"…….."}/HĐTB</div>
+<div class="sub">(Về việc: ${subject})</div>
+<p class="lb">Căn cứ Bộ luật dân sự năm 2015 được Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam thông qua ngày 24/11/2015 có hiệu lực ngày 01/01/2017.</p>
+<p class="lb">Căn cứ Luật thương mại năm 2005 được Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam thông qua ngày 14/6/2005 có hiệu lực ngày 01/01/2006.</p>
+<p class="lb">Căn cứ vào nhu cầu và năng lực của hai bên.</p>
+<p>Hôm nay, ${dateStr}, tại văn phòng Công ty TNHH Bán Lẻ Tại Kho Hải Phòng, chúng tôi gồm có:</p>
+<p class="pt">BÊN BÁN (BÊN A): CÔNG TY TNHH BÁN LẺ TẠI KHO HẢI PHÒNG</p>
+<div class="pr"><span class="pl">Địa chỉ</span><span>: LK-10, Số 384 Lê Thánh Tông, Phường Ngô Quyền, Thành phố Hải Phòng, Việt Nam</span></div>
+<div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
+<div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
+<div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 ngân hàng TMCP Kỹ thương Việt Nam - TCB Kiến An</span></div>
+<p class="pt">BÊN MUA (BÊN B):</p>
+<div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
+<div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
+<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
+<p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
+<p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
+<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
+<p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
+<table>
+  <thead><tr>
+    <th style="width:8%">STT</th><th>Tên hàng hóa</th>
+    <th style="width:10%">ĐVT</th><th style="width:8%">SL</th>
+    <th style="width:16%">Đơn giá (VNĐ)</th><th style="width:16%">Thành tiền (VNĐ)</th>
+  </tr></thead>
+  <tbody>${productRows}</tbody>
+  <tfoot><tr>
+    <td colspan="5" style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">TỔNG CỘNG</td>
+    <td style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">${fmtV(totalValue)}</td>
+  </tr></tfoot>
+</table>
+<p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
+<ul>
+  <li>Thời gian giao nhận: Bên B sẽ thông báo trước 03-05 ngày để bên A chuẩn bị hàng hóa, vận chuyển giao hàng.</li>
+  <li>Địa điểm giao hàng: ${form.custAddr||"…………………………………………………………………"}</li>
+  <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B. Bên B phải chịu mọi rủi ro đối với những trường hợp mất mát hàng hóa, phụ kiện, cũng như hàng hóa bị hư hỏng hoặc bể vỡ sau khi hai bên đã hoàn tất thủ tục giao nhận.</li>
+</ul>
+<p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
+<p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: ……………………………………VNĐ<br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
+<ul>
+  <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
+  <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp. Bên A thực hiện việc xử lý khoản thanh toán đặt cọc của Bên B theo một trong các phương án sau:<br>+ Chuyển đổi khoản đặt cọc của Bên B sang một Đơn Hàng mới có sẵn hàng (nếu Bên B có yêu cầu).<br>+ Hoàn trả lại khoản đặt cọc của Bên B (bằng tiền mặt hoặc chuyển khoản vào tài khoản của Bên B).</li>
+</ul>
+<p><strong>Lần 02:</strong> Thanh toán số tiền còn lại của đơn hàng ngay tại thời điểm kiểm tra và nhận xong hàng hóa kể từ khi kí nhận vào biên bản nhận hàng (hoặc phiếu giao hàng có giá trị tương đương).</p>
+<ul>
+  <li>Trong trường hợp Bên B không thanh toán số tiền còn lại của tổng giá trị hợp đồng thì Bên A sẽ thu hồi toàn bộ hàng hóa vừa giao và không hoàn cọc. Bên B không được phép cản trở Bên A thu hồi hàng hóa dưới bất kì hình thức nào nếu như Bên B không thanh toán theo thỏa thuận.</li>
+  <li>Trong trường hợp Bên B yêu cầu giao hàng thành nhiều đợt thì sẽ thanh toán dứt điểm cho từng đợt nhận hàng và tiền cọc sẽ được cấn trừ vào đơn hàng cuối cùng.</li>
+</ul>
+<p class="at">ĐIỀU 4: PHƯƠNG THỨC ĐỔI TRẢ/ BẢO HÀNH SAU KHI GIAO HÀNG</p>
+<p><strong>Điều kiện đổi trả hàng (sản phẩm):</strong></p>
+<ul>
+  <li>Sản phẩm được xác định bị lỗi kỹ thuật bởi nhân viên kỹ thuật của Công ty hoặc Nhà sản xuất;</li>
+  <li>Sản phẩm không thuộc nhóm hàng đặt Nhà máy không được phép đổi trả.</li>
+  <li>Sản phẩm phải nguyên vẹn không bị trầy xước, móp méo, ố vàng, nứt vỡ. (Bên B phải có trách nhiệm bảo quản cẩn thận thùng đựng, xốp và phụ kiện đi kèm khi nhận hàng để dự phòng các tình huống phải đổi trả hàng);</li>
+  <li>Bên B phải cung cấp đầy đủ Phiếu Giao Hàng và Phiếu Bảo Hành (nếu có).</li>
+</ul>
+<p><strong>Chính sách đổi trả hàng:</strong></p>
+<ul>
+  <li>Đối với các trường hợp đáp ứng đủ điều kiện, trong vòng 05 ngày sau khi nhận thông tin và các giấy tờ theo quy định, Bên A sẽ thông báo thời gian giao sản phẩm mới thay thế tới Bên B;</li>
+  <li>Bên A sẽ hoàn tiền 100% số tiền Bên B đã thanh toán nếu sản phẩm hết hàng.</li>
+</ul>
+<p><strong>Trường hợp Bên B không chấp nhận đổi trả hoặc đổi trả mất phí 20% giá trị sản phẩm sau khi nhận hàng:</strong></p>
+<ul>
+  <li>Bên B làm sản phẩm bị trầy xước, móp méo, nứt vỡ….</li>
+  <li>Bên B đổi trả vì lý do cá nhân muốn thay đổi chủng loại, mẫu mã khác.</li>
+</ul>
+<p><strong>Bảo hành:</strong> Mỗi Nhà sản xuất/ Nhà cung cấp đều có quy định về chính sách bảo hành hàng hóa, sản phẩm riêng. Được quy định rõ ràng, cụ thể bằng hình thức bảo hành điện tử tại nhà hoặc Phiếu bảo hành giấy (có mã QR) luôn kèm theo trong mỗi thùng sản phẩm, hàng hóa. Ngoài ra khách hàng có thể liên hệ số điện thoại <strong>033 5252 225</strong> để được tư vấn hỗ trợ bảo hành nhanh chóng, thuận tiện nhất.</p>
+<p class="at">ĐIỀU 5: TRÁCH NHIỆM CỦA CÁC BÊN</p>
+<p><strong>Trách nhiệm của Bên A:</strong></p>
+<ul>
+  <li>Đảm bảo cung cấp thiết bị theo đúng tiến độ bên B yêu cầu.</li>
+  <li>Sau khi giao hàng, Bên A sẽ cung cấp cho Bên B những giấy tờ sau (đây không phải là điều kiện để Bên A tiến hành việc thanh toán cho Bên B): Phiếu Giao Hàng và Phiếu Bảo Hành (nếu có); Hoá đơn VAT (gửi qua mail); Chứng nhận xuất xưởng cấp sau 7-10 ngày, kể từ ngày có hoá đơn VAT.</li>
+  <li>Bên A cam kết đảm bảo hàng hóa giao cho Bên B là hàng chính hãng của Nhà cung cấp. Nếu bên A cung cấp hàng hóa không chính Hãng, không đảm bảo đúng chất lượng của Nhà sản xuất/ Nhà cung như yêu cầu của Bên B đã thỏa thuận trong Đơn xác nhận đặt hàng thì Bên A chịu đền bù 100% giá trị đơn hàng giao sai.</li>
+</ul>
+<p><strong>Trách nhiệm của Bên B:</strong></p>
+<ul>
+  <li>Bảo đảm mặt bằng, điểm đỗ xe giao nhận hàng và an ninh, an toàn trong khu vực làm việc.</li>
+  <li>Bảo đảm thanh toán đúng thời hạn được thỏa thuận giữa hai bên.</li>
+</ul>
+<p class="at">ĐIỀU 6: ĐIỀU KHOẢN CHUNG</p>
+<ul>
+  <li>Hợp đồng này được lập thành 02 (hai) bản có giá trị pháp lý như nhau, Bên A giữ 01 (một) bản, Bên B giữ 01 bản.</li>
+  <li>Hợp đồng này có hiệu lực kể từ ngày ký kết.</li>
+  <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
+</ul>
+<div class="sig">
+  <div class="sc"><strong>BÊN BÁN</strong><br><br><br><br><br><br>Trần Thị Phương Anh</div>
+  <div class="sc"><strong>BÊN MUA</strong><br><br><br><br><br><br>${form.custName||""}</div>
+</div>
+</div></body></html>`;
+
+  const w = window.open("", "_blank");
+  if (!w) { alert("Vui lòng cho phép mở cửa sổ mới (popup) trong trình duyệt"); return; }
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+}
+
 function CreateOrder({
   onBack,
   onSave,
@@ -7023,7 +7174,7 @@ function Contracts({orders = []}) {
             "Tổng giá trị HĐ: ",
             /*#__PURE__*/React.createElement("span", {className:"text-lg font-bold text-[#B45309]"}, vnd(totalValue), " đ")),
           /*#__PURE__*/React.createElement("div", {className:"flex gap-2"},
-            /*#__PURE__*/React.createElement("button", {className:"flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"},
+            /*#__PURE__*/React.createElement("button", {onClick:()=>printContract(form, appendixItems, totalValue), className:"flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"},
               /*#__PURE__*/React.createElement(Printer, {className:"h-4 w-4"}), "In / Xuất PDF"),
             /*#__PURE__*/React.createElement("button", {onClick:save, className:"flex items-center gap-1.5 rounded-lg bg-[#B45309] px-4 py-2 text-sm font-semibold text-white hover:bg-[#92400e]"},
               /*#__PURE__*/React.createElement(Save, {className:"h-4 w-4"}), "Lưu hợp đồng")
