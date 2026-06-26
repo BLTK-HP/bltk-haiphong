@@ -1182,7 +1182,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
               /*#__PURE__*/React.createElement("p", {className:"text-[11px] text-slate-400 mb-0.5"}, "Số đơn hoàn"),
               /*#__PURE__*/React.createElement("p", {className:"text-2xl font-bold text-slate-800"}, returnedOrders.length, /*#__PURE__*/React.createElement("span", {className:"text-sm font-normal text-slate-500 ml-1"}, "đơn"))
             ),
-            /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("div", {className:"text-right"},
               /*#__PURE__*/React.createElement("p", {className:"text-[11px] text-slate-400 mb-0.5"}, "Giá trị hoàn"),
               totalReturnVal > 0
                 ? /*#__PURE__*/React.createElement("p", {className:"text-lg font-bold tabular-nums text-rose-600"}, vnd(totalReturnVal))
