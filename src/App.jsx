@@ -2709,8 +2709,10 @@ ul{margin:4px 0 4px 18px;}li{margin-bottom:3px;}
 <div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 ngân hàng TMCP Kỹ thương Việt Nam - TCB Kiến An</span></div>
+${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 <p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
+${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: ${form.custTax}</span></div>`:""}
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
@@ -2856,8 +2858,10 @@ ul{margin:4px 0 4px 18px;}li{margin-bottom:3px;}
 <div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 ngân hàng TMCP Kỹ thương Việt Nam - TCB Kiến An</span></div>
+${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 <p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
+${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: ${form.custTax}</span></div>`:""}
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
@@ -7091,8 +7095,8 @@ function Contracts({orders = []}) {
   const today = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
   const emptyForm = {
     template:"HĐMB-TBVS", contractNum:"", signDate:today(), duration:"12 tháng",
-    companyName:"", companyTax:"", companyAddr:"",
-    custName:"", custPhone:"", custAddr:"",
+    companyName:"", companyTax:"", companyAddr:"", companyPhone:"",
+    custName:"", custPhone:"", custTax:"", custAddr:"",
     orderIds:[], note:""
   };
   const [form, setForm] = useState(emptyForm);
@@ -7215,7 +7219,9 @@ function Contracts({orders = []}) {
               /*#__PURE__*/React.createElement(Lbl, null, "MST"),
               /*#__PURE__*/React.createElement("input", {value:form.companyTax, onChange:e=>set("companyTax",e.target.value), placeholder:"0312345678", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "Địa chỉ"),
-              /*#__PURE__*/React.createElement("input", {value:form.companyAddr, onChange:e=>set("companyAddr",e.target.value), placeholder:"Địa chỉ công ty…", className:iF})
+              /*#__PURE__*/React.createElement("input", {value:form.companyAddr, onChange:e=>set("companyAddr",e.target.value), placeholder:"Địa chỉ công ty…", className:`${iF} mb-2`}),
+              /*#__PURE__*/React.createElement(Lbl, null, "Số điện thoại"),
+              /*#__PURE__*/React.createElement("input", {value:form.companyPhone, onChange:e=>set("companyPhone",e.target.value), placeholder:"033 5252 225", className:iF})
             ),
             /* Bên B */
             /*#__PURE__*/React.createElement("div", null,
@@ -7226,6 +7232,8 @@ function Contracts({orders = []}) {
               /*#__PURE__*/React.createElement("input", {value:form.custName, onChange:e=>set("custName",e.target.value), placeholder:"Nhập…", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "Điện thoại"),
               /*#__PURE__*/React.createElement("input", {value:form.custPhone, onChange:e=>set("custPhone",e.target.value), placeholder:"Nhập…", className:`${iF} mb-2`}),
+              /*#__PURE__*/React.createElement(Lbl, null, "MST"),
+              /*#__PURE__*/React.createElement("input", {value:form.custTax||"", onChange:e=>set("custTax",e.target.value), placeholder:"Nhập MST (nếu có)…", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "Địa chỉ"),
               /*#__PURE__*/React.createElement("input", {value:form.custAddr, onChange:e=>set("custAddr",e.target.value), placeholder:"Nhập địa chỉ khách hàng…", className:iF})
             )
