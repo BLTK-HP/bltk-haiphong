@@ -898,9 +898,9 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const returnedOrders  = allActive.filter(o => (o.returns||[]).some(r => !r.cancelled));
   const allRetItems     = returnedOrders.flatMap(o => (o.returns||[]).filter(r => !r.cancelled));
   const totalReturnVal  = allRetItems.reduce((s,r) => s + (r.amount||0), 0);
-  const alreadyRefunded = returnedOrders.reduce((s,o) => s + (o.payments||[]).filter(p => p.kind==="Tiền hàng trả lại").reduce((ps,p) => ps+p.amount, 0), 0);
+  const alreadyRefunded = returnedOrders.reduce((s,o) => s + (o.compCosts||[]).filter(c => c.type==="Hoàn tiền hàng").reduce((cs,c) => cs+(c.amount||0), 0), 0);
   const pendingRefund   = Math.max(0, totalReturnVal - alreadyRefunded);
-  const importedToStock = allRetItems.reduce((s,r) => s + (r.amount||0), 0);
+  const importedToStock = totalReturnVal;
   const nccRetItems    = fWhIn.filter(r => (plMap[r.lot+"__"+r.prod]?.returns||[]).length > 0);
   const nccRetLots     = new Set(nccRetItems.map(r => r.lot)).size;
   const nccRetVal      = nccRetItems.reduce((s,r) => {
