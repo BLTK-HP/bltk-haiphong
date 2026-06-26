@@ -2727,7 +2727,7 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div style="text-align:center;font-weight:bold;margin-bottom:2px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
 <div style="text-align:center;font-weight:bold;text-decoration:underline;margin-bottom:20px;">Độc lập - Tự do - Hạnh phúc</div>
 <h1>HỢP ĐỒNG MUA BÁN</h1>
-<div style="text-align:center;margin-bottom:4px;">Số: ${form.contractNum||"…….."}/HĐTB</div>
+<div style="text-align:center;margin-bottom:4px;">Số: ${form.contractNum||"……………"}</div>
 <div class="sub">(Về việc: ${subject})</div>
 <p class="lb">Căn cứ Bộ luật dân sự năm 2015 được Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam thông qua ngày 24/11/2015 có hiệu lực ngày 01/01/2017.</p>
 <p class="lb">Căn cứ Luật thương mại năm 2005 được Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam thông qua ngày 14/6/2005 có hiệu lực ngày 01/01/2006.</p>
@@ -2747,7 +2747,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
 <p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
-<p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
+<p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến chân công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
 <table>
   <thead><tr>
     <th style="width:8%">STT</th><th>Tên hàng hóa</th>
@@ -2773,11 +2773,11 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":""}</strong><br>${depositWords?`(Bằng chữ: <em>${depositWords}</em>/.)`:""} ngay sau khi ký hợp đồng.</p>
+${form.deposit?`<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${fmtV(form.deposit)} VNĐ</strong><br>(Bằng chữ: <em>${depositWords}</em>/.) ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp. Bên A thực hiện việc xử lý khoản thanh toán đặt cọc của Bên B theo một trong các phương án sau:<br>+ Chuyển đổi khoản đặt cọc của Bên B sang một Đơn Hàng mới có sẵn hàng (nếu Bên B có yêu cầu).<br>+ Hoàn trả lại khoản đặt cọc của Bên B (bằng tiền mặt hoặc chuyển khoản vào tài khoản của Bên B).</li>
-</ul>
+</ul>`:""}
 <p><strong>Lần 02:</strong> Thanh toán số tiền còn lại của đơn hàng ngay tại thời điểm kiểm tra và nhận xong hàng hóa kể từ khi kí nhận vào biên bản nhận hàng (hoặc phiếu giao hàng có giá trị tương đương).</p>
 <ul>
   <li>Trong trường hợp Bên B không thanh toán số tiền còn lại của tổng giá trị hợp đồng thì Bên A sẽ thu hồi toàn bộ hàng hóa vừa giao và không hoàn cọc. Bên B không được phép cản trở Bên A thu hồi hàng hóa dưới bất kì hình thức nào nếu như Bên B không thanh toán theo thỏa thuận.</li>
@@ -2806,7 +2806,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <p><strong>Trách nhiệm của Bên A:</strong></p>
 <ul>
   <li>Đảm bảo cung cấp thiết bị theo đúng tiến độ bên B yêu cầu.</li>
-  <li>Sau khi giao hàng, Bên A sẽ cung cấp cho Bên B những giấy tờ sau (đây không phải là điều kiện để Bên A tiến hành việc thanh toán cho Bên B): Phiếu Giao Hàng và Phiếu Bảo Hành (nếu có); Hoá đơn VAT (gửi qua mail); Chứng nhận xuất xưởng cấp sau 7-10 ngày, kể từ ngày có hoá đơn VAT.</li>
+  <li>Sau khi giao hàng, Bên A sẽ cung cấp cho Bên B những giấy tờ sau (đây không phải là điều kiện để Bên B tiến hành việc thanh toán cho Bên A): Phiếu Giao Hàng và Phiếu Bảo Hành (nếu có); Hoá đơn VAT (gửi qua mail); Chứng nhận xuất xưởng cấp sau 7-10 ngày, kể từ ngày có hoá đơn VAT.</li>
   <li>Bên A cam kết đảm bảo hàng hóa giao cho Bên B là hàng chính hãng của Nhà cung cấp. Nếu bên A cung cấp hàng hóa không chính Hãng, không đảm bảo đúng chất lượng của Nhà sản xuất/ Nhà cung như yêu cầu của Bên B đã thỏa thuận trong Đơn xác nhận đặt hàng thì Bên A chịu đền bù 100% giá trị đơn hàng giao sai.</li>
 </ul>
 <p><strong>Trách nhiệm của Bên B:</strong></p>
@@ -2817,6 +2817,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <p class="at">ĐIỀU 6: ĐIỀU KHOẢN CHUNG</p>
 <ul>
   <li>Hợp đồng này được lập thành 02 (hai) bản có giá trị pháp lý như nhau, Bên A giữ 01 (một) bản, Bên B giữ 01 bản.</li>
+  <li>Kèm theo hợp đồng này là Phụ lục hợp đồng có giá trị pháp lý tương đương hợp đồng.</li>
   <li>Hợp đồng này có hiệu lực kể từ ngày ký kết.</li>
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
@@ -2885,7 +2886,7 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div style="text-align:center;font-weight:bold;margin-bottom:2px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
 <div style="text-align:center;font-weight:bold;text-decoration:underline;margin-bottom:20px;">Độc lập - Tự do - Hạnh phúc</div>
 <h1>HỢP ĐỒNG MUA BÁN</h1>
-<div style="text-align:center;margin-bottom:4px;">Số: ${form.contractNum||"…….."}/HĐTB</div>
+<div style="text-align:center;margin-bottom:4px;">Số: ${form.contractNum||"……………"}</div>
 <div class="sub">(Về việc: ${subject})</div>
 <p class="lb">Căn cứ Bộ luật dân sự năm 2015 được Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam thông qua ngày 24/11/2015 có hiệu lực ngày 01/01/2017.</p>
 <p class="lb">Căn cứ Luật thương mại năm 2005 được Quốc hội nước Cộng hòa xã hội chủ nghĩa Việt Nam thông qua ngày 14/6/2005 có hiệu lực ngày 01/01/2006.</p>
@@ -2905,7 +2906,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
 <p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
-<p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
+<p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến chân công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
 <table>
   <thead><tr>
     <th style="width:8%">STT</th><th>Tên hàng hóa</th>
@@ -2931,11 +2932,11 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":""}</strong><br>${depositWords?`(Bằng chữ: <em>${depositWords}</em>/.)`:""} ngay sau khi ký hợp đồng.</p>
+${form.deposit?`<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${fmtV(form.deposit)} VNĐ</strong><br>(Bằng chữ: <em>${depositWords}</em>/.) ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp, Bên A sẽ hoàn trả hoặc chuyển đổi khoản đặt cọc theo yêu cầu của Bên B.</li>
-</ul>
+</ul>`:""}
 <p><strong>Lần 02:</strong> Thanh toán số tiền còn lại ngay tại thời điểm kiểm tra và nhận xong hàng hóa.</p>
 <ul>
   <li>Trong trường hợp Bên B không thanh toán số tiền còn lại, Bên A sẽ thu hồi toàn bộ hàng hóa vừa giao và không hoàn cọc.</li>
