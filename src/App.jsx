@@ -2928,7 +2928,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <ul>
   <li>Thời gian giao nhận: Bên B sẽ thông báo trước 03-05 ngày để bên A chuẩn bị hàng hóa, vận chuyển giao hàng.</li>
   <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||""}</li>
-  <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B.</li>
+  <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B. Bên B phải chịu mọi rủi ro đối với những trường hợp mất mát hàng hóa, phụ kiện, cũng như hàng hóa bị hư hỏng hoặc bể vỡ sau khi hai bên đã hoàn tất thủ tục giao nhận.</li>
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
@@ -2937,24 +2937,42 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp, Bên A sẽ hoàn trả hoặc chuyển đổi khoản đặt cọc theo yêu cầu của Bên B.</li>
 </ul>
-<p><strong>Lần 02:</strong> Thanh toán số tiền còn lại ngay tại thời điểm kiểm tra và nhận xong hàng hóa.</p>
+<p><strong>Lần 02:</strong> Thanh toán số tiền còn lại của đơn hàng ngay tại thời điểm kiểm tra và nhận xong hàng hóa kể từ khi kí nhận vào biên bản nhận hàng (hoặc phiếu giao hàng có giá trị tương đương).</p>
 <ul>
-  <li>Trong trường hợp Bên B không thanh toán số tiền còn lại, Bên A sẽ thu hồi toàn bộ hàng hóa vừa giao và không hoàn cọc.</li>
-  <li>Trong trường hợp Bên B yêu cầu giao hàng thành nhiều đợt thì sẽ thanh toán dứt điểm cho từng đợt, tiền cọc cấn trừ vào đơn hàng cuối cùng.</li>
+  <li>Trong trường hợp Bên B không thanh toán số tiền còn lại của tổng giá trị hợp đồng thì Bên A sẽ thu hồi toàn bộ hàng hóa vừa giao và không hoàn cọc. Bên B không được phép cản trở Bên A thu hồi hàng hóa dưới bất kì hình thức nào nếu như Bên B không thanh toán theo thỏa thuận.</li>
+  <li>Trong trường hợp Bên B yêu cầu giao hàng thành nhiều đợt thì sẽ thanh toán dứt điểm cho từng đợt nhận hàng và tiền cọc sẽ được cấn trừ vào đơn hàng cuối cùng.</li>
 </ul>
 <p class="at">ĐIỀU 4: PHƯƠNG THỨC ĐỔI TRẢ/ BẢO HÀNH SAU KHI GIAO HÀNG</p>
-<p><strong>Điều kiện đổi trả:</strong></p>
+<p><strong>Điều kiện đổi trả hàng (sản phẩm):</strong></p>
 <ul>
   <li>Sản phẩm được xác định bị lỗi kỹ thuật bởi nhân viên kỹ thuật của Công ty hoặc Nhà sản xuất;</li>
   <li>Sản phẩm không thuộc nhóm hàng đặt Nhà máy không được phép đổi trả.</li>
-  <li>Sản phẩm phải nguyên vẹn không bị trầy xước, móp méo, ố vàng, nứt vỡ.</li>
+  <li>Sản phẩm phải nguyên vẹn không bị trầy xước, móp méo, ố vàng, nứt vỡ. (Bên B phải có trách nhiệm bảo quản cẩn thận thùng đựng, xốp và phụ kiện đi kèm khi nhận hàng để dự phòng các tình huống phải đổi trả hàng);</li>
   <li>Bên B phải cung cấp đầy đủ Phiếu Giao Hàng và Phiếu Bảo Hành (nếu có).</li>
 </ul>
-<p><strong>Chính sách đổi trả:</strong> Trong vòng 05 ngày sau khi nhận đủ thông tin, Bên A sẽ thông báo thời gian giao sản phẩm mới thay thế hoặc hoàn tiền 100% nếu sản phẩm hết hàng.</p>
-<p><strong>Bảo hành:</strong> Khách hàng liên hệ <strong>033 5252 225</strong> để được tư vấn hỗ trợ bảo hành.</p>
+<p><strong>Chính sách đổi trả hàng:</strong></p>
+<ul>
+  <li>Đối với các trường hợp đáp ứng đủ điều kiện, trong vòng 05 ngày sau khi nhận thông tin và các giấy tờ theo quy định, Bên A sẽ thông báo thời gian giao sản phẩm mới thay thế tới Bên B;</li>
+  <li>Bên A sẽ hoàn tiền 100% số tiền Bên B đã thanh toán nếu sản phẩm hết hàng.</li>
+</ul>
+<p><strong>Trường hợp Bên B không chấp nhận đổi trả hoặc đổi trả mất phí 20% giá trị sản phẩm sau khi nhận hàng:</strong></p>
+<ul>
+  <li>Bên B làm sản phẩm bị trầy xước, móp méo, nứt vỡ….</li>
+  <li>Bên B đổi trả vì lý do cá nhân muốn thay đổi chủng loại, mẫu mã khác.</li>
+</ul>
+<p><strong>Bảo hành:</strong> Mỗi Nhà sản xuất/ Nhà cung cấp đều có quy định về chính sách bảo hành hàng hóa, sản phẩm riêng. Được quy định rõ ràng, cụ thể bằng hình thức bảo hành điện tử tại nhà hoặc Phiếu bảo hành giấy (có mã QR) luôn kèm theo trong mỗi thùng sản phẩm, hàng hóa. Ngoài ra khách hàng có thể liên hệ số điện thoại <strong>033 5252 225</strong> để được tư vấn hỗ trợ bảo hành nhanh chóng, thuận tiện nhất.</p>
 <p class="at">ĐIỀU 5: TRÁCH NHIỆM CỦA CÁC BÊN</p>
-<p><strong>Trách nhiệm của Bên A:</strong> Đảm bảo cung cấp thiết bị đúng tiến độ; cung cấp Phiếu Giao Hàng, Phiếu Bảo Hành, Hoá đơn VAT, Chứng nhận xuất xưởng; đảm bảo hàng chính hãng.</p>
-<p><strong>Trách nhiệm của Bên B:</strong> Bảo đảm mặt bằng giao nhận hàng và thanh toán đúng thời hạn thỏa thuận.</p>
+<p><strong>Trách nhiệm của Bên A:</strong></p>
+<ul>
+  <li>Đảm bảo cung cấp thiết bị theo đúng tiến độ bên B yêu cầu.</li>
+  <li>Sau khi giao hàng, Bên A sẽ cung cấp cho Bên B những giấy tờ sau <strong>(đây không phải là điều kiện để Bên B tiến hành việc thanh toán cho Bên A)</strong>: Phiếu Giao Hàng và Phiếu Bảo Hành (nếu có); Hoá đơn VAT (gửi qua mail); Chứng nhận xuất xưởng cấp sau 7-10 ngày, kể từ ngày có hoá đơn VAT.</li>
+  <li>Bên A cam kết đảm bảo hàng hóa giao cho Bên B là hàng chính hãng của Nhà cung cấp. Nếu bên A cung cấp hàng hóa không chính Hãng, không đảm bảo đúng chất lượng của Nhà sản xuất/ Nhà cung như yêu cầu của Bên B đã thỏa thuận trong Đơn xác nhận đặt hàng thì Bên A chịu đền bù 100% giá trị đơn hàng giao sai.</li>
+</ul>
+<p><strong>Trách nhiệm của Bên B:</strong></p>
+<ul>
+  <li>Bảo đảm mặt bằng, điểm đỗ xe giao nhận hàng và an ninh, an toàn trong khu vực làm việc.</li>
+  <li>Bảo đảm thanh toán đúng thời hạn được thỏa thuận giữa hai bên.</li>
+</ul>
 <p class="at">ĐIỀU 6: ĐIỀU KHOẢN CHUNG</p>
 <ul>
   <li>Hợp đồng này được lập thành 02 (hai) bản có giá trị pháp lý như nhau, Bên A giữ 01 bản, Bên B giữ 01 bản.</li>
