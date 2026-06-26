@@ -2646,6 +2646,31 @@ function openPrint(order, type, cfg, products) {
   w.focus();
 }
 
+function numToWordsVN(n) {
+  if (!n || n === 0) return "Không đồng";
+  n = Math.round(n);
+  const dv = ["","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+  function read3(x, leading) {
+    if (x === 0) return "";
+    const h = Math.floor(x/100), tm = x%100, t = Math.floor(tm/10), u = tm%10;
+    let s = "";
+    if (h > 0) s += dv[h] + " trăm";
+    else if (leading) s += "không trăm";
+    if (t > 1)      s += " "+dv[t]+" mươi"+(u===0?"":(u===1?" mốt":u===4?" tư":u===5?" lăm":" "+dv[u]));
+    else if (t===1) s += " mười"+(u===0?"":(u===5?" lăm":" "+dv[u]));
+    else if (u > 0) s += (h>0||leading?" lẻ ":" ")+dv[u];
+    return s.trim();
+  }
+  const ty=Math.floor(n/1e9), tr=Math.floor((n%1e9)/1e6), ng=Math.floor((n%1e6)/1e3), rm=n%1e3;
+  let parts=[];
+  if(ty)  parts.push(read3(ty,false)+" tỷ");
+  if(tr)  parts.push(read3(tr,!!ty)+" triệu");
+  if(ng)  parts.push(read3(ng,!!(ty||tr))+" nghìn");
+  if(rm)  parts.push(read3(rm,!!(ty||tr||ng)));
+  const r = parts.join(" ").replace(/\s+/g," ").trim();
+  return r.charAt(0).toUpperCase()+r.slice(1)+" đồng";
+}
+
 function printContract(form, items, totalValue) {
   const SUBJECT_MAP = {
     "HĐMB-TBVS":     "Cung cấp thiết bị vệ sinh",
@@ -2667,30 +2692,32 @@ function printContract(form, items, totalValue) {
           <td style="text-align:right;border:1px solid #333;padding:4px 6px;">${fmtV(it.price)}</td>
           <td style="text-align:right;border:1px solid #333;padding:4px 6px;">${fmtV((it.price||0)*(it.qty||0))}</td>
         </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center;border:1px solid #333;padding:8px;">(Theo bảng kê đính kèm)</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center;border:1px solid #333;padding:8px;">(Xem Phụ lục hợp đồng đính kèm)</td></tr>`;
+  const totalWords = numToWordsVN(totalValue);
+  const depositWords = form.deposit ? numToWordsVN(form.deposit) : "";
 
   const html = `<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8">
 <title>Hợp đồng ${form.contractNum||""}</title>
 <style>
 *{box-sizing:border-box;}
-body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.65;}
-.page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm 25mm 20mm 30mm;}
-h1{font-size:14pt;font-weight:bold;text-align:center;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
-.sub{text-align:center;font-style:italic;margin-bottom:18px;}
-p{margin:5px 0;text-align:justify;}
-.lb{font-style:italic;margin-bottom:4px;text-align:justify;}
-.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;text-align:left;}
-.pr{display:flex;margin-bottom:4px;text-align:left;}
+body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.5;}
+.page{width:210mm;min-height:297mm;margin:0 auto;padding:25mm 20mm 25mm 30mm;}
+h1{font-size:14pt;font-weight:bold;text-align:center;margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
+.sub{text-align:center;font-style:italic;margin-bottom:14px;}
+p{margin:4px 0;text-align:justify;}
+.lb{font-size:11pt;font-style:italic;margin:2px 0 2px 24pt;text-align:justify;}
+.pt{font-size:13pt;font-weight:bold;margin:12px 0 5px;text-align:left;}
+.pr{display:flex;margin-bottom:3px;text-align:left;}
 .pl{width:145px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12pt;}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
 td{vertical-align:top;}
-.at{font-weight:bold;margin:14px 0 5px;text-align:left;text-transform:uppercase;}
-ul{margin:4px 0 6px 22px;}li{margin-bottom:4px;text-align:justify;}
+.at{font-weight:bold;margin:12px 0 4px;text-align:left;text-transform:uppercase;}
+ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 .sig{display:flex;justify-content:space-around;margin-top:48px;text-align:center;}
 .sc{width:40%;}
 .np{text-align:center;padding:12px;background:#f1f5f9;}
-@media print{.np{display:none!important;}.page{padding:20mm 25mm 20mm 30mm;}@page{size:A4;margin:0;}}
+@media print{.np{display:none!important;}.page{padding:25mm 20mm 25mm 30mm;}@page{size:A4;margin:0;}}
 </style></head><body>
 <div class="np">
   <button onclick="window.print()" style="padding:7px 18px;background:#bfdbfe;color:#1e3a8a;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">🖨 In / Xuất PDF</button>
@@ -2719,7 +2746,7 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
-<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
+<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong Phụ lục hợp đồng đính kèm.</p>
 <p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
 <table>
   <thead><tr>
@@ -2728,10 +2755,15 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
     <th style="width:16%">Đơn giá (VNĐ)</th><th style="width:16%">Thành tiền (VNĐ)</th>
   </tr></thead>
   <tbody>${productRows}</tbody>
-  <tfoot><tr>
-    <td colspan="5" style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">TỔNG CỘNG</td>
-    <td style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">${fmtV(totalValue)}</td>
-  </tr></tfoot>
+  <tfoot>
+    <tr>
+      <td colspan="5" style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">TỔNG CỘNG</td>
+      <td style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">${fmtV(totalValue)}</td>
+    </tr>
+    <tr>
+      <td colspan="6" style="border:1px solid #333;padding:5px 6px;font-style:italic;">(Bằng chữ: <strong>${totalWords}</strong>/.)</td>
+    </tr>
+  </tfoot>
 </table>
 <p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
 <ul>
@@ -2741,7 +2773,7 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: <em>${depositWords||"……………………………………………………………………………………………"}</em>/.) ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp. Bên A thực hiện việc xử lý khoản thanh toán đặt cọc của Bên B theo một trong các phương án sau:<br>+ Chuyển đổi khoản đặt cọc của Bên B sang một Đơn Hàng mới có sẵn hàng (nếu Bên B có yêu cầu).<br>+ Hoàn trả lại khoản đặt cọc của Bên B (bằng tiền mặt hoặc chuyển khoản vào tài khoản của Bên B).</li>
@@ -2822,7 +2854,9 @@ function exportContractWord(form, items, totalValue) {
           <td style="text-align:right;border:1px solid #333;padding:4px 6px;">${fmtV(it.price)}</td>
           <td style="text-align:right;border:1px solid #333;padding:4px 6px;">${fmtV((it.price||0)*(it.qty||0))}</td>
         </tr>`).join("")
-    : `<tr><td colspan="6" style="text-align:center;border:1px solid #333;padding:8px;">(Theo bảng kê đính kèm)</td></tr>`;
+    : `<tr><td colspan="6" style="text-align:center;border:1px solid #333;padding:8px;">(Xem Phụ lục hợp đồng đính kèm)</td></tr>`;
+  const totalWords = numToWordsVN(totalValue);
+  const depositWords = form.deposit ? numToWordsVN(form.deposit) : "";
 
   const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office'
   xmlns:w='urn:schemas-microsoft-com:office:word'
@@ -2830,20 +2864,20 @@ function exportContractWord(form, items, totalValue) {
 <head><meta charset='utf-8'>
 <style>
 *{box-sizing:border-box;}
-body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.65;}
-.page{width:210mm;margin:0 auto;padding:20mm 25mm 20mm 30mm;}
-h1{font-size:14pt;font-weight:bold;text-align:center;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
-.sub{text-align:center;font-style:italic;margin-bottom:18px;}
-p{margin:5px 0;text-align:justify;}
-.lb{font-style:italic;margin-bottom:4px;text-align:justify;}
-.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;text-align:left;}
-.pr{display:flex;margin-bottom:4px;text-align:left;}
+body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.5;}
+.page{width:210mm;margin:0 auto;padding:25mm 20mm 25mm 30mm;}
+h1{font-size:14pt;font-weight:bold;text-align:center;margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
+.sub{text-align:center;font-style:italic;margin-bottom:14px;}
+p{margin:4px 0;text-align:justify;}
+.lb{font-size:11pt;font-style:italic;margin:2px 0 2px 24pt;text-align:justify;}
+.pt{font-size:13pt;font-weight:bold;margin:12px 0 5px;text-align:left;}
+.pr{display:flex;margin-bottom:3px;text-align:left;}
 .pl{width:145px;flex-shrink:0;}
-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12pt;}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
 td{vertical-align:top;}
-.at{font-weight:bold;margin:14px 0 5px;text-align:left;text-transform:uppercase;}
-ul{margin:4px 0 6px 22px;}li{margin-bottom:4px;text-align:justify;}
+.at{font-weight:bold;margin:12px 0 4px;text-align:left;text-transform:uppercase;}
+ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 .sig{display:flex;justify-content:space-around;margin-top:48px;text-align:center;}
 .sc{width:40%;}
 </style></head>
@@ -2870,7 +2904,7 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
-<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
+<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong Phụ lục hợp đồng đính kèm.</p>
 <p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
 <table>
   <thead><tr>
@@ -2879,10 +2913,15 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
     <th style="width:16%">Đơn giá (VNĐ)</th><th style="width:16%">Thành tiền (VNĐ)</th>
   </tr></thead>
   <tbody>${productRows}</tbody>
-  <tfoot><tr>
-    <td colspan="5" style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">TỔNG CỘNG</td>
-    <td style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">${fmtV(totalValue)}</td>
-  </tr></tfoot>
+  <tfoot>
+    <tr>
+      <td colspan="5" style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">TỔNG CỘNG</td>
+      <td style="text-align:right;font-weight:bold;border:1px solid #333;padding:5px 6px;">${fmtV(totalValue)}</td>
+    </tr>
+    <tr>
+      <td colspan="6" style="border:1px solid #333;padding:5px 6px;font-style:italic;">(Bằng chữ: <strong>${totalWords}</strong>/.)</td>
+    </tr>
+  </tfoot>
 </table>
 <p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
 <ul>
@@ -2892,7 +2931,7 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: <em>${depositWords||"……………………………………………………………………………………………"}</em>/.) ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp, Bên A sẽ hoàn trả hoặc chuyển đổi khoản đặt cọc theo yêu cầu của Bên B.</li>
