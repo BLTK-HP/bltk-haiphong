@@ -909,7 +909,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   }, 0);
 
   // ── LỢI NHUẬN (Accrual) ───────────────────────────────────────────────────
-  const expOrders     = fOrders.filter(o => o.deliveryConfirmed || o.exported);
+  const expOrders     = allActive.filter(o => o.deliveryConfirmed || o.exported);
   const accrualRev    = expOrders.reduce((s,o) => s + calc(o).total, 0);
   const accrualCOGS   = expOrders.reduce((s,o) => s + calc(o).totalCost, 0);
   const accrualShip   = expOrders.reduce((s,o) => s + (o.importExpense||0), 0);
@@ -1233,7 +1233,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
         /*#__PURE__*/React.createElement(TrendingUp, {className:"h-3.5 w-3.5 text-slate-400"}),
         secHd("Lợi nhuận", "Kế toán · Accrual")
       ),
-      /*#__PURE__*/React.createElement("p", {className:"mb-3 text-xs italic text-slate-400"}, "Tính theo đơn đã giao trong kỳ (gồm cả phần chưa thu tiền) — khác với dòng tiền thực ở mục Tài Chính."),
+      /*#__PURE__*/React.createElement("p", {className:"mb-3 text-xs italic text-slate-400"}, "Tính theo toàn bộ đơn đã giao (gồm cả phần chưa thu tiền) — khác với dòng tiền thực ở mục Tài Chính."),
       /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-3 lg:grid-cols-4"},
 
         /* Doanh thu */
