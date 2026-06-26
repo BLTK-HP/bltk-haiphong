@@ -2740,8 +2740,8 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 <p class="pt">BÊN MUA (BÊN B):</p>
-<div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
-${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: ${form.custTax}</span></div>`:""}
+<div class="pr"><span class="pl">Họ và tên / Công ty</span><span>: ${form.custName||""}</span></div>
+<div class="pr"><span class="pl">MST/CCCD</span><span>: ${form.custTax||"………………………………………"}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
@@ -2898,8 +2898,8 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 <p class="pt">BÊN MUA (BÊN B):</p>
-<div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
-${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: ${form.custTax}</span></div>`:""}
+<div class="pr"><span class="pl">Họ và tên / Công ty</span><span>: ${form.custName||""}</span></div>
+<div class="pr"><span class="pl">MST/CCCD</span><span>: ${form.custTax||"………………………………………"}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
@@ -7282,8 +7282,8 @@ function Contracts({orders = []}) {
                 /*#__PURE__*/React.createElement("span", {className:"rounded bg-[#FCEBD8] px-2 py-0.5 text-[#B45309]"}, "Khách hàng")),
               /*#__PURE__*/React.createElement(Lbl, null, "Tên khách hàng"),
               /*#__PURE__*/React.createElement("input", {value:form.custName, onChange:e=>set("custName",e.target.value), placeholder:"Nhập…", className:`${iF} mb-2`}),
-              /*#__PURE__*/React.createElement(Lbl, null, "MST"),
-              /*#__PURE__*/React.createElement("input", {value:form.custTax||"", onChange:e=>set("custTax",e.target.value), placeholder:"Nhập MST (nếu có)…", className:`${iF} mb-2`}),
+              /*#__PURE__*/React.createElement(Lbl, null, "MST / CCCD"),
+              /*#__PURE__*/React.createElement("input", {value:form.custTax||"", onChange:e=>set("custTax",e.target.value), placeholder:"Nhập MST hoặc CCCD…", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "Địa chỉ"),
               /*#__PURE__*/React.createElement("input", {value:form.custAddr, onChange:e=>set("custAddr",e.target.value), placeholder:"Nhập địa chỉ khách hàng…", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "Số điện thoại"),
