@@ -7234,12 +7234,12 @@ function Contracts({orders = []}) {
                 /*#__PURE__*/React.createElement("span", {className:"rounded bg-[#FCEBD8] px-2 py-0.5 text-[#B45309]"}, "Khách hàng")),
               /*#__PURE__*/React.createElement(Lbl, null, "Tên khách hàng"),
               /*#__PURE__*/React.createElement("input", {value:form.custName, onChange:e=>set("custName",e.target.value), placeholder:"Nhập…", className:`${iF} mb-2`}),
-              /*#__PURE__*/React.createElement(Lbl, null, "Điện thoại"),
-              /*#__PURE__*/React.createElement("input", {value:form.custPhone, onChange:e=>set("custPhone",e.target.value), placeholder:"Nhập…", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "MST"),
               /*#__PURE__*/React.createElement("input", {value:form.custTax||"", onChange:e=>set("custTax",e.target.value), placeholder:"Nhập MST (nếu có)…", className:`${iF} mb-2`}),
               /*#__PURE__*/React.createElement(Lbl, null, "Địa chỉ"),
-              /*#__PURE__*/React.createElement("input", {value:form.custAddr, onChange:e=>set("custAddr",e.target.value), placeholder:"Nhập địa chỉ khách hàng…", className:iF})
+              /*#__PURE__*/React.createElement("input", {value:form.custAddr, onChange:e=>set("custAddr",e.target.value), placeholder:"Nhập địa chỉ khách hàng…", className:`${iF} mb-2`}),
+              /*#__PURE__*/React.createElement(Lbl, null, "Số điện thoại"),
+              /*#__PURE__*/React.createElement("input", {value:form.custPhone, onChange:e=>set("custPhone",e.target.value), placeholder:"Nhập…", className:iF})
             )
           )
         ),
