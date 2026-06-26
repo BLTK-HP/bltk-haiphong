@@ -1879,9 +1879,9 @@ function KhoModal({ order, onClose, onConfirm, onGoToWhIn, initTab }) {
     tab === "nhap" ? renderNhap() : tab === "xuat" ? renderXuat() : renderXlyKho());
 }
 const RETURN_STORES = [
-  {key:"Kho HH", label:"HH — Kho Hải Hậu"},
-  {key:"Kho HG", label:"HG — Kho Hải Giang"},
-  {key:"Kho SR", label:"SR — Kho Showroom"},
+  {key:"Kho HH", label:"HH"},
+  {key:"Kho HG", label:"HG"},
+  {key:"Kho SR", label:"SR"},
 ];
 function ReturnModal({
   order,
