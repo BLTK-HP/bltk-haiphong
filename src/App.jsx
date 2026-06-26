@@ -7152,12 +7152,21 @@ function Contracts({orders = []}) {
     return /*#__PURE__*/React.createElement("div", {className:"min-h-screen bg-[#FBF6F1] -mx-4 -mt-4 px-4 pt-4 pb-10"},
       /*#__PURE__*/React.createElement("div", {className:"max-w-3xl mx-auto"},
 
-        /* Back + Title */
-        /*#__PURE__*/React.createElement("div", {className:"mb-6 text-center"},
-          /*#__PURE__*/React.createElement("button", {onClick:()=>setShowForm(false), className:"mb-3 flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"},
+        /* Back + Title + Actions */
+        /*#__PURE__*/React.createElement("div", {className:"mb-6 flex items-center justify-between"},
+          /*#__PURE__*/React.createElement("button", {onClick:()=>setShowForm(false), className:"flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700"},
             /*#__PURE__*/React.createElement(ChevronLeft, {className:"h-4 w-4"}), "Danh sách hợp đồng"),
-          /*#__PURE__*/React.createElement("h1", {className:"text-2xl font-bold text-slate-800"}, "Hợp đồng nguyên tắc"),
-          /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-400 mt-1"}, "Màn hình tạo / chỉnh sửa hợp đồng")
+          /*#__PURE__*/React.createElement("div", {className:"text-center"},
+            /*#__PURE__*/React.createElement("h1", {className:"text-2xl font-bold text-slate-800"}, "Hợp đồng nguyên tắc"),
+            /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-400 mt-0.5"}, "Màn hình tạo / chỉnh sửa hợp đồng")),
+          /*#__PURE__*/React.createElement("div", {className:"flex gap-2"},
+            /*#__PURE__*/React.createElement("button", {onClick:()=>exportContractWord(form, appendixItems, totalValue), className:"flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"},
+              /*#__PURE__*/React.createElement(FileText, {className:"h-4 w-4"}), "Xuất Word"),
+            /*#__PURE__*/React.createElement("button", {onClick:()=>printContract(form, appendixItems, totalValue), className:"flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"},
+              /*#__PURE__*/React.createElement(Printer, {className:"h-4 w-4"}), "In / Xuất PDF"),
+            /*#__PURE__*/React.createElement("button", {onClick:save, className:"flex items-center gap-1.5 rounded-lg bg-[#B45309] px-4 py-2 text-sm font-semibold text-white hover:bg-[#92400e]"},
+              /*#__PURE__*/React.createElement(Save, {className:"h-4 w-4"}), "Lưu hợp đồng")
+          )
         ),
 
         /* Section 1: Template */
@@ -7301,19 +7310,11 @@ function Contracts({orders = []}) {
           )
         ),
 
-        /* Footer */
-        /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between rounded-xl border border-slate-200 bg-white px-5 py-4"},
+        /* Footer — tổng giá trị */
+        /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white px-5 py-3 text-center"},
           /*#__PURE__*/React.createElement("span", {className:"text-sm font-medium text-slate-600"},
             "Tổng giá trị HĐ: ",
-            /*#__PURE__*/React.createElement("span", {className:"text-lg font-bold text-[#B45309]"}, vnd(totalValue), " đ")),
-          /*#__PURE__*/React.createElement("div", {className:"flex gap-2"},
-            /*#__PURE__*/React.createElement("button", {onClick:()=>exportContractWord(form, appendixItems, totalValue), className:"flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"},
-              /*#__PURE__*/React.createElement(FileText, {className:"h-4 w-4"}), "Xuất Word"),
-            /*#__PURE__*/React.createElement("button", {onClick:()=>printContract(form, appendixItems, totalValue), className:"flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"},
-              /*#__PURE__*/React.createElement(Printer, {className:"h-4 w-4"}), "In / Xuất PDF"),
-            /*#__PURE__*/React.createElement("button", {onClick:save, className:"flex items-center gap-1.5 rounded-lg bg-[#B45309] px-4 py-2 text-sm font-semibold text-white hover:bg-[#92400e]"},
-              /*#__PURE__*/React.createElement(Save, {className:"h-4 w-4"}), "Lưu hợp đồng")
-          )
+            /*#__PURE__*/React.createElement("span", {className:"text-lg font-bold text-[#B45309]"}, vnd(totalValue), " đ"))
         )
       )
     );
