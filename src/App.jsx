@@ -4932,7 +4932,8 @@ function Suppliers() {
   })), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-500"
   }, s.addr || ""), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-right tabular-nums font-semibold " + (debt > 0 ? "text-[#B91C1C]" : "text-slate-400")
+    className: "px-4 py-3 text-right tabular-nums " + (debt > 0 ? "text-[#B91C1C]" : "text-slate-400"),
+    style: {fontWeight: 700}
   }, debt > 0 ? vnd(debt) : "—"), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement("div", {
