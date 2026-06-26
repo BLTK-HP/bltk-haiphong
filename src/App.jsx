@@ -4216,7 +4216,9 @@ function ProductForm({
     ...x,
     ...p
   }));
-  const dupName = f.name.trim() && existingNames.includes(f.name.trim().toLowerCase());
+  const dupName = f.name.trim() &&
+    !(isEdit && f.name.trim().toLowerCase() === (e.name || "").trim().toLowerCase()) &&
+    existingNames.includes(f.name.trim().toLowerCase());
   const dupSku  = f.sku.trim()  && existingSkus.includes(f.sku.trim().toLowerCase());
   const can = f.sku.trim() && f.name.trim() && f.unit && !dupName && !dupSku;
   return /*#__PURE__*/React.createElement(Modal, {
@@ -4410,10 +4412,11 @@ function ProductsTab() {
       if (JSON.stringify(prevMap[sku]) !== JSON.stringify(p))
         saveDoc("products", toFsId(sku), p).catch(e => { console.error(e); notify("Lỗi lưu sản phẩm: " + (e.message || e.code || "Lỗi kết nối")); });
     });
-    Object.keys(prevMap).forEach(sku => { if (!nextMap[sku]) deleteDocument("products", toFsId(sku)).catch(console.error); });
+    Object.keys(prevMap).forEach(sku => { if (!nextMap[sku]) deleteDocument("products", toFsId(sku)).catch(e => { console.error(e); notify("Lỗi xoá sản phẩm: " + (e.message || e.code || "Lỗi kết nối")); }); });
   };
   const [q, setQ] = useState("");
   const [form, setForm] = useState(null); // {} new | product edit
+  const [delConfirm, setDelConfirm] = useState(null); // sku đang chờ xác nhận xóa
   const [perPage, setPerPage] = useState(50);
   const [page, setPage] = useState(1);
   const prevQ = React.useRef(q);
@@ -4444,10 +4447,8 @@ function ProductsTab() {
     setForm(null);
   };
   const del = sku => {
-    if (window.confirm("Xoá sản phẩm này?")) {
-      setItems(xs => xs.filter(p => p.sku !== sku));
-      notify("Đã xoá sản phẩm");
-    }
+    setItems(xs => xs.filter(p => p.sku !== sku));
+    notify("Đã xoá sản phẩm");
   };
   const onExport = () => exportCSV("danh-sach-san-pham", ["Mã SP", "Tên sản phẩm", "Mô tả", "ĐVT", "Niêm yết", "Giá bán", "Tồn"], rows.map(p => [p.sku, p.name, p.desc, p.unit, p.list, p.sale, p.stock]));
   if (!prodsLoaded) return /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-center py-16 text-slate-400 text-sm gap-2"},
@@ -4561,17 +4562,30 @@ function ProductsTab() {
   }, p.stock)), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center justify-center"
-  }, /*#__PURE__*/React.createElement(IconBtn, {
-    icon: Pencil,
-    title: "Sửa",
-    onClick: () => setForm(p)
-  }), /*#__PURE__*/React.createElement(IconBtn, {
-    tone: "danger",
-    icon: Trash2,
-    title: "Xoá",
-    onClick: () => del(p.sku)
-  })))))),
+    className: "flex items-center justify-center gap-1"
+  }, delConfirm === p.sku
+    ? /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement("span", {className: "text-xs text-rose-600 font-medium"}, "Xoá?"),
+        /*#__PURE__*/React.createElement("button", {
+          className: "rounded px-1.5 py-0.5 text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700",
+          onClick: () => { del(p.sku); setDelConfirm(null); }
+        }, "Có"),
+        /*#__PURE__*/React.createElement("button", {
+          className: "rounded px-1.5 py-0.5 text-xs text-slate-500 hover:bg-slate-100 border border-slate-200",
+          onClick: () => setDelConfirm(null)
+        }, "Không"))
+    : /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement(IconBtn, {
+          icon: Pencil,
+          title: "Sửa",
+          onClick: () => setForm(p)
+        }),
+        /*#__PURE__*/React.createElement(IconBtn, {
+          tone: "danger",
+          icon: Trash2,
+          title: "Xoá",
+          onClick: () => setDelConfirm(p.sku)
+        }))))))),
   totalPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-2 flex-wrap"},
     /*#__PURE__*/React.createElement("select", {
       value: perPage,
