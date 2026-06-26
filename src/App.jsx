@@ -2767,7 +2767,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       return t;
     }));
   };
-  const CHI_KIND_MAP = {"Hoàn tiền hàng":"Chi phí","Chi phí Ship hàng":"Chi vận chuyển","Chi phí hoa hồng":"Chi phí"};
+  const CHI_KIND_MAP = {"Hoàn tiền hàng":"Hoàn tiền KH","Chi phí Ship hàng":"Chi vận chuyển","Chi phí hoa hồng":"Chi hoa hồng","Chi phí lắp đặt":"Chi lắp đặt"};
   const autoAddChi = (type, amount, acc) => {
     const nextId = _txns.length ? Math.max(..._txns.map(t=>t.id))+1 : 1;
     const d = new Date(), pad = n => String(n).padStart(2,"0");
@@ -6011,7 +6011,7 @@ function EditTxnModal({txn, onClose, onSave}) {
   const isOut   = txn.amount < 0;
   const canSave = entity.trim() && rawAmt > 0;
   const lbl     = "mb-1 block text-[13px] font-medium text-slate-500";
-  const ALL_KINDS = ["Thu tiền","Đặt cọc","Thanh toán","Thu khác","Chi mua hàng","Chi vận chuyển","Chi phí","Hoàn ứng","Chi khác","Chuyển đi","Chuyển về"];
+  const ALL_KINDS = ["Thu tiền","Đặt cọc","Thanh toán","Thu khác","Chi mua hàng","Chi vận chuyển","Hoàn tiền KH","Chi hoa hồng","Chi lắp đặt","Chi phí","Hoàn ứng","Chi khác","Chuyển đi","Chuyển về"];
   const doSave  = () => onSave({...txn, acc, entity, orderId, kind, amount: isOut ? -rawAmt : rawAmt, note});
   return /*#__PURE__*/React.createElement(Modal, {title:"Sửa giao dịch #"+txn.id, onClose, maxW:"max-w-lg",
     footer:/*#__PURE__*/React.createElement(React.Fragment, null,
