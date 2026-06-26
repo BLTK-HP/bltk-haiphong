@@ -7107,7 +7107,15 @@ function Contracts({orders = []}) {
   const [form, setForm] = useState(emptyForm);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
 
-  const openNew  = () => { setForm(emptyForm); setEditId(null); setAddOrderId(""); setShowForm(true); };
+  const PREFIX_MAP = {"HĐMB-TBVS":"TBVS","HĐMB-TBB":"TBB","HĐMB-TBVS-TBB":"TBVS-TBB"};
+  const autoNum = (tpl) => {
+    const p = PREFIX_MAP[tpl] || "HĐ";
+    const yr = String(new Date().getFullYear()).slice(-2);
+    const pat = `HĐ-${p}${yr}/`;
+    const n = contracts.filter(c => (c.contractNum||"").startsWith(pat)).length + 1;
+    return `${pat}${String(n).padStart(2,"0")}`;
+  };
+  const openNew  = () => { const num = autoNum(emptyForm.template); setForm({...emptyForm, contractNum:num}); setEditId(null); setAddOrderId(""); setShowForm(true); };
   const openEdit = c  => { setForm({...emptyForm,...c}); setEditId(c.id); setAddOrderId(""); setShowForm(true); };
 
   const addToAppendix = () => {
@@ -7183,7 +7191,7 @@ function Contracts({orders = []}) {
             CONTRACT_TEMPLATES.map(t => {
               const active = form.template === t.key;
               return /*#__PURE__*/React.createElement("button", {
-                key: t.key, onClick: () => set("template", t.key),
+                key: t.key, onClick: () => { set("template", t.key); if (!editId) set("contractNum", autoNum(t.key)); },
                 className: `rounded-xl border-2 p-4 text-center transition-all ${active ? "border-[#B45309] bg-[#FDF1E5]" : "border-slate-200 bg-white hover:border-[#B45309]/50"}`
               },
                 /*#__PURE__*/React.createElement("div", {className:"text-2xl mb-1"}, t.icon),
