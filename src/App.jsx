@@ -2821,7 +2821,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
 <div class="sig">
-  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>Trần Thị Phương Anh</div>
+  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
   <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>${form.custName||""}</div>
 </div>
 </div></body></html>`;
@@ -2961,7 +2961,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
 <div class="sig">
-  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>Trần Thị Phương Anh</div>
+  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
   <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>${form.custName||""}</div>
 </div>
 </div></body></html>`;
