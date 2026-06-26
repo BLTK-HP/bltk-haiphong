@@ -862,7 +862,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
 
   // ── GIAO DỊCH HÀNG HOÁ (all-time — hiển thị trạng thái hiện tại, không lọc theo kỳ) ──────
   const deliveredOrders = allActive.filter(o => o.deliveryConfirmed || o.exported);
-  const depositOrders   = allActive.filter(o => !(o.deliveryConfirmed || o.exported) && (o.paid||0) > 0);
+  const depositOrders   = allActive.filter(o => calc(o).pay === "Đã đặt cọc");
   const fWhIn           = whInItems.filter(r => r.supplier && inRange(r.date));
   const nccTotal        = fWhIn.reduce((s,r) => s + (r.qtyIn||0)*(r.costNcc||0) + (r.fee||0), 0);
   const nccPaid         = fWhIn.reduce((s,r) => {
