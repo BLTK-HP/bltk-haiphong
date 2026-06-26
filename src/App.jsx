@@ -895,7 +895,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const totalNccDebt = Object.values(nccDebt).reduce((s,v) => s+v, 0);
 
   // ── HOÀN HÀNG ─────────────────────────────────────────────────────────────
-  const returnedOrders = fOrders.filter(o => (o.returns||[]).length > 0 || o.returned);
+  const returnedOrders = allActive.filter(o => (o.returns||[]).length > 0 || o.returned);
   const nccRetItems    = fWhIn.filter(r => (plMap[r.lot+"__"+r.prod]?.returns||[]).length > 0);
   const nccRetLots     = new Set(nccRetItems.map(r => r.lot)).size;
   const nccRetVal      = nccRetItems.reduce((s,r) => {
