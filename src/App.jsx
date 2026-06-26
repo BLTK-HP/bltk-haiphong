@@ -2739,11 +2739,11 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
-<p class="pt">BÊN MUA (BÊN B):</p>
-<div class="pr"><span class="pl">Họ và tên / Công ty</span><span>: ${form.custName||""}</span></div>
-<div class="pr"><span class="pl">MST/CCCD</span><span>: ${form.custTax||"………………………………………"}</span></div>
+${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế (MST)":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
+<div class="pr"><span class="pl">${lbName}</span><span>: ${form.custName||""}</span></div>
+<div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||"………………………………………"}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
-<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
+<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>`;})()}
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
 <p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong Phụ lục hợp đồng đính kèm.</p>
@@ -2897,11 +2897,11 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
-<p class="pt">BÊN MUA (BÊN B):</p>
-<div class="pr"><span class="pl">Họ và tên / Công ty</span><span>: ${form.custName||""}</span></div>
-<div class="pr"><span class="pl">MST/CCCD</span><span>: ${form.custTax||"………………………………………"}</span></div>
+${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế (MST)":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
+<div class="pr"><span class="pl">${lbName}</span><span>: ${form.custName||""}</span></div>
+<div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||"………………………………………"}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
-<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>
+<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>`;})()}
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
 <p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong Phụ lục hợp đồng đính kèm.</p>
