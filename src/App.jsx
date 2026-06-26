@@ -7263,9 +7263,14 @@ function Contracts({orders = []}) {
         /*#__PURE__*/React.createElement("div", {className:sec},
           /*#__PURE__*/React.createElement(SecHd, {n:"5", title:"Số tiền đặt cọc lần 1"}),
           /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-3"},
-            /*#__PURE__*/React.createElement("input", {type:"number", value:form.deposit||"", onChange:e=>set("deposit",parseFloat(e.target.value)||0), placeholder:"0", className:`${iF} w-60`}),
-            /*#__PURE__*/React.createElement("span", {className:"text-sm text-slate-500"}, "VNĐ"),
-            form.deposit>0 && /*#__PURE__*/React.createElement("span", {className:"text-sm font-semibold text-[#B45309]"}, "= ", new Intl.NumberFormat("vi-VN").format(form.deposit), " đ")
+            /*#__PURE__*/React.createElement("input", {
+              type:"text", inputMode:"numeric",
+              value: form.deposit ? new Intl.NumberFormat("vi-VN").format(form.deposit) : "",
+              onChange: e => { const v = parseFloat(e.target.value.replace(/\./g,"").replace(/,/g,""))||0; set("deposit",v); },
+              placeholder:"0",
+              className:`${iF} w-60 text-right tabular-nums`
+            }),
+            /*#__PURE__*/React.createElement("span", {className:"text-sm text-slate-500"}, "VNĐ")
           )
         ),
 
