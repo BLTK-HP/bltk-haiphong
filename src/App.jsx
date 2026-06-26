@@ -6791,8 +6791,8 @@ function ReportStaff({ orders = [] }) {
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-2.5 text-right tabular-nums ${totals.remain > 0 ? "text-[#B91C1C]" : "text-slate-300"}`}, totals.remain > 0 ? vnd(totals.remain) : ""))));
 }
 const CONTRACT_TEMPLATES = [
-  {key:"HĐMB-TBVS",     label:"HĐMB Thiết bị vệ sinh", icon:"🪠"},
-  {key:"HĐMB-TBB",      label:"HĐMB Thiết bị bếp",     icon:"🔍"},
+  {key:"HĐMB-TBVS",     label:"HĐMB Thiết bị vệ sinh", icon:"🚿"},
+  {key:"HĐMB-TBB",      label:"HĐMB Thiết bị bếp",     icon:"🍳"},
   {key:"HĐMB-TBVS-TBB", label:"HĐMB TBVS & Bếp",       icon:"🏠"},
 ];
 
