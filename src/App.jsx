@@ -2708,7 +2708,7 @@ p{margin:4px 0;text-align:justify;}
 .lb{font-size:11pt;font-style:italic;margin:2px 0 2px 24pt;text-align:justify;}
 .pt{font-size:13pt;font-weight:bold;margin:12px 0 5px;text-align:left;}
 .pr{display:flex;margin-bottom:3px;text-align:left;}
-.pl{width:145px;flex-shrink:0;}
+.pl{width:145px;flex-shrink:0;}.pr>span:last-child{flex:1;min-width:0;}
 table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
 td{vertical-align:top;}
@@ -2872,7 +2872,7 @@ p{margin:4px 0;text-align:justify;}
 .lb{font-size:11pt;font-style:italic;margin:2px 0 2px 24pt;text-align:justify;}
 .pt{font-size:13pt;font-weight:bold;margin:12px 0 5px;text-align:left;}
 .pr{display:flex;margin-bottom:3px;text-align:left;}
-.pl{width:145px;flex-shrink:0;}
+.pl{width:145px;flex-shrink:0;}.pr>span:last-child{flex:1;min-width:0;}
 table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
 td{vertical-align:top;}
