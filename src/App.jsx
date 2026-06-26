@@ -2673,20 +2673,22 @@ function printContract(form, items, totalValue) {
 <title>Hợp đồng ${form.contractNum||""}</title>
 <style>
 *{box-sizing:border-box;}
-body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;}
+body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.65;}
 .page{width:210mm;min-height:297mm;margin:0 auto;padding:20mm 25mm 20mm 30mm;}
-h1{font-size:16pt;font-weight:bold;text-align:center;margin:12px 0 4px;letter-spacing:1px;}
-.sub{text-align:center;font-style:italic;margin-bottom:16px;}
-.lb{font-style:italic;margin-bottom:6px;}
-.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;}
-.pr{display:flex;margin-bottom:4px;}
-.pl{width:130px;flex-shrink:0;}
+h1{font-size:14pt;font-weight:bold;text-align:center;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
+.sub{text-align:center;font-style:italic;margin-bottom:18px;}
+p{margin:5px 0;text-align:justify;}
+.lb{font-style:italic;margin-bottom:4px;text-align:justify;}
+.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;text-align:left;}
+.pr{display:flex;margin-bottom:4px;text-align:left;}
+.pl{width:145px;flex-shrink:0;}
 table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
-.at{font-weight:bold;margin:14px 0 6px;}
-ul{margin:4px 0 4px 18px;}li{margin-bottom:3px;}
-.sig{display:flex;justify-content:space-between;margin-top:40px;text-align:center;}
-.sc{width:45%;}
+td{vertical-align:top;}
+.at{font-weight:bold;margin:14px 0 5px;text-align:left;text-transform:uppercase;}
+ul{margin:4px 0 6px 22px;}li{margin-bottom:4px;text-align:justify;}
+.sig{display:flex;justify-content:space-around;margin-top:48px;text-align:center;}
+.sc{width:40%;}
 .np{text-align:center;padding:12px;background:#f1f5f9;}
 @media print{.np{display:none!important;}.page{padding:20mm 25mm 20mm 30mm;}@page{size:A4;margin:0;}}
 </style></head><body>
@@ -2787,8 +2789,8 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
 <div class="sig">
-  <div class="sc"><strong>BÊN BÁN</strong><br><br><br><br><br><br>Trần Thị Phương Anh</div>
-  <div class="sc"><strong>BÊN MUA</strong><br><br><br><br><br><br>${form.custName||""}</div>
+  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>Trần Thị Phương Anh</div>
+  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>${form.custName||""}</div>
 </div>
 </div></body></html>`;
 
@@ -2828,20 +2830,22 @@ function exportContractWord(form, items, totalValue) {
 <head><meta charset='utf-8'>
 <style>
 *{box-sizing:border-box;}
-body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;}
+body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.65;}
 .page{width:210mm;margin:0 auto;padding:20mm 25mm 20mm 30mm;}
-h1{font-size:16pt;font-weight:bold;text-align:center;margin:12px 0 4px;letter-spacing:1px;}
-.sub{text-align:center;font-style:italic;margin-bottom:16px;}
-.lb{font-style:italic;margin-bottom:6px;}
-.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;}
-.pr{display:flex;margin-bottom:4px;}
-.pl{width:130px;flex-shrink:0;}
+h1{font-size:14pt;font-weight:bold;text-align:center;margin:10px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
+.sub{text-align:center;font-style:italic;margin-bottom:18px;}
+p{margin:5px 0;text-align:justify;}
+.lb{font-style:italic;margin-bottom:4px;text-align:justify;}
+.pt{font-size:13pt;font-weight:bold;margin:14px 0 6px;text-align:left;}
+.pr{display:flex;margin-bottom:4px;text-align:left;}
+.pl{width:145px;flex-shrink:0;}
 table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
-.at{font-weight:bold;margin:14px 0 6px;}
-ul{margin:4px 0 4px 18px;}li{margin-bottom:3px;}
-.sig{display:flex;justify-content:space-between;margin-top:40px;text-align:center;}
-.sc{width:45%;}
+td{vertical-align:top;}
+.at{font-weight:bold;margin:14px 0 5px;text-align:left;text-transform:uppercase;}
+ul{margin:4px 0 6px 22px;}li{margin-bottom:4px;text-align:justify;}
+.sig{display:flex;justify-content:space-around;margin-top:48px;text-align:center;}
+.sc{width:40%;}
 </style></head>
 <body><div class="page">
 <div style="text-align:center;font-weight:bold;margin-bottom:2px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -2918,8 +2922,8 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
 <div class="sig">
-  <div class="sc"><strong>BÊN BÁN</strong><br><br><br><br><br><br>Trần Thị Phương Anh</div>
-  <div class="sc"><strong>BÊN MUA</strong><br><br><br><br><br><br>${form.custName||""}</div>
+  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>Trần Thị Phương Anh</div>
+  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>${form.custName||""}</div>
 </div>
 </div></body></html>`;
 
