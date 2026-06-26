@@ -912,10 +912,13 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const expOrders     = allActive.filter(o => o.deliveryConfirmed || o.exported);
   const accrualRev    = expOrders.reduce((s,o) => s + calc(o).total, 0);
   const accrualCOGS   = expOrders.reduce((s,o) => s + calc(o).totalCost, 0);
-  const accrualShip   = expOrders.reduce((s,o) => s + (o.importExpense||0), 0);
-  const accrualExp    = expOrders.reduce((s,o) => s + (o.expense||0), 0);
-  const accrualCPBH   = accrualShip + accrualExp;
-  const accrualProfit = accrualRev - accrualCOGS - accrualCPBH;
+  const accrualShip       = expOrders.reduce((s,o) => s + (o.importExpense||0), 0);
+  const accrualExp        = expOrders.reduce((s,o) => s + (o.expense||0), 0);
+  const accrualCompShip   = expOrders.reduce((s,o) => s + (o.compCosts||[]).filter(c=>c.type==="Chi phí Ship hàng").reduce((cs,c)=>cs+(c.amount||0),0), 0);
+  const accrualCompComm   = expOrders.reduce((s,o) => s + (o.compCosts||[]).filter(c=>c.type==="Chi phí hoa hồng").reduce((cs,c)=>cs+(c.amount||0),0), 0);
+  const accrualCompInst   = expOrders.reduce((s,o) => s + (o.compCosts||[]).filter(c=>c.type==="Chi phí lắp đặt").reduce((cs,c)=>cs+(c.amount||0),0), 0);
+  const accrualCPBH       = accrualShip + accrualExp + accrualCompShip + accrualCompComm + accrualCompInst;
+  const accrualProfit     = accrualRev - accrualCOGS - accrualCPBH;
   const margin        = accrualRev > 0 ? Math.round(accrualProfit*1000/accrualRev)/10 : 0;
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -1262,10 +1265,19 @@ function Dashboard({ orders = [], purchaseList = [] }) {
           /*#__PURE__*/React.createElement("p", {className:"text-2xl font-bold text-amber-700 tabular-nums"}, accrualCPBH > 0 ? "−"+vnd(accrualCPBH) : "—"),
           /*#__PURE__*/React.createElement("div", {className:"mt-2 space-y-1"},
             /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs"},
-              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Vận chuyển"),
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Vận chuyển nhập"),
               accrualShip > 0 ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums"}, vnd(accrualShip)) : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
             ),
             /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs"},
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Ship hàng"),
+              accrualCompShip > 0 ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums"}, vnd(accrualCompShip)) : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+            ), /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs py-0.5"},
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Hoa hồng"),
+              accrualCompComm > 0 ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums"}, vnd(accrualCompComm)) : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+            ), /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs py-0.5"},
+              /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Lắp đặt"),
+              accrualCompInst > 0 ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums"}, vnd(accrualCompInst)) : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+            ), /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs py-0.5"},
               /*#__PURE__*/React.createElement("span", {className:"text-slate-500"}, "Chi phí khác"),
               accrualExp > 0 ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums"}, vnd(accrualExp)) : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
             )
