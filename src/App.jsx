@@ -841,7 +841,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
 
   // ── TÀI CHÍNH ────────────────────────────────────────────────────────────
   const TRANSFER_KINDS = new Set(["Chuyển đi", "Chuyển về"]);
-  const NCC_KINDS      = new Set(["Thanh toán NCC", "Đặt cọc NCC", "Chi mua hàng"]);
+  const NCC_KINDS      = new Set(["CP Thanh Toán NCC", "CP Đặt Cọc NCC", "CPVC Nhập Hàng"]);
 
   const thuAll   = fTxns.filter(t => t.amount > 0 && !TRANSFER_KINDS.has(t.kind));
   const chiAll   = fTxns.filter(t => t.amount < 0 && !TRANSFER_KINDS.has(t.kind));
@@ -4325,7 +4325,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums text-[#B91C1C]", style:{fontWeight:700}}, vnd(rows.reduce((s,r)=>s+(r.costNcc+(r.fee||0))*r.qtyIn,0))),
     /*#__PURE__*/React.createElement("td", {colSpan: 2}))),
   doc && /*#__PURE__*/React.createElement(DocModal, {doc: doc, onClose: () => setDoc(null)}),
-  payModal && /*#__PURE__*/React.createElement(PhieuChiModal, {onClose: () => setPayModal(null), initEntity: payModal.supplier||"", initOrderId: impCode(payModal.lot), initKind: "Thanh toán NCC", kinds: ["Đặt cọc NCC","Thanh toán NCC"], initAmount: lotRemaining(payModal), initNote: "Thanh toán "+impCode(payModal.lot)+" - "+(payModal.supplier||""), nextId: nextTxnId, onSave: handlePaySave}),
+  payModal && /*#__PURE__*/React.createElement(PhieuChiModal, {onClose: () => setPayModal(null), initEntity: payModal.supplier||"", initOrderId: impCode(payModal.lot), initKind: "CP Thanh Toán NCC", kinds: ["CP Đặt Cọc NCC","CP Thanh Toán NCC"], initAmount: lotRemaining(payModal), initNote: "Thanh toán "+impCode(payModal.lot)+" - "+(payModal.supplier||""), nextId: nextTxnId, onSave: handlePaySave}),
   nccReturnModal && /*#__PURE__*/React.createElement(NccReturnModal, {
     lot: nccReturnModal.lot,
     prod: nccReturnModal.prod,
@@ -5663,7 +5663,7 @@ function Suppliers() {
     initial: form.name ? form : null,
     onClose: () => setForm(null),
     onSave: save
-  }), payModal && /*#__PURE__*/React.createElement(PhieuChiModal, {onClose: () => setPayModal(null), initEntity: payModal.name, initKind: "Thanh toán NCC", kinds: ["Đặt cọc NCC","Thanh toán NCC"], initAmount: debtOf(payModal.name), initNote: "Thanh toán NCC - "+payModal.name, nextId: nextTxnId, onSave: handlePaySave}));
+  }), payModal && /*#__PURE__*/React.createElement(PhieuChiModal, {onClose: () => setPayModal(null), initEntity: payModal.name, initKind: "CP Thanh Toán NCC", kinds: ["CP Đặt Cọc NCC","CP Thanh Toán NCC"], initAmount: debtOf(payModal.name), initNote: "Thanh toán NCC - "+payModal.name, nextId: nextTxnId, onSave: handlePaySave}));
 }
 
 /* ───────── Công nợ khách hàng (tổng hợp → chi tiết) ───────── */
@@ -6289,7 +6289,7 @@ function PhieuChiModal({onClose, onSave, nextId, initEntity="", initOrderId="", 
   const [note, setNote]     = useState(initNote);
   React.useEffect(() => {
     if (kinds) {
-      const verb = kind === "Đặt cọc NCC" ? "Đặt cọc" : "Thanh toán";
+      const verb = kind === "CP Đặt Cọc NCC" ? "Đặt cọc" : "Thanh toán";
       setNote(n => verb + n.replace(/^(Đặt cọc|Thanh toán)/, ""));
     }
   }, [kind]);
@@ -6373,7 +6373,7 @@ function EditTxnModal({txn, onClose, onSave}) {
   const isOut   = txn.amount < 0;
   const canSave = entity.trim() && rawAmt > 0;
   const lbl     = "mb-1 block text-[13px] font-medium text-slate-500";
-  const ALL_KINDS = ["Thu tiền","Đặt cọc","Thanh toán","Thu khác","Chi mua hàng","Chi vận chuyển","Hoàn tiền KH","Chi hoa hồng","Chi lắp đặt","Chi phí","Hoàn ứng","Chi khác","Chuyển đi","Chuyển về"];
+  const ALL_KINDS = ["Thu tiền","Đặt cọc","Thanh toán","Thu khác","CPVC Nhập Hàng","CP Đặt Cọc NCC","CP Thanh Toán NCC","CP Ship ĐH","CP Lắp Đặt","CP Hoàn Hàng","CP Thuê Nhà","CP Tiền Điện","CP Tiền Nước","CP Vận Hành","CP Hoa Hồng","Chi phí <200k","Hoàn tiền KH","Hoàn ứng","Chuyển đi","Chuyển về"];
   const doSave  = () => onSave({...txn, acc, entity, orderId, kind, amount: isOut ? -rawAmt : rawAmt, note});
   return /*#__PURE__*/React.createElement(Modal, {title:"Sửa giao dịch #"+txn.id, onClose, maxW:"max-w-lg",
     footer:/*#__PURE__*/React.createElement(React.Fragment, null,
@@ -6504,7 +6504,7 @@ function Finance({setActive, onOpenOrder}) {
     "Đặt cọc":        THU,
     "Thanh toán":     THU,
     "Thu khác":       THU,
-    "Chi mua hàng":   CHI,
+    "CPVC Nhập Hàng": CHI, "CP Đặt Cọc NCC": CHI, "CP Thanh Toán NCC": CHI, "CP Ship ĐH": CHI, "CP Lắp Đặt": CHI, "CP Hoàn Hàng": CHI, "CP Thuê Nhà": CHI, "CP Tiền Điện": CHI, "CP Tiền Nước": CHI, "CP Vận Hành": CHI, "CP Hoa Hồng": CHI, "Chi phí <200k": CHI,
     "Chi vận chuyển": CHI,
     "Hoàn tiền KH":   CHI,
     "Chi hoa hồng":   CHI,
@@ -6559,7 +6559,7 @@ function Finance({setActive, onOpenOrder}) {
 
   const KIND_COLORS_D = {
     "Thu tiền":"bg-[#dcfce7] text-[#047857]","Đặt cọc":"bg-[#dcfce7] text-[#047857]","Thanh toán":"bg-[#dcfce7] text-[#047857]","Thu khác":"bg-[#dcfce7] text-[#047857]",
-    "Chi mua hàng":"bg-[#fee2e2] text-[#B91C1C]","Chi vận chuyển":"bg-[#fee2e2] text-[#B91C1C]","Hoàn tiền KH":"bg-[#fee2e2] text-[#B91C1C]","Chi hoa hồng":"bg-[#fee2e2] text-[#B91C1C]","Chi lắp đặt":"bg-[#fee2e2] text-[#B91C1C]","Chi phí":"bg-[#fee2e2] text-[#B91C1C]","Hoàn ứng":"bg-[#fee2e2] text-[#B91C1C]","Chi khác":"bg-[#fee2e2] text-[#B91C1C]",
+    "CPVC Nhập Hàng":"bg-[#fee2e2] text-[#B91C1C]","CP Đặt Cọc NCC":"bg-[#fee2e2] text-[#B91C1C]","CP Thanh Toán NCC":"bg-[#fee2e2] text-[#B91C1C]","CP Ship ĐH":"bg-[#fee2e2] text-[#B91C1C]","CP Lắp Đặt":"bg-[#fee2e2] text-[#B91C1C]","CP Hoàn Hàng":"bg-[#fee2e2] text-[#B91C1C]","CP Thuê Nhà":"bg-[#fee2e2] text-[#B91C1C]","CP Tiền Điện":"bg-[#fee2e2] text-[#B91C1C]","CP Tiền Nước":"bg-[#fee2e2] text-[#B91C1C]","CP Vận Hành":"bg-[#fee2e2] text-[#B91C1C]","CP Hoa Hồng":"bg-[#fee2e2] text-[#B91C1C]","Chi phí <200k":"bg-[#fee2e2] text-[#B91C1C]","Hoàn tiền KH":"bg-[#fee2e2] text-[#B91C1C]","Hoàn ứng":"bg-[#fee2e2] text-[#B91C1C]",
     "Chuyển đi":"bg-slate-100 text-slate-600 ring-1 ring-slate-200","Chuyển về":"bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   };
 
