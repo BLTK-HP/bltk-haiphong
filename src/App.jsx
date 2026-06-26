@@ -860,8 +860,10 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const totalBal = accBals.reduce((s,a) => s + a.bal, 0);
 
   // ── GIAO DỊCH HÀNG HOÁ ───────────────────────────────────────────────────
+  // deliveredOrders: đã giao trong kỳ
   const deliveredOrders = fOrders.filter(o => o.exported);
-  const depositOrders   = fOrders.filter(o => !o.exported && (o.paid||0) > 0);
+  // depositOrders: tất cả đơn đang chờ giao có cọc (all-time, vì đặt cọc có thể từ tháng trước)
+  const depositOrders   = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && !o.exported && (o.paid||0) > 0);
   const fWhIn           = whInItems.filter(r => r.supplier && inRange(r.date));
   const nccTotal        = fWhIn.reduce((s,r) => s + (r.qtyIn||0)*(r.costNcc||0) + (r.fee||0), 0);
   const nccPaid         = fWhIn.reduce((s,r) => {
@@ -1044,7 +1046,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
           ),
           /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-start justify-between"},
             /*#__PURE__*/React.createElement("div", null,
-              /*#__PURE__*/React.createElement("p", {className:"text-xs text-slate-500"}, "Số đơn"),
+              /*#__PURE__*/React.createElement("p", {className:"text-xs text-slate-500"}, "Đang chờ giao"),
               /*#__PURE__*/React.createElement("p", {className:"text-2xl font-bold text-slate-800"}, depositOrders.length,
                 /*#__PURE__*/React.createElement("span", {className:"ml-1 text-sm font-normal text-slate-500"}, "đơn")
               )
