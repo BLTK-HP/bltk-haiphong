@@ -2739,7 +2739,7 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
-${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế (MST)":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
+${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">${lbName}</span><span>: ${form.custName||""}</span></div>
 <div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||"………………………………………"}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
@@ -2897,7 +2897,7 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
 <div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
-${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế (MST)":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
+${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">${lbName}</span><span>: ${form.custName||""}</span></div>
 <div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||"………………………………………"}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
