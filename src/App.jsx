@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
+import { IMPORTED_ORDERS, IMPORTED_PRODUCTS, IMPORTED_TXNS } from './importData.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc } from 'firebase/firestore'
 import { db } from './firebase.js'
@@ -391,6 +392,15 @@ const NAV = [{
     key: "admin_clear",
     label: "Xóa dữ liệu test"
   }, {
+    key: "import_orders",
+    label: "Import đơn hàng"
+  }, {
+    key: "import_products",
+    label: "Import sản phẩm"
+  }, {
+    key: "import_txns",
+    label: "Import sao kê NH"
+  }, {
     key: "users",
     label: "Quản lý nhân viên"
   }]
@@ -418,7 +428,10 @@ const LABELS = {
   settings_numformat: "Định dạng số",
   settings_docnum: "Quy tắc đánh số chứng từ",
   settings_print: "Cấu hình mẫu in",
-  admin_clear: "Xóa dữ liệu test"
+  admin_clear: "Xóa dữ liệu test",
+  import_orders: "Import đơn hàng",
+  import_products: "Import sản phẩm",
+  import_txns: "Import sao kê NH"
 };
 
 /* ───────── atoms ───────── */
@@ -7820,6 +7833,12 @@ function Screen({
       return /*#__PURE__*/React.createElement(SettingsPrint, null);
     case "admin_clear":
       return /*#__PURE__*/React.createElement(AdminClearData, null);
+    case "import_orders":
+      return /*#__PURE__*/React.createElement(ImportOrders, {setOrders, orders});
+    case "import_products":
+      return /*#__PURE__*/React.createElement(ImportProducts, null);
+    case "import_txns":
+      return /*#__PURE__*/React.createElement(ImportTxns, null);
     case "users":
       return /*#__PURE__*/React.createElement(UsersTab, null);
     default:
@@ -8380,6 +8399,104 @@ function SettingsPrint() {
             form.phone && /*#__PURE__*/React.createElement("div", {className:"text-xs text-slate-500"}, "ĐT: ", form.phone))))),
     /*#__PURE__*/React.createElement("div", {className:"flex justify-end"},
       /*#__PURE__*/React.createElement("button", {onClick:save, className:blueBtn}, "Lưu cấu hình")));
+}
+
+/* ───────── Import đơn hàng từ file JSON ───────── */
+function ImportOrders({ setOrders, orders }) {
+  const [status, setStatus] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+
+  const doImport = () => {
+    setBusy(true); setStatus(null);
+    const existingIds = new Set(orders.map(o => o.id));
+    const newOrders = IMPORTED_ORDERS.filter(o => o.id && !existingIds.has(o.id)).map(o => ({
+      expense: 0, importExpense: 0, paid: 0, delivery: "Chưa giao hàng",
+      orderStatus: "", imported: false, exported: false, returned: false, draft: false,
+      ...o
+    }));
+    if (newOrders.length === 0) { setStatus({ ok: false, msg: "Không có đơn mới (tất cả đã tồn tại rồi)." }); setBusy(false); return; }
+    setOrders(prev => [...newOrders, ...prev]);
+    setStatus({ ok: true, msg: `✅ Đã import ${newOrders.length} đơn hàng thành công!` });
+    setBusy(false);
+  };
+
+  return React.createElement("div", { className: "max-w-lg space-y-4" },
+    React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
+      React.createElement("p", { className: "font-semibold text-slate-700" }, "Import đơn hàng từ app cũ"),
+      React.createElement("p", { className: "text-sm text-slate-500" }, `Sẵn sàng import ${IMPORTED_ORDERS.length} đơn hàng. Các đơn đã tồn tại (trùng mã) sẽ bị bỏ qua.`),
+      React.createElement("button", {
+        onClick: doImport, disabled: busy,
+        className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
+      }, busy ? "Đang import..." : "Import ngay"),
+      status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
+    )
+  );
+}
+
+/* ───────── Import sản phẩm từ Excel ───────── */
+function ImportProducts() {
+  const [status, setStatus] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+
+  const doImport = async () => {
+    setBusy(true); setStatus(null);
+    try {
+      // Bước 1: Xoá sạch collection cũ
+      const snap = await getDocs(collection(db, "products"));
+      await Promise.all(snap.docs.map(d => deleteDoc(fsDoc(db, "products", d.id))));
+      // Bước 2: Import 959 sản phẩm đúng từ Excel
+      await Promise.all(IMPORTED_PRODUCTS.map(p => saveDoc("products", p.sku.replace(/\//g, "__"), p)));
+      setStatus({ ok: true, msg: `✅ Đã xoá dữ liệu cũ và import ${IMPORTED_PRODUCTS.length} sản phẩm thành công!` });
+    } catch(err) {
+      setStatus({ ok: false, msg: "Lỗi: " + err.message });
+    }
+    setBusy(false);
+  };
+
+  return React.createElement("div", { className: "max-w-lg space-y-4" },
+    React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
+      React.createElement("p", { className: "font-semibold text-slate-700" }, "Import sản phẩm từ Excel"),
+      React.createElement("p", { className: "text-sm text-slate-500" }, `Ghi đè toàn bộ ${IMPORTED_PRODUCTS.length} sản phẩm từ file Excel lên Firestore. Dữ liệu lỗi PDF sẽ bị thay thế.`),
+      React.createElement("button", {
+        onClick: doImport, disabled: busy,
+        className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
+      }, busy ? "Đang import..." : "Import sản phẩm ngay"),
+      status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
+    )
+  );
+}
+
+/* ───────── Import sao kê ngân hàng TCB ───────── */
+function ImportTxns() {
+  const [status, setStatus] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+
+  const doImport = async () => {
+    setBusy(true); setStatus(null);
+    try {
+      const snap = await getDocs(collection(db, "txns"));
+      const existingRefs = new Set(snap.docs.map(d => d.data().ref).filter(Boolean));
+      const toAdd = IMPORTED_TXNS.filter(t => !existingRefs.has(t.ref));
+      const maxId = snap.docs.reduce((m, d) => Math.max(m, d.data().id || 0), 0);
+      await Promise.all(toAdd.map((t, i) => saveDoc("txns", String(maxId + i + 1), { ...t, id: maxId + i + 1 })));
+      setStatus({ ok: true, msg: `✅ Đã import ${toAdd.length} giao dịch (bỏ qua ${IMPORTED_TXNS.length - toAdd.length} trùng).` });
+    } catch(err) {
+      setStatus({ ok: false, msg: "Lỗi: " + err.message });
+    }
+    setBusy(false);
+  };
+
+  return React.createElement("div", { className: "max-w-lg space-y-4" },
+    React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
+      React.createElement("p", { className: "font-semibold text-slate-700" }, "Import sao kê ngân hàng TCB cá nhân"),
+      React.createElement("p", { className: "text-sm text-slate-500" }, `${IMPORTED_TXNS.length} giao dịch từ T1–T5/2026. Giao dịch trùng mã tham chiếu sẽ bỏ qua.`),
+      React.createElement("button", {
+        onClick: doImport, disabled: busy,
+        className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
+      }, busy ? "Đang import..." : "Import sao kê ngay"),
+      status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
+    )
+  );
 }
 
 /* ───────── TEMP: Xóa dữ liệu test ───────── */
