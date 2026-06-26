@@ -13,7 +13,7 @@ export function useCollection(colName, fallback = []) {
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, colName), snap => {
-      const data = snap.docs.map(d => d.data());
+      const data = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
       setItems(data);
       setLoaded(true);
       setError(null);

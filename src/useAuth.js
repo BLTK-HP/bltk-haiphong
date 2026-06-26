@@ -7,15 +7,19 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 
-// role: "manager" | "sales" | "warehouse"
+// role: "admin" | "manager" | "sales" | "warehouse"
 export const ROLES = {
+  admin:     { label: "Admin",              color: "bg-red-50 text-red-700 ring-1 ring-red-300" },
   manager:   { label: "Quản lý / Kế toán", color: "bg-[#fef9f0] text-[#92400e] ring-1 ring-[#b45309]" },
   sales:     { label: "Nhân viên bán hàng", color: "bg-[#ffedd5] text-[#c2410c] ring-1 ring-[#fdba74]" },
   warehouse: { label: "Nhân viên kho",      color: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
 };
 
+const ALL_SCREENS = ["sales_orders","sales_draft","sales_create","contracts","purchase","wh_in","wh_out","wh_stock","pc_products","pc_customers","pc_suppliers","finance","settings","settings_payment","settings_numformat","settings_docnum","settings_print","admin_clear","users","dashboard","rp_sales","rp_preorder","rp_staff","rp_finance","debt_cust","debt_ncc"];
+
 // Màn hình nào role nào được xem
 export const ALLOWED = {
+  admin:     ALL_SCREENS,
   manager:   ["sales_orders","sales_draft","sales_create","contracts","purchase","wh_in","wh_out","wh_stock","pc_products","pc_customers","pc_suppliers","finance","settings","settings_payment","settings_numformat","settings_docnum","settings_print","admin_clear","users","dashboard","rp_sales","rp_preorder","rp_staff","rp_finance","debt_cust","debt_ncc"],
   sales:     ["sales_orders","sales_draft","sales_create","pc_products","pc_customers","dashboard"],
   warehouse: ["wh_in","wh_out","wh_stock","purchase","pc_products","pc_customers","pc_suppliers","dashboard"],
