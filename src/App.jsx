@@ -2736,12 +2736,12 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
 <p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
 <ul>
   <li>Thời gian giao nhận: Bên B sẽ thông báo trước 03-05 ngày để bên A chuẩn bị hàng hóa, vận chuyển giao hàng.</li>
-  <li>Địa điểm giao hàng: ${form.custAddr||"…………………………………………………………………"}</li>
+  <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||"…………………………………………………………………"}</li>
   <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B. Bên B phải chịu mọi rủi ro đối với những trường hợp mất mát hàng hóa, phụ kiện, cũng như hàng hóa bị hư hỏng hoặc bể vỡ sau khi hai bên đã hoàn tất thủ tục giao nhận.</li>
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: ……………………………………VNĐ<br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp. Bên A thực hiện việc xử lý khoản thanh toán đặt cọc của Bên B theo một trong các phương án sau:<br>+ Chuyển đổi khoản đặt cọc của Bên B sang một Đơn Hàng mới có sẵn hàng (nếu Bên B có yêu cầu).<br>+ Hoàn trả lại khoản đặt cọc của Bên B (bằng tiền mặt hoặc chuyển khoản vào tài khoản của Bên B).</li>
@@ -2887,12 +2887,12 @@ ${form.custTax?`<div class="pr"><span class="pl">Mã số thuế</span><span>: $
 <p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
 <ul>
   <li>Thời gian giao nhận: Bên B sẽ thông báo trước 03-05 ngày để bên A chuẩn bị hàng hóa, vận chuyển giao hàng.</li>
-  <li>Địa điểm giao hàng: ${form.custAddr||"…………………………………………………………………"}</li>
+  <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||"…………………………………………………………………"}</li>
   <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B.</li>
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: ……………………………………VNĐ<br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: …………………………………………………………………………/.) ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp, Bên A sẽ hoàn trả hoặc chuyển đổi khoản đặt cọc theo yêu cầu của Bên B.</li>
@@ -7099,6 +7099,7 @@ function Contracts({orders = []}) {
   const today = () => { const d=new Date(); return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`; };
   const emptyForm = {
     template:"HĐMB-TBVS", contractNum:"", signDate:today(), duration:"12 tháng",
+    deliveryAddr:"", deposit:0,
     companyName:"", companyTax:"", companyAddr:"", companyPhone:"",
     custName:"", custPhone:"", custTax:"", custAddr:"",
     orderIds:[], note:""
@@ -7196,7 +7197,7 @@ function Contracts({orders = []}) {
         /* Section 2: Contract info */
         /*#__PURE__*/React.createElement("div", {className:sec},
           /*#__PURE__*/React.createElement(SecHd, {n:"2", title:"Thông tin hợp đồng"}),
-          /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-3 gap-3"},
+          /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-3 gap-3 mb-3"},
             /*#__PURE__*/React.createElement("div", null,
               /*#__PURE__*/React.createElement(Lbl, null, "Số hợp đồng"),
               /*#__PURE__*/React.createElement("input", {value:form.contractNum, onChange:e=>set("contractNum",e.target.value), placeholder:"HĐ-TBVS 01", className:iF})),
@@ -7206,6 +7207,14 @@ function Contracts({orders = []}) {
             /*#__PURE__*/React.createElement("div", null,
               /*#__PURE__*/React.createElement(Lbl, null, "Thời hạn"),
               /*#__PURE__*/React.createElement("input", {value:form.duration, onChange:e=>set("duration",e.target.value), placeholder:"12 tháng", className:iF}))
+          ),
+          /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-3"},
+            /*#__PURE__*/React.createElement("div", null,
+              /*#__PURE__*/React.createElement(Lbl, null, "Địa điểm giao hàng"),
+              /*#__PURE__*/React.createElement("input", {value:form.deliveryAddr||"", onChange:e=>set("deliveryAddr",e.target.value), placeholder:"Địa điểm nhận hàng của khách…", className:iF})),
+            /*#__PURE__*/React.createElement("div", null,
+              /*#__PURE__*/React.createElement(Lbl, null, "Số tiền đặt cọc lần 1 (VNĐ)"),
+              /*#__PURE__*/React.createElement("input", {type:"number", value:form.deposit||"", onChange:e=>set("deposit",parseFloat(e.target.value)||0), placeholder:"0", className:iF}))
           )
         ),
 
