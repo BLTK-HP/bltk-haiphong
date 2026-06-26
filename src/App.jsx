@@ -835,8 +835,9 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const plMap = {};
   purchaseList.forEach(r => { plMap[r.lot + "__" + r.prod] = r; });
 
-  const fOrders = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && inRange(o.dt));
-  const fTxns   = txns.filter(t => !t.cancelled && inRange(t.date));
+  const allActive = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy');
+  const fOrders   = allActive.filter(o => inRange(o.dt));
+  const fTxns     = txns.filter(t => !t.cancelled && inRange(t.date));
 
   // ── TÀI CHÍNH ────────────────────────────────────────────────────────────
   const TRANSFER_KINDS = new Set(["Chuyển đi", "Chuyển về"]);
@@ -859,11 +860,9 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   });
   const totalBal = accBals.reduce((s,a) => s + a.bal, 0);
 
-  // ── GIAO DỊCH HÀNG HOÁ ───────────────────────────────────────────────────
-  // deliveredOrders: đã giao trong kỳ
-  const deliveredOrders = fOrders.filter(o => o.exported);
-  // depositOrders: tất cả đơn đang chờ giao có cọc (all-time, vì đặt cọc có thể từ tháng trước)
-  const depositOrders   = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && !o.exported && (o.paid||0) > 0);
+  // ── GIAO DỊCH HÀNG HOÁ (all-time — hiển thị trạng thái hiện tại, không lọc theo kỳ) ──────
+  const deliveredOrders = allActive.filter(o => o.deliveryConfirmed || o.exported);
+  const depositOrders   = allActive.filter(o => !(o.deliveryConfirmed || o.exported) && (o.paid||0) > 0);
   const fWhIn           = whInItems.filter(r => r.supplier && inRange(r.date));
   const nccTotal        = fWhIn.reduce((s,r) => s + (r.qtyIn||0)*(r.costNcc||0) + (r.fee||0), 0);
   const nccPaid         = fWhIn.reduce((s,r) => {
@@ -875,7 +874,6 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   const stockVal = whInItems.reduce((s,r) => s + (r.qtyRemaining ?? r.qtyNow ?? 0) * (r.unitCost ?? r.costNcc ?? 0), 0);
 
   // ── CÔNG NỢ (all-time) ────────────────────────────────────────────────────
-  const allActive = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy');
   const custDebt  = {};
   allActive.forEach(o => {
     const rem = Math.max(0, calc(o).remaining);
