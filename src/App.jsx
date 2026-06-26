@@ -4240,13 +4240,21 @@ function ProductForm({
     className: "mb-1 block text-sm font-medium text-slate-700"
   }, "Mã sản phẩm ", /*#__PURE__*/React.createElement("span", {
     className: "text-[#B91C1C]"
-  }, "*")), /*#__PURE__*/React.createElement("input", {
-    className: inputF + (dupSku ? " border-rose-400 ring-1 ring-rose-400" : ""),
-    value: f.sku,
-    onChange: ev => set({sku: ev.target.value})
-  }), dupSku && /*#__PURE__*/React.createElement("p", {
-    className: "mt-1 flex items-center gap-1 text-xs text-[#B91C1C]"
-  }, /*#__PURE__*/React.createElement(AlertTriangle, {className: "h-3.5 w-3.5 shrink-0"}), "Mã sản phẩm đã tồn tại, vui lòng nhập mã khác")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }, "*")), isEdit
+    ? /*#__PURE__*/React.createElement("input", {
+        className: inputF + " bg-slate-50 text-slate-500 cursor-not-allowed",
+        value: f.sku,
+        readOnly: true
+      })
+    : /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement("input", {
+          className: inputF + (dupSku ? " border-rose-400 ring-1 ring-rose-400" : ""),
+          value: f.sku,
+          onChange: ev => set({sku: ev.target.value})
+        }),
+        dupSku && /*#__PURE__*/React.createElement("p", {
+          className: "mt-1 flex items-center gap-1 text-xs text-[#B91C1C]"
+        }, /*#__PURE__*/React.createElement(AlertTriangle, {className: "h-3.5 w-3.5 shrink-0"}), "Mã sản phẩm đã tồn tại, vui lòng nhập mã khác"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-sm font-medium text-slate-700"
   }, "Tên sản phẩm ", /*#__PURE__*/React.createElement("span", {
     className: "text-[#B91C1C]"
@@ -4399,7 +4407,8 @@ function ProductsTab() {
     const prevMap = Object.fromEntries(items.map(p => [p.sku, p]));
     const nextMap = Object.fromEntries(next.map(p => [p.sku, p]));
     Object.entries(nextMap).forEach(([sku, p]) => {
-      if (JSON.stringify(prevMap[sku]) !== JSON.stringify(p)) saveDoc("products", toFsId(sku), p).catch(console.error);
+      if (JSON.stringify(prevMap[sku]) !== JSON.stringify(p))
+        saveDoc("products", toFsId(sku), p).catch(e => { console.error(e); notify("Lỗi lưu sản phẩm: " + (e.message || e.code || "Lỗi kết nối")); });
     });
     Object.keys(prevMap).forEach(sku => { if (!nextMap[sku]) deleteDocument("products", toFsId(sku)).catch(console.error); });
   };
@@ -4425,13 +4434,13 @@ function ProductsTab() {
   };
   const tag = n => n === 0 ? "bg-rose-50 text-[#B91C1C]" : n <= 5 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-[#92400e]";
   const save = f => {
-    setItems(xs => xs.some(p => p.sku === f.sku && form && form.sku === f.sku) ? xs.map(p => p.sku === form.sku ? {
-      ...p,
-      ...f
-    } : p) : [{
-      ...f
-    }, ...xs]);
-    notify(form && form.sku ? "Đã cập nhật sản phẩm" : "Đã thêm sản phẩm");
+    if (form && form.sku) {
+      setItems(xs => xs.map(p => p.sku === form.sku ? { ...p, ...f } : p));
+      notify("Đã cập nhật sản phẩm");
+    } else {
+      setItems(xs => [{ ...f }, ...xs]);
+      notify("Đã thêm sản phẩm");
+    }
     setForm(null);
   };
   const del = sku => {
