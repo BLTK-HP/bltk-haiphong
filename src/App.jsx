@@ -5398,9 +5398,9 @@ function DebtCust({ orders = [] }) {
   }, "Số dư nợ cuối kỳ")), /*#__PURE__*/React.createElement("tr", {
     className: "bg-[#ffedd5] text-xs font-semibold uppercase tracking-wide text-[#7c2d12]"
   }, /*#__PURE__*/React.createElement("th", {
-    className: "border border-[#fed7aa] px-3 py-1.5 text-right"
+    className: "border border-[#fed7aa] px-3 py-1.5 text-center"
   }, "Phải TT"), /*#__PURE__*/React.createElement("th", {
-    className: "border border-[#fed7aa] px-3 py-1.5 text-right"
+    className: "border border-[#fed7aa] px-3 py-1.5 text-center"
   }, "Đã TT"))), /*#__PURE__*/React.createElement("tbody", {
     className: "divide-y divide-slate-100"
   }, custDebt.map((r, i) => {
