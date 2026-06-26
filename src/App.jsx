@@ -2746,7 +2746,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>`;})()}
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
-<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong Phụ lục hợp đồng đính kèm.</p>
+<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
 <p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
 <table>
   <thead><tr>
@@ -2904,7 +2904,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>`;})()}
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
 <p class="at">ĐIỀU 1: NỘI DUNG CÔNG VIỆC</p>
-<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong Phụ lục hợp đồng đính kèm.</p>
+<p>Bên A đồng ý cung cấp ${subject} cho Bên B đúng với mã hàng, tên hàng, số lượng, thông số kỹ thuật và đơn giá được thể hiện chi tiết trong bảng kê đính kèm.</p>
 <p>Giá trị hợp đồng đã bao gồm thuế GTGT và chi phí vận chuyển hàng hóa đến khu vực tập kết vật tư tại tầng 01 của công trình. Không bao gồm chi phí lắp đặt sản phẩm.</p>
 <table>
   <thead><tr>
