@@ -2971,7 +2971,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `HopDong_${(form.contractNum||'moi').replace(/[/\\]/g,'-')}.doc`;
+  a.download = `${(form.contractNum||'HĐ-moi').replace(/\//g,'-')}.doc`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
