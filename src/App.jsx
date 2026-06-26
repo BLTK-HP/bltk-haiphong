@@ -2741,7 +2741,7 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">${lbName}</span><span>: ${form.custName||""}</span></div>
-<div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||"………………………………………"}</span></div>
+<div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||""}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>`;})()}
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
@@ -2768,12 +2768,12 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
 <ul>
   <li>Thời gian giao nhận: Bên B sẽ thông báo trước 03-05 ngày để bên A chuẩn bị hàng hóa, vận chuyển giao hàng.</li>
-  <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||"…………………………………………………………………"}</li>
+  <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||""}</li>
   <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B. Bên B phải chịu mọi rủi ro đối với những trường hợp mất mát hàng hóa, phụ kiện, cũng như hàng hóa bị hư hỏng hoặc bể vỡ sau khi hai bên đã hoàn tất thủ tục giao nhận.</li>
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: <em>${depositWords||"……………………………………………………………………………………………"}</em>/.) ngay sau khi ký hợp đồng.</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":""}</strong><br>${depositWords?`(Bằng chữ: <em>${depositWords}</em>/.)`:""} ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp. Bên A thực hiện việc xử lý khoản thanh toán đặt cọc của Bên B theo một trong các phương án sau:<br>+ Chuyển đổi khoản đặt cọc của Bên B sang một Đơn Hàng mới có sẵn hàng (nếu Bên B có yêu cầu).<br>+ Hoàn trả lại khoản đặt cọc của Bên B (bằng tiền mặt hoặc chuyển khoản vào tài khoản của Bên B).</li>
@@ -2899,7 +2899,7 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công ty":"Họ và tên";const lbTax=isCo?"Mã số thuế":"Số CCCD";return`<p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">${lbName}</span><span>: ${form.custName||""}</span></div>
-<div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||"………………………………………"}</span></div>
+<div class="pr"><span class="pl">${lbTax}</span><span>: ${form.custTax||""}</span></div>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: ${form.custAddr||""}</span></div>
 <div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.custPhone||""}</span></div>`;})()}
 <p><em>Hai bên cùng thỏa thuận ký kết hợp đồng với những điều khoản sau:</em></p>
@@ -2926,12 +2926,12 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 <p class="at">ĐIỀU 2: THỜI GIAN GIAO NHẬN HÀNG</p>
 <ul>
   <li>Thời gian giao nhận: Bên B sẽ thông báo trước 03-05 ngày để bên A chuẩn bị hàng hóa, vận chuyển giao hàng.</li>
-  <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||"…………………………………………………………………"}</li>
+  <li>Địa điểm giao hàng: ${form.deliveryAddr||form.custAddr||""}</li>
   <li>Bên B phải chuẩn bị sắp xếp khu vực nhận hàng, nhân công, máy móc (nếu cần) để lên lầu và phải tự chịu trách nhiệm bảo quản hàng hóa sau khi Bên A đã giao hàng đến chân công trình của Bên B.</li>
 </ul>
 <p class="at">ĐIỀU 3: PHƯƠNG THỨC THANH TOÁN</p>
 <p>Bên B thanh toán cho Bên A bằng hình thức chuyển khoản theo 2 lần như sau:</p>
-<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":"……………………………………VNĐ"}</strong><br>(Bằng chữ: <em>${depositWords||"……………………………………………………………………………………………"}</em>/.) ngay sau khi ký hợp đồng.</p>
+<p><strong>Lần 01:</strong> Đặt cọc tạm ứng số tiền là: <strong>${form.deposit?fmtV(form.deposit)+" VNĐ":""}</strong><br>${depositWords?`(Bằng chữ: <em>${depositWords}</em>/.)`:""} ngay sau khi ký hợp đồng.</p>
 <ul>
   <li>Trong trường hợp đơn hàng của Bên B được thực hiện thành công, khoản đặt cọc nói trên sẽ được khấu trừ để hoàn tất nghĩa vụ thanh toán của Bên B.</li>
   <li>Trong trường hợp Bên A không thể giao hàng do nguyên nhân khách quan từ Nhà sản xuất/ Nhà cung cấp, Bên A sẽ hoàn trả hoặc chuyển đổi khoản đặt cọc theo yêu cầu của Bên B.</li>
