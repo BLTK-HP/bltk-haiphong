@@ -1967,6 +1967,7 @@ function OrderTable({
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const [fDelivery, setFDelivery] = useState("Tất cả");
+  const [fPayment, setFPayment] = useState("Tất cả");
   const [fStatus, setFStatus] = useState("Tất cả");
   const [fStaff, setFStaff] = useState("Tất cả");
   const [fromDate, setFromDate] = useState(localMonthStart());
@@ -1978,6 +1979,7 @@ function OrderTable({
   const rows = orders.filter(o => {
     if (fromD || toD) { const d = parseViDate(o.dt); if (fromD && d < fromD) return false; if (toD && d > toD.setHours(23,59,59)) return false; }
     if (fDelivery !== "Tất cả" && o.delivery !== fDelivery) return false;
+    if (fPayment !== "Tất cả" && calc(o).pay !== fPayment) return false;
     if (fStatus !== "Tất cả" && calc(o).orderStatus !== fStatus) return false;
     if (fStaff !== "Tất cả" && o.staff !== fStaff) return false;
     if (q && !`${o.id} ${o.name} ${o.phone}`.toLowerCase().includes(q.toLowerCase())) return false;
@@ -2021,6 +2023,14 @@ function OrderTable({
     onChange: e => setFDelivery(e.target.value),
     className: field
   }, ["Tất cả", "Đã giao hàng", "Chưa giao hàng"].map(s => /*#__PURE__*/React.createElement("option", {
+    key: s
+  }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "mb-1 block text-[13px] font-medium text-slate-500"
+  }, "Thanh toán"), /*#__PURE__*/React.createElement("select", {
+    value: fPayment,
+    onChange: e => setFPayment(e.target.value),
+    className: field
+  }, ["Tất cả", "Đã thanh toán", "Đã đặt cọc", "Chờ thanh toán"].map(s => /*#__PURE__*/React.createElement("option", {
     key: s
   }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
