@@ -2822,7 +2822,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 </ul>
 <div class="sig">
   <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
-  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>${form.custName||""}</div>
+  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
 </div>
 </div></body></html>`;
 
@@ -2962,7 +2962,7 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
 </ul>
 <div class="sig">
   <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
-  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br>${form.custName||""}</div>
+  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
 </div>
 </div></body></html>`;
 
