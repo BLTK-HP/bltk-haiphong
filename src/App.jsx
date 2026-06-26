@@ -2735,9 +2735,9 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <p>Hôm nay, ${dateStr}, tại văn phòng Công ty TNHH Bán Lẻ Tại Kho Hải Phòng, chúng tôi gồm có:</p>
 <p class="pt">BÊN BÁN (BÊN A): CÔNG TY TNHH BÁN LẺ TẠI KHO HẢI PHÒNG</p>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: LK-10, Số 384 Lê Thánh Tông, Phường Ngô Quyền, Thành phố Hải Phòng, Việt Nam</span></div>
-<div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
+<div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;—&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
-<div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 ngân hàng TMCP Kỹ thương Việt Nam - TCB Kiến An</span></div>
+<div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 <p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
@@ -2893,9 +2893,9 @@ ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
 <p>Hôm nay, ${dateStr}, tại văn phòng Công ty TNHH Bán Lẻ Tại Kho Hải Phòng, chúng tôi gồm có:</p>
 <p class="pt">BÊN BÁN (BÊN A): CÔNG TY TNHH BÁN LẺ TẠI KHO HẢI PHÒNG</p>
 <div class="pr"><span class="pl">Địa chỉ</span><span>: LK-10, Số 384 Lê Thánh Tông, Phường Ngô Quyền, Thành phố Hải Phòng, Việt Nam</span></div>
-<div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
+<div class="pr"><span class="pl">Người đại diện</span><span>: Bà Trần Thị Phương Anh &nbsp;&nbsp;&nbsp;—&nbsp;&nbsp;&nbsp; Chức vụ: Giám đốc</span></div>
 <div class="pr"><span class="pl">Mã số thuế</span><span>: 0202252225</span></div>
-<div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 ngân hàng TMCP Kỹ thương Việt Nam - TCB Kiến An</span></div>
+<div class="pr"><span class="pl">Số tài khoản</span><span>: 202252225 – Ngân hàng TMCP Kỹ thương Việt Nam (Techcombank) – Chi nhánh Kiến An</span></div>
 ${form.companyPhone?`<div class="pr"><span class="pl">Số điện thoại</span><span>: ${form.companyPhone}</span></div>`:""}
 <p class="pt">BÊN MUA (BÊN B):</p>
 <div class="pr"><span class="pl">Họ tên</span><span>: ${form.custName||""}</span></div>
