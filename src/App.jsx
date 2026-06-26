@@ -1109,7 +1109,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
 
         /* KH cần thu */
         /*#__PURE__*/React.createElement("div", {className:"flex flex-col rounded-xl border border-slate-200 bg-white p-4"},
-          /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"},
+          /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-rose-600"},
             /*#__PURE__*/React.createElement(Users, {className:"h-3.5 w-3.5"}), "Khách hàng cần thu tiền"
           ),
           /*#__PURE__*/React.createElement("div", {className:"flex-1"},
@@ -1134,7 +1134,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
 
         /* NCC cần trả */
         /*#__PURE__*/React.createElement("div", {className:"flex flex-col rounded-xl border border-slate-200 bg-white p-4"},
-          /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"},
+          /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-blue-600"},
             /*#__PURE__*/React.createElement(Building2, {className:"h-3.5 w-3.5"}), "NCC cần thanh toán"
           ),
           /*#__PURE__*/React.createElement("div", {className:"flex-1"},
