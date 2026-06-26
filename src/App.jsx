@@ -6138,15 +6138,18 @@ function Finance({setActive, onOpenOrder}) {
   const THU = "bg-[#dcfce7] text-[#047857]";
   const CHI = "bg-[#fee2e2] text-[#B91C1C]";
   const KIND_COLORS = {
-    "Thu tiền":      THU,
-    "Đặt cọc":       THU,
-    "Thanh toán":    THU,
-    "Thu khác":      THU,
-    "Chi mua hàng":  CHI,
-    "Chi vận chuyển":CHI,
-    "Chi phí":       CHI,
-    "Hoàn ứng":      CHI,
-    "Chi khác":      CHI,
+    "Thu tiền":       THU,
+    "Đặt cọc":        THU,
+    "Thanh toán":     THU,
+    "Thu khác":       THU,
+    "Chi mua hàng":   CHI,
+    "Chi vận chuyển": CHI,
+    "Hoàn tiền KH":   CHI,
+    "Chi hoa hồng":   CHI,
+    "Chi lắp đặt":    CHI,
+    "Chi phí":        CHI,
+    "Hoàn ứng":       CHI,
+    "Chi khác":       CHI,
     "Chuyển đi":  "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
     "Chuyển về":  "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   };
@@ -6194,7 +6197,7 @@ function Finance({setActive, onOpenOrder}) {
 
   const KIND_COLORS_D = {
     "Thu tiền":"bg-[#dcfce7] text-[#047857]","Đặt cọc":"bg-[#dcfce7] text-[#047857]","Thanh toán":"bg-[#dcfce7] text-[#047857]","Thu khác":"bg-[#dcfce7] text-[#047857]",
-    "Chi mua hàng":"bg-[#fee2e2] text-[#B91C1C]","Chi vận chuyển":"bg-[#fee2e2] text-[#B91C1C]","Chi phí":"bg-[#fee2e2] text-[#B91C1C]","Hoàn ứng":"bg-[#fee2e2] text-[#B91C1C]","Chi khác":"bg-[#fee2e2] text-[#B91C1C]",
+    "Chi mua hàng":"bg-[#fee2e2] text-[#B91C1C]","Chi vận chuyển":"bg-[#fee2e2] text-[#B91C1C]","Hoàn tiền KH":"bg-[#fee2e2] text-[#B91C1C]","Chi hoa hồng":"bg-[#fee2e2] text-[#B91C1C]","Chi lắp đặt":"bg-[#fee2e2] text-[#B91C1C]","Chi phí":"bg-[#fee2e2] text-[#B91C1C]","Hoàn ứng":"bg-[#fee2e2] text-[#B91C1C]","Chi khác":"bg-[#fee2e2] text-[#B91C1C]",
     "Chuyển đi":"bg-slate-100 text-slate-600 ring-1 ring-slate-200","Chuyển về":"bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   };
 
