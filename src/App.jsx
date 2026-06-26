@@ -1108,45 +1108,53 @@ function Dashboard({ orders = [], purchaseList = [] }) {
       /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-1 gap-3 md:grid-cols-2"},
 
         /* KH cần thu */
-        /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4"},
+        /*#__PURE__*/React.createElement("div", {className:"flex flex-col rounded-xl border border-slate-200 bg-white p-4"},
           /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"},
             /*#__PURE__*/React.createElement(Users, {className:"h-3.5 w-3.5"}), "Khách hàng cần thu tiền"
           ),
-          custDebtList.length === 0
-            ? /*#__PURE__*/React.createElement("p", {className:"py-2 text-center text-sm text-slate-400"}, "Không có công nợ")
-            : /*#__PURE__*/React.createElement("div", {className:"space-y-1.5"},
-                custDebtList.map(c =>
-                  /*#__PURE__*/React.createElement("div", {key:c.name, className:"flex justify-between text-sm py-0.5"},
-                    /*#__PURE__*/React.createElement("span", {className:"font-medium text-slate-800 truncate max-w-[60%]"}, c.name),
-                    /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-slate-600"}, vnd(c.debt))
+          /*#__PURE__*/React.createElement("div", {className:"flex-1"},
+            custDebtList.length === 0
+              ? /*#__PURE__*/React.createElement("p", {className:"py-2 text-sm text-slate-400"}, "Không có công nợ")
+              : /*#__PURE__*/React.createElement("div", {className:"space-y-1.5"},
+                  custDebtList.map(c =>
+                    /*#__PURE__*/React.createElement("div", {key:c.name, className:"flex justify-between text-sm py-0.5"},
+                      /*#__PURE__*/React.createElement("span", {className:"font-medium text-slate-800 truncate max-w-[60%]"}, c.name),
+                      /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-slate-600"}, vnd(c.debt))
+                    )
                   )
-                ),
-                /*#__PURE__*/React.createElement("div", {className:"mt-2 flex justify-between border-t border-slate-100 pt-2 text-sm"},
-                  /*#__PURE__*/React.createElement("span", {className:"text-slate-600"}, "Tổng cần thu"),
-                  /*#__PURE__*/React.createElement("span", {className:"font-bold tabular-nums text-[#B91C1C]"}, vnd(totalCustDebt))
                 )
-              )
+          ),
+          /*#__PURE__*/React.createElement("div", {className:"mt-3 flex justify-between border-t border-slate-100 pt-2 text-sm"},
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-600"}, "Tổng cần thu"),
+            totalCustDebt > 0
+              ? /*#__PURE__*/React.createElement("span", {className:"font-bold tabular-nums text-[#B91C1C]"}, vnd(totalCustDebt))
+              : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+          )
         ),
 
         /* NCC cần trả */
-        /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4"},
+        /*#__PURE__*/React.createElement("div", {className:"flex flex-col rounded-xl border border-slate-200 bg-white p-4"},
           /*#__PURE__*/React.createElement("div", {className:"mb-3 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"},
             /*#__PURE__*/React.createElement(Building2, {className:"h-3.5 w-3.5"}), "NCC cần thanh toán"
           ),
-          nccDebtList.length === 0
-            ? /*#__PURE__*/React.createElement("p", {className:"py-2 text-center text-sm text-slate-400"}, "Không có công nợ")
-            : /*#__PURE__*/React.createElement("div", {className:"space-y-1.5"},
-                nccDebtList.map(c =>
-                  /*#__PURE__*/React.createElement("div", {key:c.name, className:"flex justify-between text-sm py-0.5"},
-                    /*#__PURE__*/React.createElement("span", {className:"font-medium text-slate-800 truncate max-w-[60%]"}, c.name),
-                    /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-slate-600"}, vnd(c.debt))
+          /*#__PURE__*/React.createElement("div", {className:"flex-1"},
+            nccDebtList.length === 0
+              ? /*#__PURE__*/React.createElement("p", {className:"py-2 text-sm text-slate-400"}, "Không có công nợ")
+              : /*#__PURE__*/React.createElement("div", {className:"space-y-1.5"},
+                  nccDebtList.map(c =>
+                    /*#__PURE__*/React.createElement("div", {key:c.name, className:"flex justify-between text-sm py-0.5"},
+                      /*#__PURE__*/React.createElement("span", {className:"font-medium text-slate-800 truncate max-w-[60%]"}, c.name),
+                      /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-slate-600"}, vnd(c.debt))
+                    )
                   )
-                ),
-                /*#__PURE__*/React.createElement("div", {className:"mt-2 flex justify-between border-t border-slate-100 pt-2 text-sm"},
-                  /*#__PURE__*/React.createElement("span", {className:"text-slate-600"}, "Tổng phải trả"),
-                  /*#__PURE__*/React.createElement("span", {className:"font-bold tabular-nums text-blue-700"}, vnd(totalNccDebt))
                 )
-              )
+          ),
+          /*#__PURE__*/React.createElement("div", {className:"mt-3 flex justify-between border-t border-slate-100 pt-2 text-sm"},
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-600"}, "Tổng phải trả"),
+            totalNccDebt > 0
+              ? /*#__PURE__*/React.createElement("span", {className:"font-bold tabular-nums text-blue-700"}, vnd(totalNccDebt))
+              : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
+          )
         )
       )
     ),
