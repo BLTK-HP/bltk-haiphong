@@ -2865,21 +2865,21 @@ function exportContractWord(form, items, totalValue) {
 <head><meta charset='utf-8'>
 <style>
 *{box-sizing:border-box;}
-body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.5;}
+body{font-family:"Times New Roman",Times,serif;font-size:13pt;color:#000;background:#fff;margin:0;line-height:1.8;}
 .page{width:210mm;margin:0 auto;padding:25mm 20mm 25mm 30mm;}
-h1{font-size:14pt;font-weight:bold;text-align:center;margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.5px;}
-.sub{text-align:center;font-style:italic;margin-bottom:14px;}
-p{margin:4px 0;text-align:justify;}
-.lb{font-size:11pt;font-style:italic;margin:2px 0 2px 24pt;text-align:justify;}
-.pt{font-size:13pt;font-weight:bold;margin:12px 0 5px;text-align:left;}
-.pr{display:flex;margin-bottom:3px;text-align:left;}
-.pl{width:145px;flex-shrink:0;}.pr>span:last-child{flex:1;min-width:0;}
-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12pt;}
+h1{font-size:14pt;font-weight:bold;text-align:center;margin:10pt 0 6pt;text-transform:uppercase;letter-spacing:0.5px;}
+.sub{text-align:center;font-style:italic;margin-bottom:10pt;}
+p{margin:8pt 0;text-align:justify;}
+.lb{font-size:11pt;font-style:italic;margin:3pt 0 3pt 24pt;text-align:justify;}
+.pt{font-size:13pt;font-weight:bold;margin:14pt 0 6pt;text-align:left;}
+.pr{display:block;margin-bottom:6pt;text-align:left;}
+.pl{display:inline-block;width:145px;}
+table{width:100%;border-collapse:collapse;margin:10pt 0;font-size:12pt;}
 th{background:#f0f0f0;font-weight:bold;text-align:center;border:1px solid #333;padding:5px 6px;}
 td{vertical-align:top;}
-.at{font-weight:bold;margin:12px 0 4px;text-align:left;text-transform:uppercase;}
-ul{margin:3px 0 5px 24pt;}li{margin-bottom:3px;text-align:justify;}
-.sig{display:flex;justify-content:space-around;margin-top:48px;text-align:center;}
+.at{font-weight:bold;margin:16pt 0 6pt;text-align:left;text-transform:uppercase;}
+ul{margin:4pt 0 8pt 24pt;}li{margin-bottom:6pt;text-align:justify;}
+.sig{margin-top:48pt;text-align:center;}
 .sc{width:40%;}
 </style></head>
 <body><div class="page">
