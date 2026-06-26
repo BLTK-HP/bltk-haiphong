@@ -7216,11 +7216,11 @@ function Contracts({orders = []}) {
               /*#__PURE__*/React.createElement(Lbl, null, "Thời hạn"),
               /*#__PURE__*/React.createElement("input", {value:form.duration, onChange:e=>set("duration",e.target.value), placeholder:"12 tháng", className:iF}))
           ),
-          /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-2 gap-3"},
-            /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("div", {className:"flex gap-3"},
+            /*#__PURE__*/React.createElement("div", {className:"flex-[5]"},
               /*#__PURE__*/React.createElement(Lbl, null, "Địa điểm giao hàng"),
               /*#__PURE__*/React.createElement("input", {value:form.deliveryAddr||"", onChange:e=>set("deliveryAddr",e.target.value), placeholder:"Địa điểm nhận hàng của khách…", className:iF})),
-            /*#__PURE__*/React.createElement("div", null,
+            /*#__PURE__*/React.createElement("div", {className:"flex-[4]"},
               /*#__PURE__*/React.createElement(Lbl, null, "Số tiền đặt cọc lần 1 (VNĐ)"),
               /*#__PURE__*/React.createElement("input", {type:"number", value:form.deposit||"", onChange:e=>set("deposit",parseFloat(e.target.value)||0), placeholder:"0", className:iF}))
           )
