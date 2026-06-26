@@ -909,7 +909,7 @@ function Dashboard({ orders = [], purchaseList = [] }) {
   }, 0);
 
   // ── LỢI NHUẬN (Accrual) ───────────────────────────────────────────────────
-  const expOrders     = fOrders.filter(o => o.exported);
+  const expOrders     = fOrders.filter(o => o.deliveryConfirmed || o.exported);
   const accrualRev    = expOrders.reduce((s,o) => s + calc(o).total, 0);
   const accrualCOGS   = expOrders.reduce((s,o) => s + calc(o).totalCost, 0);
   const accrualShip   = expOrders.reduce((s,o) => s + (o.importExpense||0), 0);
