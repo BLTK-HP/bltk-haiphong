@@ -2821,10 +2821,10 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
   <li>Hợp đồng này có hiệu lực kể từ ngày ký kết.</li>
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
-<div class="sig">
-  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
-  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
-</div>
+<table style="width:100%;margin-top:48px;border-collapse:collapse;"><tr>
+  <td style="width:50%;text-align:center;border:none;padding:0;vertical-align:top;"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></td>
+  <td style="width:50%;text-align:center;border:none;padding:0;vertical-align:top;"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></td>
+</tr></table>
 </div></body></html>`;
 
   const w = window.open("", "_blank");
@@ -2961,10 +2961,10 @@ ${(()=>{const isCo=/công ty/i.test(form.custName||"");const lbName=isCo?"Công 
   <li>Hợp đồng này có hiệu lực kể từ ngày ký kết.</li>
   <li>Sau khi giao nhận hàng và thanh toán hoàn tất, hợp đồng này tự được thanh lý.</li>
 </ul>
-<div class="sig">
-  <div class="sc"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
-  <div class="sc"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></div>
-</div>
+<table style="width:100%;margin-top:48px;border-collapse:collapse;"><tr>
+  <td style="width:50%;text-align:center;border:none;padding:0;vertical-align:top;"><strong>BÊN BÁN</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></td>
+  <td style="width:50%;text-align:center;border:none;padding:0;vertical-align:top;"><strong>BÊN MUA</strong><br><em>(Ký, ghi rõ họ tên)</em><br><br><br><br><br><br></td>
+</tr></table>
 </div></body></html>`;
 
   const blob = new Blob(['﻿', html], {type: 'application/msword'});
