@@ -3,10 +3,11 @@ import PRODUCTS from './products.js'
 import { IMPORTED_ORDERS, IMPORTED_PRODUCTS, IMPORTED_TXNS } from './importData.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc } from 'firebase/firestore'
-import { db } from './firebase.js'
+import { db, storage } from './firebase.js'
 import { AuthProvider, useAuth, ROLES, ALLOWED, createUserProfile } from './useAuth.js'
 import { auth } from './firebase.js'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 
 import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, ChevronLeft, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings, ArrowUpFromLine, Building2, PackageSearch, Layers, CornerUpLeft, RefreshCw, ReceiptText, Link2 } from 'lucide-react'
@@ -5072,6 +5073,65 @@ function Stock() {
   }));
 }
 
+/* ───────── Upload ảnh lên Firebase Storage ───────── */
+function ImageUploader({ sku, value, onChange }) {
+  const [uploading, setUploading] = React.useState(false);
+  const handleFile = async ev => {
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const safeSku = (sku || 'product_' + Date.now()).replace(/[\/\\]/g, '__');
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `products/${safeSku}.${ext}`;
+      const fileRef = storageRef(storage, path);
+      await uploadBytes(fileRef, file);
+      const url = await getDownloadURL(fileRef);
+      onChange(url);
+    } catch(e) {
+      alert('Lỗi upload ảnh: ' + e.message);
+    }
+    setUploading(false);
+  };
+  return React.createElement("div", { className: "space-y-2" },
+    React.createElement("div", { className: "flex items-center gap-3" },
+      React.createElement("label", {
+        className: "inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600 hover:bg-slate-100"
+      },
+        uploading
+          ? React.createElement("span", null, "Đang upload...")
+          : React.createElement(React.Fragment, null,
+              React.createElement(Upload, { className: "h-4 w-4" }),
+              " Chọn ảnh từ máy"
+            ),
+        React.createElement("input", {
+          type: "file", accept: "image/*",
+          className: "hidden",
+          disabled: uploading,
+          onChange: handleFile
+        })
+      ),
+      value && React.createElement("button", {
+        type: "button",
+        onClick: () => onChange(""),
+        className: "text-xs text-slate-400 hover:text-red-500"
+      }, "Xoá ảnh")
+    ),
+    React.createElement("input", {
+      type: "text",
+      placeholder: "Hoặc dán URL ảnh...",
+      value: value || "",
+      onChange: ev => onChange(ev.target.value),
+      className: "block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+    }),
+    value && React.createElement("img", {
+      src: value, alt: "preview",
+      className: "h-24 w-24 rounded-lg border border-slate-200 object-cover",
+      onError: ev => { ev.target.style.display = 'none'; }
+    })
+  );
+}
+
 /* ───────── Products (form thêm/sửa theo Ảnh 3 & 4) ───────── */
 const UNITS = ["Cái", "Bộ", "Chiếc", "Hộp", "Thùng", "Mét", "Cặp"];
 const CATS = ["Bồn cầu", "Vòi lavabo", "Sen tắm", "Chậu rửa", "Tiểu nam", "Bếp từ", "Lò nướng", "Hút mùi", "Phụ kiện"];
@@ -5256,24 +5316,11 @@ function ProductForm({
     })
   }, /*#__PURE__*/React.createElement("option", null, "Đang bán"), /*#__PURE__*/React.createElement("option", null, "Ngừng bán"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-sm font-medium text-slate-700"
-  }, "Hình ảnh"), /*#__PURE__*/React.createElement("input", {
-    type: "file",
-    accept: "image/*",
-    onChange: ev => {
-      const file = ev.target.files && ev.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => set({
-        img: reader.result
-      });
-      reader.readAsDataURL(file);
-    },
-    className: "block w-full text-sm text-slate-500 file:mr-3 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:text-slate-700 hover:file:bg-slate-200"
-  }), f.img ? /*#__PURE__*/React.createElement("img", {
-    src: f.img,
-    alt: "preview",
-    className: "mt-2 h-24 w-24 rounded-lg border border-slate-200 object-cover"
-  }) : null)));
+  }, "Hình ảnh"), /*#__PURE__*/React.createElement(ImageUploader, {
+    sku: f.sku,
+    value: f.img,
+    onChange: url => set({ img: url })
+  }))));
 }
 function ProductsTab() {
   const notify = useToast();
@@ -6624,12 +6671,70 @@ function EditTxnModal({txn, onClose, onSave}) {
       /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Ghi chú"),
         /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),className:inputF}))));
 }
+/* ───────── Đối chiếu sao kê tự động ───────── */
+function ReconcileBtn({ txns, setTxns, orders }) {
+  const [busy, setBusy] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+
+  const parseDate = s => {
+    if (!s) return null;
+    const p = s.split(' ')[0].split('/');
+    return p.length === 3 ? new Date(+p[2], +p[1]-1, +p[0]) : null;
+  };
+
+  const doReconcile = async () => {
+    setBusy(true); setResult(null);
+    // Chỉ xét giao dịch ngân hàng THU chưa có orderId
+    const bankTxns = txns.filter(t => t.bankImport && t.amount > 0 && !t.orderId);
+    // Chỉ xét đơn hàng có tiền thanh toán
+    const paidOrders = (orders || []).filter(o => o.paid > 0);
+
+    let linked = 0, ambiguous = 0;
+    const updates = {};
+
+    for (const order of paidOrders) {
+      const orderDate = parseDate(order.dt);
+      if (!orderDate) continue;
+      const matches = bankTxns.filter(t => {
+        if (updates[t.id]) return false; // đã được link
+        const txnDate = parseDate(t.date);
+        if (!txnDate) return false;
+        const diffDays = Math.abs((txnDate - orderDate) / 86400000);
+        return t.amount === order.paid && diffDays <= 3;
+      });
+      if (matches.length === 1) {
+        updates[matches[0].id] = order.id;
+        linked++;
+      } else if (matches.length > 1) {
+        ambiguous++;
+      }
+    }
+
+    if (linked > 0) {
+      setTxns(p => p.map(t => updates[t.id] ? { ...t, orderId: updates[t.id] } : t));
+    }
+    setResult({ linked, ambiguous, total: bankTxns.length });
+    setBusy(false);
+  };
+
+  return React.createElement("div", { className: "flex items-center gap-2" },
+    React.createElement("button", {
+      onClick: doReconcile, disabled: busy,
+      className: "inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+    }, busy ? "Đang đối chiếu..." : "Đối chiếu tự động"),
+    result && React.createElement("span", { className: "text-xs text-slate-500" },
+      `Khớp: ${result.linked} | Nhiều khả năng: ${result.ambiguous} | Chưa khớp: ${result.total - result.linked - result.ambiguous}`
+    )
+  );
+}
+
 function Finance({setActive, onOpenOrder}) {
   const notify = useToast();
   const { profile } = useAuth();
   const {bankAccounts} = useBankAccounts();
   const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
   const {txns, setTxns}       = useTxns();
+  const [orders]              = useCollection("orders");
   const [q, setQ]             = useState("");
   const [fromDate, setFromDate] = useState(localMonthStart);
   const [toDate, setToDate]   = useState(localToday);
@@ -6991,7 +7096,8 @@ function Finance({setActive, onOpenOrder}) {
         /*#__PURE__*/React.createElement("select", {value:fDir, onChange:e=>setFDir(e.target.value), className:`${field} py-1.5 text-sm`},
           ["Tất cả","Thu","Chi"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k))),
         /*#__PURE__*/React.createElement(PrintBtn, null),
-        /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExportTxn}))},
+        /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExportTxn}),
+        /*#__PURE__*/React.createElement(ReconcileBtn, {txns, setTxns, orders}))},
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
         /*#__PURE__*/React.createElement(TableShell, {minW:"1100px",
           head:/*#__PURE__*/React.createElement(React.Fragment,null,
