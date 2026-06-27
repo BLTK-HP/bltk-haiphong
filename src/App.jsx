@@ -8617,9 +8617,10 @@ function ImportAppTxns() {
     setBusy(true); setStatus(null);
     try {
       const snap = await getDocs(collection(db, "txns"));
-      const existingIds = new Set(snap.docs.map(d => d.data().id).filter(Boolean));
-      const toAdd = IMPORTED_APP_TXNS.filter(t => !existingIds.has(t.id));
-      await Promise.all(toAdd.map(t => saveDoc("txns", String(t.id), t)));
+      // Dùng key "app_<id>" để tránh trùng với sao kê TCB (key "1","2",...)
+      const existingKeys = new Set(snap.docs.map(d => d.id));
+      const toAdd = IMPORTED_APP_TXNS.filter(t => !existingKeys.has('app_' + t.id));
+      await Promise.all(toAdd.map(t => saveDoc("txns", 'app_' + t.id, t)));
       setStatus({ ok: true, msg: `✅ Đã import ${toAdd.length} giao dịch (bỏ qua ${IMPORTED_APP_TXNS.length - toAdd.length} trùng).` });
     } catch(err) {
       setStatus({ ok: false, msg: "Lỗi: " + err.message });
