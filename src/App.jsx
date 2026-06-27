@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
-import { IMPORTED_ORDERS, IMPORTED_PRODUCTS, IMPORTED_TXNS, IMPORTED_APP_TXNS } from './importData.js'
+import { IMPORTED_ORDERS, IMPORTED_PRODUCTS, IMPORTED_TXNS, IMPORTED_APP_TXNS, IMPORTED_CTY_TXNS } from './importData.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc } from 'firebase/firestore'
 import { db, storage } from './firebase.js'
@@ -7946,6 +7946,7 @@ function Screen({
     case "import_txns":
       return /*#__PURE__*/React.createElement("div", { className: "max-w-lg space-y-4" },
         React.createElement(ImportTxns, null),
+        React.createElement(ImportCtyTxns, null),
         React.createElement(ImportAppTxns, null)
       );
     case "users":
@@ -8635,6 +8636,36 @@ function ImportAppTxns() {
       onClick: doImport, disabled: busy,
       className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
     }, busy ? "Đang import..." : "Import giao dịch ngay"),
+    status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
+  );
+}
+
+/* ───────── Import sao kê TCB công ty ───────── */
+function ImportCtyTxns() {
+  const [status, setStatus] = React.useState(null);
+  const [busy, setBusy] = React.useState(false);
+
+  const doImport = async () => {
+    setBusy(true); setStatus(null);
+    try {
+      const snap = await getDocs(collection(db, "txns"));
+      const existingRefs = new Set(snap.docs.map(d => d.data().ref).filter(Boolean));
+      const toAdd = IMPORTED_CTY_TXNS.filter(t => !existingRefs.has(t.ref));
+      await Promise.all(toAdd.map(t => saveDoc("txns", 'cty_' + t.id, t)));
+      setStatus({ ok: true, msg: `✅ Đã import ${toAdd.length} GD (bỏ qua ${IMPORTED_CTY_TXNS.length - toAdd.length} trùng).` });
+    } catch(err) {
+      setStatus({ ok: false, msg: "Lỗi: " + err.message });
+    }
+    setBusy(false);
+  };
+
+  return React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
+    React.createElement("p", { className: "font-semibold text-slate-700" }, "Import sao kê TCB công ty"),
+    React.createElement("p", { className: "text-sm text-slate-500" }, `${IMPORTED_CTY_TXNS.length} giao dịch T1–T5/2026, tài khoản TCB-CTY BLTK HP.`),
+    React.createElement("button", {
+      onClick: doImport, disabled: busy,
+      className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
+    }, busy ? "Đang import..." : "Import sao kê CTY ngay"),
     status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
   );
 }
