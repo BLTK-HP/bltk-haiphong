@@ -115,5 +115,6 @@ export const TCB_PAT_T6_2026 = [
   {"date": "26/06/2026", "ref": "FT26177903942200", "entity": "TRAN THI CUC NGAN HANG TMCP VIET NAM THINH VUONG (VPBANK) Phuong Anh chuyen khoan nhanh", "note": "", "acc": "TCB-PAT", "amount": -39000},
   {"date": "28/06/2026", "ref": "PAT_280620_SWAY", "entity": "CONG TY TNHH SWAY CO", "note": "140889 B6RYN", "acc": "TCB-PAT", "amount": -45000},
   {"date": "28/06/2026", "ref": "PAT_280620_COFFEE", "entity": "HO KINH DOANH EASTERN COFFEE", "note": "MS00T08720383072195", "acc": "TCB-PAT", "amount": -36000},
-  {"date": "28/06/2026", "ref": "PAT_280620_INTEREST", "entity": "TECHCOMBANK", "note": "Tra lai tai khoan thanh toan 06/2026", "acc": "TCB-PAT", "amount": 1873}
+  {"date": "28/06/2026", "ref": "PAT_280620_INTEREST", "entity": "TECHCOMBANK", "note": "Tra lai tai khoan thanh toan 06/2026", "acc": "TCB-PAT", "amount": 1873},
+  {"date": "28/06/2026", "ref": "FT26180252569496", "entity": "NGUYEN THANH HUNG", "note": "TRAN THI PHUONG ANH chuyen tien", "acc": "TCB-PAT", "amount": -120000}
 ];
