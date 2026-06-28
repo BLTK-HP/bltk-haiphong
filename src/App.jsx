@@ -8364,28 +8364,33 @@ function App({ profile, logout }) {
     })();
   }, [appLoaded]);
 
-  // Auto-migration: thay thế GD TCB-CTY T1-T5/2026 sai bằng dữ liệu chính xác từ sao kê PDF
+  // Auto-migration v2: xoá toàn bộ GD TCB-CTY T1-T5/2026 (mọi format ngày), import lại đúng từ PDF
   React.useEffect(() => {
     if (!appLoaded) return;
-    if (localStorage.getItem('bltk_tcb_history_v1') === 'done') return;
+    if (localStorage.getItem('bltk_tcb_history_v2') === 'done') return;
     (async () => {
       try {
-        console.log("[tcb-history] Bắt đầu sửa GD TCB-CTY T1-T5/2026...");
-        const months = ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026'];
-        const t15Old = txns.filter(t => t.acc === 'TCB-CTY' && months.some(m => String(t.date||'').includes(m)));
-        console.log(`[tcb-history] Xoá ${t15Old.length} GD T1-T5 TCB-CTY cũ...`);
+        console.log("[tcb-history-v2] Bắt đầu sửa GD TCB-CTY T1-T5/2026...");
+        // Bắt cả 2 format: "DD/MM/YYYY" và "YYYY-MM-DD"
+        const isT15 = t => {
+          const d = String(t.date || '');
+          return ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026'].some(m => d.includes(m))
+              || ['2026-01','2026-02','2026-03','2026-04','2026-05'].some(m => d.startsWith(m));
+        };
+        const t15Old = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
+        console.log(`[tcb-history-v2] Xoá ${t15Old.length} GD T1-T5 TCB-CTY...`);
         for (const t of t15Old) await deleteDocument("txns", String(t.id));
         const remaining = txns.filter(t => !t15Old.find(o => o.id === t.id));
         const maxId = remaining.length ? Math.max(...remaining.map(t => Number(t.id)||0)) : 0;
-        console.log(`[tcb-history] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
+        console.log(`[tcb-history-v2] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
         for (let i = 0; i < TCB_CTY_HISTORY_2026.length; i++) {
           const newId = maxId + i + 1;
           await saveDoc("txns", String(newId), { ...TCB_CTY_HISTORY_2026[i], id: newId });
         }
-        localStorage.setItem('bltk_tcb_history_v1', 'done');
-        console.log("[tcb-history] Hoàn thành ✓");
+        localStorage.setItem('bltk_tcb_history_v2', 'done');
+        console.log("[tcb-history-v2] Hoàn thành ✓");
       } catch(e) {
-        console.error("[tcb-history] Lỗi:", e);
+        console.error("[tcb-history-v2] Lỗi:", e);
       }
     })();
   }, [appLoaded]);
