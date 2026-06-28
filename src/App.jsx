@@ -65,7 +65,7 @@ const ORDER_STATUS = {
   "Hoàn thành":     "bg-[#fef9f0] text-[#92400e] ring-[#b45309]",
   "Huỷ":            "bg-[#FBE9E7] text-[#9A1B0E] ring-[#F5C5BE]"
 };
-const ORDER_TABS = ["Tất cả", "Chờ giao hàng", "Chờ xử lý", "Hoàn thành", "Huỷ"];
+const ORDER_TABS = ["Tất cả", "Chờ xử lý", "Hoàn thành", "Huỷ"];
 const PAY_STATUS = {
   "Đã đặt cọc":    "bg-slate-100 text-slate-500 ring-slate-200",
   "Chờ thanh toán": "bg-[#FFFBEB] text-[#B45309] ring-[#FDE68A]",
@@ -79,6 +79,11 @@ const KHO_STATUS = {
 const DELIVERY = {
   "Đã giao hàng":   "bg-[#fef9f0] text-[#92400e] ring-[#b45309]",
   "Chưa giao hàng": "bg-slate-100 text-slate-500 ring-slate-200"
+};
+const normalizeDelivery = v => {
+  if (!v || v === "Chưa giao" || v === "Sẵn sàng giao") return "Chưa giao hàng";
+  if (v === "Đã giao") return "Đã giao hàng";
+  return v;
 };
 const TIERS = {
   "Thường": "bg-slate-100 text-slate-600 ring-slate-200",
@@ -399,9 +404,6 @@ const NAV = [{
     key: "import_products",
     label: "Import sản phẩm"
   }, {
-    key: "import_txns",
-    label: "Import sao kê NH"
-  }, {
     key: "users",
     label: "Quản lý nhân viên"
   }]
@@ -431,8 +433,7 @@ const LABELS = {
   settings_print: "Cấu hình mẫu in",
   admin_clear: "Xóa dữ liệu test",
   import_orders: "Import đơn hàng",
-  import_products: "Import sản phẩm",
-  import_txns: "Import sao kê NH"
+  import_products: "Import sản phẩm"
 };
 
 /* ───────── atoms ───────── */
@@ -730,9 +731,9 @@ function RangeBar({
 
 /* ── Bank accounts context (shared Finance ↔ Settings) ── */
 const INIT_BANK_ACCOUNTS = [
-  {id:1, key:"TCB-CTY",  bank:"TCB-CTY BLTK HP", account:"02", owner:"CÔNG TY BTLK HP", branch:"", note:"", openBal:0, status:"Hoạt động"},
-  {id:2, key:"TCB-PAT",  bank:"TCB-PAT",          account:"01", owner:"PAT",              branch:"", note:"", openBal:0, status:"Hoạt động"},
-  {id:3, key:"Tiền mặt", bank:"TIEN MAT",         account:"TM", owner:"Tiền mặt",         branch:"", note:"", openBal:0, status:"Hoạt động"},
+  {id:1, key:"TCB-CTY",  bank:"TCB-CTY BLTK HP", account:"02", owner:"CÔNG TY BTLK HP", branch:"", note:"", openBal:-315593511, status:"Hoạt động"},
+  {id:2, key:"TCB-PAT",  bank:"TCB-PAT",          account:"01", owner:"PAT",              branch:"", note:"", openBal:218663367, status:"Hoạt động"},
+  {id:3, key:"Tiền mặt", bank:"TIEN MAT",         account:"TM", owner:"Tiền mặt",         branch:"", note:"", openBal:0,       status:"Hoạt động"},
 ];
 const BankCtx = React.createContext(null);
 const useBankAccounts = () => React.useContext(BankCtx);
@@ -2089,13 +2090,14 @@ function OrderTable({
   const [toDate, setToDate] = useState(localToday());
   const [ordPage, setOrdPage] = useState(1);
   React.useEffect(() => setOrdPage(1), [q, fDelivery, fPayment, fStatus, fStaff, fromDate, toDate]);
-  const staffList = ["Tất cả", ...new Set(orders.map(o => o.staff))];
+  const [usersForFilter] = useCollection("users");
+  const staffList = ["Tất cả", ...usersForFilter.map(u => u.name).filter(Boolean).sort()];
   const parseISO = s => { const [y,m,d] = s.split('-'); return new Date(+y,+m-1,+d); };
   const fromD = fromDate ? parseISO(fromDate) : null;
   const toD   = toDate   ? parseISO(toDate)   : null;
   const rows = orders.filter(o => {
     if (fromD || toD) { const d = parseViDate(o.dt); if (fromD && d < fromD) return false; if (toD && d > new Date(toD.getFullYear(), toD.getMonth(), toD.getDate(), 23, 59, 59)) return false; }
-    if (fDelivery !== "Tất cả" && o.delivery !== fDelivery) return false;
+    if (fDelivery !== "Tất cả" && normalizeDelivery(o.delivery) !== fDelivery) return false;
     if (fPayment !== "Tất cả" && calc(o).pay !== fPayment) return false;
     if (fStatus !== "Tất cả" && calc(o).orderStatus !== fStatus) return false;
     if (fStaff !== "Tất cả" && o.staff !== fStaff) return false;
@@ -2284,7 +2286,7 @@ function OrderTable({
       className: "px-3 py-3 text-center"
     }, /*#__PURE__*/React.createElement(Pill, {
       map: DELIVERY,
-      value: o.delivery
+      value: normalizeDelivery(o.delivery)
     })), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-center"
     }, (() => {
@@ -4593,11 +4595,13 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   const [doc, setDoc] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
   const [fProd, setFProd] = useState("Tất cả");
-  const [whOutPage, setWhOutPage] = useState(1);
-  React.useEffect(() => setWhOutPage(1), [q, fProd, fromDate, toDate]);
-  const prodList = ["Tất cả", ...new Set(items.map(r => r.prod))];
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
+  const [whOutPage, setWhOutPage] = useState(1);
+  const [selectedSlips, setSelectedSlips] = useState(new Set());
+  const toggleSlip = slip => setSelectedSlips(prev => { const s = new Set(prev); s.has(slip) ? s.delete(slip) : s.add(slip); return s; });
+  React.useEffect(() => setWhOutPage(1), [q, fProd, fromDate, toDate]);
+  const prodList = ["Tất cả", ...new Set(items.map(r => r.prod))];
   const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
   const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= _pISO(f)) && (!t || d <= new Date(_pISO(t).setHours(23,59,59))); };
   const rows = items.filter(r => {
@@ -4609,6 +4613,8 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   const WHOUT_PER_PAGE = 25;
   const totalWhOutPages = Math.ceil(rows.length / WHOUT_PER_PAGE);
   const pagedWhOut = rows.slice((whOutPage - 1) * WHOUT_PER_PAGE, whOutPage * WHOUT_PER_PAGE);
+  const allPageChecked = pagedWhOut.length > 0 && pagedWhOut.every(r => selectedSlips.has(r.slip));
+  const toggleAll = () => setSelectedSlips(prev => { const s = new Set(prev); allPageChecked ? pagedWhOut.forEach(r => s.delete(r.slip)) : pagedWhOut.forEach(r => s.add(r.slip)); return s; });
   const onExport = () => exportCSV("danh-sach-phieu-xuat-kho", ["Thời gian", "Đơn hàng", "Khách hàng", "Địa chỉ", "Tên sản phẩm", "Nhà cung cấp", "Kho", "SL xuất", "Giá bán", "Thành tiền", "TT Đơn", "TT Giao", "Người xuất"], rows.map(r => [r.dt, r.order, r.cust, r.addr, r.prod, r.supplier, r.store, r.qty, r.sale, r.sale * r.qty, r.orderStatus, r.delivery, r.staff]));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
@@ -4698,7 +4704,15 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
       style: {
         width: 80
       }
-    }, "Kho"))
+    }, "Kho"), /*#__PURE__*/React.createElement(Th, {
+      style: {width: 40},
+      className: "text-center"
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "checkbox",
+      checked: allPageChecked,
+      onChange: toggleAll,
+      className: "h-3.5 w-3.5 cursor-pointer accent-blue-500 rounded"
+    })))
   }, pagedWhOut.map(r => /*#__PURE__*/React.createElement("tr", {
     key: r.slip,
     className: "align-top hover:bg-slate-50/60"
@@ -4738,13 +4752,20 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
     className: "px-3 py-3 text-xs text-slate-500"
   }, r.staff), /*#__PURE__*/React.createElement("td", {
     className: "px-3 py-3 text-slate-500"
-  }, storeShort(r.store)))),
+  }, storeShort(r.store)), /*#__PURE__*/React.createElement("td", {
+    className: "px-3 py-3 text-center"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: selectedSlips.has(r.slip),
+    onChange: () => toggleSlip(r.slip),
+    className: "h-3.5 w-3.5 cursor-pointer accent-blue-500 rounded"
+  })))),
   /*#__PURE__*/React.createElement("tr", {className: "border-t-2 border-[#fdba74] bg-[#fed7aa]"},
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 6}, "TỔNG CỘNG (", rows.length, " PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums text-slate-800", style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qty,0)),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3"}),
     /*#__PURE__*/React.createElement("td", {className: "px-3 py-3 text-right tabular-nums text-[#B91C1C]", style:{fontWeight:700}}, vnd(rows.reduce((s,r)=>s+r.sale*r.qty,0))),
-    /*#__PURE__*/React.createElement("td", {colSpan: 2}))),
+    /*#__PURE__*/React.createElement("td", {colSpan: 3}))),
   totalWhOutPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-1 px-1 flex-wrap"},
     /*#__PURE__*/React.createElement("span", {className: "text-xs text-slate-500"},
       `${(whOutPage-1)*WHOUT_PER_PAGE+1}–${Math.min(whOutPage*WHOUT_PER_PAGE, rows.length)} / ${rows.length} phiếu`),
@@ -6787,13 +6808,19 @@ function Finance({setActive, onOpenOrder}) {
     return true;
   });
   const accSummary = activeAccs.map(a => {
+    // Dư đầu kỳ = openBal(01/01) + tất cả GD trước fromDate
+    const preTxns = fromD ? txns.filter(t => !t.cancelled && t.acc === a.key && parseD(t.date) < fromD) : [];
+    const preIn   = preTxns.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+    const preOut  = preTxns.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
+    const periodOpenBal = (a.openBal||0) + preIn - preOut;
+    // Luỹ kế trong kỳ
     const at = summaryTxns.filter(t=>t.acc===a.key);
     const totalIn  = at.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
     const totalOut = at.filter(t=>t.amount<0).reduce((s,t)=>s+Math.abs(t.amount),0);
-    return {...a, totalIn, totalOut, closeBal: a.openBal+totalIn-totalOut};
+    return {...a, periodOpenBal, totalIn, totalOut, closeBal: periodOpenBal+totalIn-totalOut};
   });
   const tot = {
-    openBal: accSummary.reduce((s,a)=>s+a.openBal,0),
+    openBal: accSummary.reduce((s,a)=>s+(a.periodOpenBal||0),0),
     totalIn: accSummary.reduce((s,a)=>s+a.totalIn,0),
     totalOut:accSummary.reduce((s,a)=>s+a.totalOut,0),
     closeBal:accSummary.reduce((s,a)=>s+a.closeBal,0),
@@ -7028,18 +7055,18 @@ function Finance({setActive, onOpenOrder}) {
             /*#__PURE__*/React.createElement("tr", null,
               /*#__PURE__*/React.createElement("th",{className:thC},"Tài khoản"),
               /*#__PURE__*/React.createElement("th",{className:thC},"Số TK"),
-              /*#__PURE__*/React.createElement("th",{className:thC},"Chủ tài khoản"),
-              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư đầu kỳ"),
-              /*#__PURE__*/React.createElement("th",{className:thR},"Tổng tiền vào"),
-              /*#__PURE__*/React.createElement("th",{className:thR},"Tổng tiền ra"),
-              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư cuối kỳ"),
+              /*#__PURE__*/React.createElement("th",{className:thC},"Chủ TK"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Dư đầu kỳ"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Thu"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Chi"),
+              /*#__PURE__*/React.createElement("th",{className:thR},"Số dư hiện tại"),
               /*#__PURE__*/React.createElement("th",{className:"px-3 py-2.5 text-center"},""))),
           /*#__PURE__*/React.createElement("tbody", null,
-            accSummary.map(a=>/*#__PURE__*/React.createElement("tr",{key:a.key},
+            accSummary.map(a=>/*#__PURE__*/React.createElement("tr",{key:a.key, className:""},
               /*#__PURE__*/React.createElement("td",{className:tdC+" font-medium"},a.bank),
               /*#__PURE__*/React.createElement("td",{className:tdC},a.account),
-              /*#__PURE__*/React.createElement("td",{className:tdC},a.owner),
-              /*#__PURE__*/React.createElement("td",{className:tdR+" text-slate-800"},vnd(a.openBal)),
+              /*#__PURE__*/React.createElement("td",{className:tdC+" text-slate-500 text-xs"},a.owner),
+              /*#__PURE__*/React.createElement("td",{className:tdR+" text-slate-700"},vnd(a.periodOpenBal)),
               /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalIn>0?" text-[#047857]":" text-slate-300")},a.totalIn>0?vnd(a.totalIn):""),
               /*#__PURE__*/React.createElement("td",{className:tdR+(a.totalOut>0?" text-[#B91C1C]":" text-slate-300")},a.totalOut>0?vnd(a.totalOut):""),
               /*#__PURE__*/React.createElement("td",{className:tdR+(a.closeBal<0?" text-[#B91C1C] font-bold":" text-slate-900 font-semibold")},vnd(a.closeBal)),
@@ -7943,12 +7970,6 @@ function Screen({
       return /*#__PURE__*/React.createElement(ImportOrders, {setOrders, orders});
     case "import_products":
       return /*#__PURE__*/React.createElement(ImportProducts, null);
-    case "import_txns":
-      return /*#__PURE__*/React.createElement("div", { className: "max-w-lg space-y-4" },
-        React.createElement(ImportTxns, null),
-        React.createElement(ImportCtyTxns, null),
-        React.createElement(ImportAppTxns, null)
-      );
     case "users":
       return /*#__PURE__*/React.createElement(UsersTab, null);
     default:
@@ -8027,7 +8048,7 @@ function App({ profile, logout }) {
   const setPurchaseList = u => syncFS("purchases", r => r.lot)(purchaseList, u);
   const setWhInItems = u => syncFS("wh_in", r => (r.lot||"")+"~~"+(r.prod||""))(whInItems, u);
   const setWhOutItems = u => syncFS("wh_out", r => r.slip)(whOutItems, u);
-  const BANKS_VER = "v3";
+  const BANKS_VER = "v7";
   const [bankAccounts, setBankAccounts] = useState(() => {
     try {
       if (localStorage.getItem('bltk_banks_ver') !== BANKS_VER) {
@@ -8036,8 +8057,7 @@ function App({ profile, logout }) {
       }
       const saved = JSON.parse(localStorage.getItem('bltk_banks'));
       if (!saved) return INIT_BANK_ACCOUNTS;
-      const initMap = Object.fromEntries(INIT_BANK_ACCOUNTS.map(a => [a.key, a.openBal]));
-      return saved.map(a => a.key in initMap ? {...a, openBal: initMap[a.key]} : a);
+      return saved;
     } catch { return INIT_BANK_ACCOUNTS; }
   });
   React.useEffect(() => {
@@ -8182,10 +8202,10 @@ function SettingsPayment() {
   const [txTypes, setTxTypes] = React.useState(initTxTypes);
   const [bankModal, setBankModal] = React.useState(null);
   const [txModal, setTxModal] = React.useState(null);
-  const [bankForm, setBankForm] = React.useState({key:"", bank:"", account:"", owner:"", branch:"", note:"", openBal:0, status:"Hoạt động"});
+  const [bankForm, setBankForm] = React.useState({key:"", bank:"", account:"", owner:"", branch:"", note:"", openBal:0, openBalDate:"01/01/2026", status:"Hoạt động"});
   const [txForm, setTxForm] = React.useState({name:"", type:"Thu", status:"Hoạt động"});
 
-  const openAddBank = () => { setBankForm({key:"", bank:"", account:"", owner:"", branch:"", note:"", openBal:0, status:"Hoạt động"}); setBankModal("add"); };
+  const openAddBank = () => { setBankForm({key:"", bank:"", account:"", owner:"", branch:"", note:"", openBal:0, openBalDate:"01/01/2026", status:"Hoạt động"}); setBankModal("add"); };
   const openEditBank = r => { setBankForm({...r}); setBankModal(r.id); };
   const saveBank = () => {
     if (bankModal === "add") setBanks(bs => [...bs, {...bankForm, id: Date.now(), key: bankForm.key || bankForm.bank}]);
@@ -8217,7 +8237,7 @@ function SettingsPayment() {
             /*#__PURE__*/React.createElement("th", {className: th}, "Ngân hàng"),
             /*#__PURE__*/React.createElement("th", {className: th}, "Số tài khoản"),
             /*#__PURE__*/React.createElement("th", {className: th}, "Chủ tài khoản"),
-            /*#__PURE__*/React.createElement("th", {className: th}, "Chi nhánh"),
+            /*#__PURE__*/React.createElement("th", {className: th}, "Dư đầu kỳ (01/01/2026)"),
             /*#__PURE__*/React.createElement("th", {className: th}, "Trạng thái"),
             /*#__PURE__*/React.createElement("th", {className: th}, "Thao tác"))),
         /*#__PURE__*/React.createElement("tbody", {className: "divide-y divide-slate-100"},
@@ -8225,14 +8245,15 @@ function SettingsPayment() {
             /*#__PURE__*/React.createElement("td", {className: td}, r.bank),
             /*#__PURE__*/React.createElement("td", {className: td}, r.account),
             /*#__PURE__*/React.createElement("td", {className: td}, r.owner),
-            /*#__PURE__*/React.createElement("td", {className: td}, r.branch || ""),
+            /*#__PURE__*/React.createElement("td", {className: td+" text-right tabular-nums font-medium", style:{color: r.openBal>0?"#047857":"#f59e0b"}},
+              r.openBal ? r.openBal.toLocaleString("vi-VN")+"đ" : "⚠ Chưa nhập"),
             /*#__PURE__*/React.createElement("td", {className: td}, /*#__PURE__*/React.createElement("span", {className: badge(r.status)}, r.status)),
             /*#__PURE__*/React.createElement("td", {className: "px-4 py-3"},
               /*#__PURE__*/React.createElement("div", {className: "flex items-center gap-1.5"},
                 /*#__PURE__*/React.createElement("button", {onClick: () => openEditBank(r), className: editBtn}, /*#__PURE__*/React.createElement(Pencil, {className: "h-3.5 w-3.5"})),
                 /*#__PURE__*/React.createElement("button", {onClick: () => deleteBank(r), className: delBtn, title: "Ẩn tài khoản (không xóa vĩnh viễn)"}, /*#__PURE__*/React.createElement(Trash2, {className: "h-3.5 w-3.5"})))))))),
       bankModal !== null && /*#__PURE__*/React.createElement("div", {className: "fixed inset-0 z-50 flex items-center justify-center bg-black/40"},
-        /*#__PURE__*/React.createElement("div", {className: "w-full max-w-md rounded-xl bg-white p-6 shadow-xl space-y-4"},
+        /*#__PURE__*/React.createElement("div", {className: "w-full max-w-lg rounded-xl bg-white p-6 shadow-xl space-y-4"},
           /*#__PURE__*/React.createElement("h4", {className: "text-base font-semibold text-slate-800"}, bankModal === "add" ? "Thêm tài khoản ngân hàng" : "Sửa tài khoản ngân hàng"),
           /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-3"},
             ["key:Mã tài khoản (ID)", "bank:Tên ngân hàng", "account:Số tài khoản", "owner:Chủ tài khoản", "branch:Chi nhánh", "note:Ghi chú"].map(s => {
@@ -8242,15 +8263,15 @@ function SettingsPayment() {
                 /*#__PURE__*/React.createElement("input", {className: inf, value: bankForm[k]||"", onChange: e => setBankForm(f => ({...f, [k]: e.target.value}))}));
             }),
             /*#__PURE__*/React.createElement("div", null,
-              /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-xs font-medium text-slate-500"}, "Số dư đầu kỳ (đ)", bankModal !== "add" && /*#__PURE__*/React.createElement("span", {className: "ml-1 text-[#94A3B8]"}, "— không thể sửa")),
-              bankModal === "add"
-                ? /*#__PURE__*/React.createElement(NumInput, {className: inf, value: bankForm.openBal||0, onChange: v => setBankForm(f => ({...f, openBal: v}))})
-                : /*#__PURE__*/React.createElement("div", {className: "rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-500 tabular-nums"}, (bankForm.openBal||0).toLocaleString("vi-VN"))),
+              /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-xs font-medium text-slate-500"}, "Dư đầu kỳ 01/01/2026 (đ)"),
+              /*#__PURE__*/React.createElement(NumInput, {className: inf, value: bankForm.openBal||0, onChange: v => setBankForm(f => ({...f, openBal: v}))})),
             /*#__PURE__*/React.createElement("div", null,
               /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-xs font-medium text-slate-500"}, "Trạng thái"),
               /*#__PURE__*/React.createElement("select", {className: inf, value: bankForm.status, onChange: e => setBankForm(f => ({...f, status: e.target.value}))},
                 /*#__PURE__*/React.createElement("option", null, "Hoạt động"),
                 /*#__PURE__*/React.createElement("option", null, "Ngừng hoạt động")))),
+          /*#__PURE__*/React.createElement("p", {className: "text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2"},
+            "⚠ Số dư đầu kỳ = số dư TK ngân hàng tại ngày đầu kỳ (lấy từ sao kê NH). Tất cả giao dịch sau ngày đó sẽ cộng/trừ vào đây để ra số dư hiện tại."),
           /*#__PURE__*/React.createElement("div", {className: "flex justify-end gap-2"},
             /*#__PURE__*/React.createElement("button", {onClick: () => setBankModal(null), className: ghostBtn}, "Huỷ"),
             /*#__PURE__*/React.createElement("button", {onClick: saveBank, className: addBtnBlue}, "Lưu"))))),
@@ -8576,99 +8597,6 @@ function ImportProducts() {
   );
 }
 
-/* ───────── Import sao kê ngân hàng TCB ───────── */
-function ImportTxns() {
-  const [status, setStatus] = React.useState(null);
-  const [busy, setBusy] = React.useState(false);
-
-  const doImport = async () => {
-    setBusy(true); setStatus(null);
-    try {
-      const snap = await getDocs(collection(db, "txns"));
-      const existingRefs = new Set(snap.docs.map(d => d.data().ref).filter(Boolean));
-      const toAdd = IMPORTED_TXNS.filter(t => !existingRefs.has(t.ref));
-      const maxId = snap.docs.reduce((m, d) => Math.max(m, d.data().id || 0), 0);
-      await Promise.all(toAdd.map((t, i) => saveDoc("txns", String(maxId + i + 1), { ...t, id: maxId + i + 1 })));
-      setStatus({ ok: true, msg: `✅ Đã import ${toAdd.length} giao dịch (bỏ qua ${IMPORTED_TXNS.length - toAdd.length} trùng).` });
-    } catch(err) {
-      setStatus({ ok: false, msg: "Lỗi: " + err.message });
-    }
-    setBusy(false);
-  };
-
-  return React.createElement("div", { className: "max-w-lg space-y-4" },
-    React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
-      React.createElement("p", { className: "font-semibold text-slate-700" }, "Import sao kê ngân hàng TCB cá nhân"),
-      React.createElement("p", { className: "text-sm text-slate-500" }, `${IMPORTED_TXNS.length} giao dịch từ T1–T5/2026. Giao dịch trùng mã tham chiếu sẽ bỏ qua.`),
-      React.createElement("button", {
-        onClick: doImport, disabled: busy,
-        className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
-      }, busy ? "Đang import..." : "Import sao kê ngay"),
-      status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
-    )
-  );
-}
-
-/* ───────── Import giao dịch từ app cũ ───────── */
-function ImportAppTxns() {
-  const [status, setStatus] = React.useState(null);
-  const [busy, setBusy] = React.useState(false);
-
-  const doImport = async () => {
-    setBusy(true); setStatus(null);
-    try {
-      const snap = await getDocs(collection(db, "txns"));
-      // Dùng key "app_<id>" để tránh trùng với sao kê TCB (key "1","2",...)
-      const existingKeys = new Set(snap.docs.map(d => d.id));
-      const toAdd = IMPORTED_APP_TXNS.filter(t => !existingKeys.has('app_' + t.id));
-      await Promise.all(toAdd.map(t => saveDoc("txns", 'app_' + t.id, t)));
-      setStatus({ ok: true, msg: `✅ Đã import ${toAdd.length} giao dịch (bỏ qua ${IMPORTED_APP_TXNS.length - toAdd.length} trùng).` });
-    } catch(err) {
-      setStatus({ ok: false, msg: "Lỗi: " + err.message });
-    }
-    setBusy(false);
-  };
-
-  return React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
-    React.createElement("p", { className: "font-semibold text-slate-700" }, "Import giao dịch từ app cũ"),
-    React.createElement("p", { className: "text-sm text-slate-500" }, `${IMPORTED_APP_TXNS.length} giao dịch T1–T6/2026 (thanh toán ĐH, đặt cọc, chi NCC, tiền nhà...).`),
-    React.createElement("button", {
-      onClick: doImport, disabled: busy,
-      className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
-    }, busy ? "Đang import..." : "Import giao dịch ngay"),
-    status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
-  );
-}
-
-/* ───────── Import sao kê TCB công ty ───────── */
-function ImportCtyTxns() {
-  const [status, setStatus] = React.useState(null);
-  const [busy, setBusy] = React.useState(false);
-
-  const doImport = async () => {
-    setBusy(true); setStatus(null);
-    try {
-      const snap = await getDocs(collection(db, "txns"));
-      const existingRefs = new Set(snap.docs.map(d => d.data().ref).filter(Boolean));
-      const toAdd = IMPORTED_CTY_TXNS.filter(t => !existingRefs.has(t.ref));
-      await Promise.all(toAdd.map(t => saveDoc("txns", 'cty_' + t.id, t)));
-      setStatus({ ok: true, msg: `✅ Đã import ${toAdd.length} GD (bỏ qua ${IMPORTED_CTY_TXNS.length - toAdd.length} trùng).` });
-    } catch(err) {
-      setStatus({ ok: false, msg: "Lỗi: " + err.message });
-    }
-    setBusy(false);
-  };
-
-  return React.createElement("div", { className: "rounded-xl border border-slate-200 bg-white p-5 space-y-4" },
-    React.createElement("p", { className: "font-semibold text-slate-700" }, "Import sao kê TCB công ty"),
-    React.createElement("p", { className: "text-sm text-slate-500" }, `${IMPORTED_CTY_TXNS.length} giao dịch T1–T5/2026, tài khoản TCB-CTY BLTK HP.`),
-    React.createElement("button", {
-      onClick: doImport, disabled: busy,
-      className: "rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#78350f] disabled:opacity-50"
-    }, busy ? "Đang import..." : "Import sao kê CTY ngay"),
-    status && React.createElement("p", { className: `text-sm font-medium ${status.ok ? "text-green-700" : "text-red-600"}` }, status.msg)
-  );
-}
 
 /* ───────── TEMP: Xóa dữ liệu test ───────── */
 function AdminClearData() {
