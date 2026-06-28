@@ -8021,12 +8021,10 @@ function App({ profile, logout }) {
   const [active, setActive] = useState(defaultScreen);
   const [whInSearch, setWhInSearch] = useState("");
   const [open, setOpen] = useState({ sales: true });
-  const currentYear = new Date().getFullYear();
-  const yearFilter = [where("year", "==", currentYear)];
-  // Firestore-backed state — lọc theo năm hiện tại để giảm data load
-  const [orders, ordersLoaded] = useCollection("orders", [], yearFilter);
+  // Firestore-backed state
+  const [orders, ordersLoaded] = useCollection("orders");
   const [openOrderId, setOpenOrderId] = useState(null);
-  const [purchaseList, purchasesLoaded] = useCollection("purchases", [], yearFilter);
+  const [purchaseList, purchasesLoaded] = useCollection("purchases");
   const toKhoGlobal = s => (s||"HH").replace(/^Kho\s+/, "") || "HH";
   const addKhoGlobal = r => ({
     ...r,
@@ -8040,14 +8038,14 @@ function App({ profile, logout }) {
     const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(whInKey(s))).map(addKhoGlobal);
     return fresh.length ? [...fresh, ...prev] : prev;
   };
-  const [whInItems, whInLoaded] = useCollection("wh_in", [], yearFilter);
+  const [whInItems, whInLoaded] = useCollection("wh_in");
   const addUnitCostOut = r => ({...r, unitCost: r.unitCost ?? 0});
   const mergeWhOut = (prev, newSlips) => {
     const existing = new Set(prev.map(r => r.slip));
     const fresh = (Array.isArray(newSlips) ? newSlips : [newSlips]).filter(s => !existing.has(s.slip));
     return fresh.length ? [...fresh, ...prev] : prev;
   };
-  const [whOutItems, whOutLoaded] = useCollection("wh_out", [], yearFilter);
+  const [whOutItems, whOutLoaded] = useCollection("wh_out");
 
   // Firestore write helpers (thay thế setState)
   const syncFS = (colName, getId) => (current, updater) => {
@@ -8078,7 +8076,7 @@ function App({ profile, logout }) {
   React.useEffect(() => {
     localStorage.setItem('bltk_banks', JSON.stringify(bankAccounts));
   }, [bankAccounts]);
-  const [txnsFS, txnsLoaded] = useCollection("txns", [], yearFilter);
+  const [txnsFS, txnsLoaded] = useCollection("txns");
   const txns = txnsFS;
   const setTxns = u => syncFS("txns", t => String(t.id))(txns, u);
   const [docNums, setDocNums] = useState(() => {
