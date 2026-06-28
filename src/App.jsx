@@ -9079,15 +9079,19 @@ function UsersTab() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("sales");
+  const [editPass, setEditPass] = useState("");
+  const [showEditPass, setShowEditPass] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
 
-  const openEdit = u => { setEditUser(u); setEditName(u.name || ""); setEditEmail(u.email || ""); setEditRole(u.role || "sales"); };
+  const openEdit = u => { setEditUser(u); setEditName(u.name || ""); setEditEmail(u.email || ""); setEditRole(u.role || "sales"); setEditPass(u.pass || ""); setShowEditPass(false); };
 
   const saveEdit = async e => {
     e.preventDefault();
     setEditSaving(true);
     try {
-      await saveDoc("users", editUser._id || editUser.uid || editUser.id, { ...editUser, name: editName.trim(), email: editEmail.trim(), role: editRole });
+      const data = { ...editUser, name: editName.trim(), email: editEmail.trim(), role: editRole };
+      if (editPass.trim()) data.pass = editPass.trim();
+      await saveDoc("users", editUser._id || editUser.uid || editUser.id, data);
       notify("Đã cập nhật thông tin");
       setEditUser(null);
     } catch(err) { notify("Lỗi: " + err.message); }
@@ -9099,7 +9103,7 @@ function UsersTab() {
     setSaving(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, newEmail.trim(), newPass);
-      await createUserProfile(cred.user.uid, { email: newEmail.trim(), name: newName.trim(), role: newRole });
+      await createUserProfile(cred.user.uid, { email: newEmail.trim(), name: newName.trim(), role: newRole, pass: newPass.trim() });
       notify("Đã tạo tài khoản " + newEmail);
       setForm(null); setNewEmail(""); setNewPass(""); setNewName(""); setNewRole("sales");
     } catch(err) {
@@ -9118,12 +9122,14 @@ function UsersTab() {
       head: React.createElement(React.Fragment, null,
         React.createElement(Th, null, "Họ tên"),
         React.createElement(Th, null, "Email"),
+        React.createElement(Th, null, "Mật khẩu"),
         React.createElement(Th, null, "Vai trò"),
         React.createElement(Th, {center:true, style:{width:80}}, ""))
     },
       [...users].sort((a,b) => { const o = ["admin","manager","sales","warehouse"]; const ia = o.includes(a.role) ? o.indexOf(a.role) : 99; const ib = o.includes(b.role) ? o.indexOf(b.role) : 99; return ia - ib; }).map(u => React.createElement("tr", { key: u.email, className: "hover:bg-slate-50" },
         React.createElement("td", { className: "px-4 py-2.5 text-sm font-medium text-slate-800" }, u.name || ""),
         React.createElement("td", { className: "px-4 py-2.5 text-sm text-slate-500" }, u.email),
+        React.createElement("td", { className: "px-4 py-2.5 text-sm font-mono text-slate-600" }, u.pass || React.createElement("span", {className:"text-slate-300 text-xs"}, "chưa lưu")),
         React.createElement("td", { className: "px-4 py-2.5" },
           React.createElement("span", {className: "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium " + (ROLES[u.role]?.color || "bg-slate-100 text-slate-500")},
             ROLES[u.role]?.label || u.role)),
@@ -9145,6 +9151,12 @@ function UsersTab() {
             React.createElement("label", { className: lbl }, "Vai trò"),
             React.createElement("select", { value: editRole, onChange: e => setEditRole(e.target.value), className: field + " w-full" },
               Object.entries(ROLES).map(([k, v]) => React.createElement("option", { key: k, value: k }, v.label)))),
+          React.createElement("div", null,
+            React.createElement("label", { className: lbl }, "Mật khẩu (lưu để nhớ)"),
+            React.createElement("div", {className:"relative"},
+              React.createElement("input", { type: showEditPass ? "text" : "password", value: editPass, onChange: e => setEditPass(e.target.value), placeholder: "Nhập để lưu mật khẩu", className: field + " w-full pr-10" }),
+              React.createElement("button", { type:"button", onClick: () => setShowEditPass(v => !v), className:"absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs" },
+                showEditPass ? "Ẩn" : "Hiện"))),
           React.createElement("div", { className: "flex gap-2 pt-2" },
             React.createElement("button", { type: "button", onClick: () => setEditUser(null), className: ghostBtn }, "Huỷ"),
             React.createElement("button", { type: "submit", disabled: editSaving, className: blueBtn + " flex-1 justify-center disabled:opacity-50" },
