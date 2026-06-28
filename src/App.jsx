@@ -6870,7 +6870,7 @@ function PhieuThuModal({onClose, onSave, nextId}) {
           activeAccs.map(a=>/*#__PURE__*/React.createElement("option",{key:a.key,value:a.key},a.bank+" ("+a.account+")")))),
       /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Loại thu"),
         /*#__PURE__*/React.createElement("select",{value:kind,onChange:e=>setKind(e.target.value),className:inputF},
-          ["Thu Tiền Hàng","Thu Tiền Cọc","Thu Vận Chuyển","Thu Tiền Thuê Nhà","Thu Khác"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
+          ["Đặt cọc","Thanh toán"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k)))),
       /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Đối tượng ",/*#__PURE__*/React.createElement("span",{className:"text-[#B91C1C]"},"*")),
         /*#__PURE__*/React.createElement("input",{value:entity,onChange:e=>setEntity(e.target.value),placeholder:"Tên khách hàng...",className:inputF})),
       /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Số đơn hàng"),
@@ -6983,7 +6983,7 @@ function EditTxnModal({txn, onClose, onSave}) {
   const isOut   = txn.amount < 0;
   const canSave = entity.trim() && rawAmt > 0;
   const lbl     = "mb-1 block text-[13px] font-medium text-slate-500";
-  const ALL_KINDS = ["Thu tiền","Đặt cọc","Thanh toán","Thu khác","CPVC Nhập Hàng","CP Đặt Cọc NCC","CP Thanh Toán NCC","CP Ship ĐH","CP Lắp Đặt","CP Hoàn Hàng","CP Thuê Nhà","CP Tiền Điện","CP Tiền Nước","CP Vận Hành","CP Hoa Hồng","Chi phí <200k","Hoàn tiền KH","Hoàn ứng","Chuyển đi","Chuyển về"];
+  const ALL_KINDS = ["Đặt cọc","Thanh toán","CPVC Nhập Hàng","CP Đặt Cọc NCC","CP Thanh Toán NCC","CP Ship ĐH","CP Lắp Đặt","CP Hoàn Hàng","CP Thuê Nhà","CP Tiền Điện","CP Tiền Nước","CP Vận Hành","CP Hoa Hồng","Chi phí <200k","Hoàn tiền KH","Hoàn ứng","Chuyển đi","Chuyển về"];
   const doSave  = () => onSave({...txn, acc, entity, orderId, kind, amount: isOut ? -rawAmt : rawAmt, note});
   return /*#__PURE__*/React.createElement(Modal, {title:"Sửa giao dịch #"+txn.id, onClose, maxW:"max-w-lg",
     footer:/*#__PURE__*/React.createElement(React.Fragment, null,
@@ -7117,7 +7117,7 @@ function Finance({setActive, onOpenOrder}) {
   }).sort((a, b) => { const da = parseD(a.date), db = parseD(b.date); return da - db !== 0 ? db - da : b.id - a.id; });
 
   const baseTxns = txns.filter(t => !t.cancelled && (patOnly ? t.acc === "TCB-PAT" : t.acc !== "TCB-PAT"));
-  const STD_THU = ["Thanh toán","Đặt cọc","Thu Tiền Hàng","Thu Vận Chuyển","Thu Tiền Thuê Nhà","Thu khác"];
+  const STD_THU = ["Đặt cọc","Thanh toán"];
   const STD_CHI = ["CPVC Nhập Hàng","CP Đặt Cọc NCC","CP Thanh Toán NCC","CP Ship ĐH","CP Lắp Đặt","CP Hoàn Hàng","CP Thuê Nhà","CP Tiền Điện","CP Tiền Nước","CP Vận Hành","Hoàn tiền KH","Chi hoa hồng","Chi khác"];
   const allThuKinds = [...new Set([...STD_THU, ...baseTxns.filter(t=>t.amount>0).map(t=>normalizeKind(t)).filter(Boolean)])];
   const allChiKinds = [...new Set([...STD_CHI, ...baseTxns.filter(t=>t.amount<0).map(t=>normalizeKind(t)).filter(Boolean)])];
@@ -7229,7 +7229,7 @@ function Finance({setActive, onOpenOrder}) {
     if (t.amount > 0) thuKinds[k] = (thuKinds[k]||0) + t.amount;
     if (t.amount < 0) chiKinds[k] = (chiKinds[k]||0) + Math.abs(t.amount);
   });
-  const THU_KINDS = ["Thu tiền hàng","Thu tiền đặt cọc","Thu tiền thuê nhà","Thu khác"];
+  const THU_KINDS = ["Đặt cọc","Thanh toán"];
   const knownThuKinds = new Set(THU_KINDS);
   const thuOrdered = THU_KINDS.filter(k=>thuKinds[k]>0).map(k=>({kind:k,total:thuKinds[k]}));
   const thuOther = Object.entries(thuKinds).filter(([k])=>!knownThuKinds.has(k)).map(([kind,total])=>({kind,total}));
