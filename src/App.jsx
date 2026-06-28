@@ -6864,6 +6864,10 @@ function Finance({setActive, onOpenOrder}) {
   const onExportTxn = () => exportCSV("lich-su-giao-dich", ["Ngày","Số phiếu","Số đơn hàng","Đối tượng","Loại GD","Tài khoản","Số tiền","Nội dung","Người tạo"],
     visibleTxns.map(t => [t.date, fmtDocId(t.amount>=0?"PT":"PC",t.id), t.orderId||"", t.entity||"", t.kind||"", t.acc||"", t.amount, t.note||"", t.staff||""]));
 
+  const normalizeKind = t => {
+    if (patOnly && t.amount < 0 && Math.abs(t.amount) < 500000) return "CP cá nhân <500k";
+    return t.kind;
+  };
   const THU = "bg-[#dcfce7] text-[#047857]";
   const CHI = "bg-[#fee2e2] text-[#B91C1C]";
   const KIND_COLORS = {
@@ -6879,6 +6883,7 @@ function Finance({setActive, onOpenOrder}) {
     "Chi phí":        CHI,
     "Hoàn ứng":       CHI,
     "Chi khác":       CHI,
+    "CP cá nhân <500k": CHI, "CP tiền học": CHI, "CP điện nước": CHI, "CP thuê nhà": CHI,
     "Chuyển đi":  "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
     "Chuyển về":  "bg-slate-100 text-slate-600 ring-1 ring-slate-200",
   };
@@ -7015,7 +7020,7 @@ function Finance({setActive, onOpenOrder}) {
                 t.orderId?/*#__PURE__*/React.createElement("button",{className:"inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium bg-[#fef9f0] text-[#92400e] hover:bg-amber-100",onClick:()=>onOpenOrder&&onOpenOrder(t.orderId)},t.orderId):/*#__PURE__*/React.createElement("span",{className:"text-slate-300"},"")),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-700"},t.entity),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
-                /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS_D[t.kind]||"bg-slate-100 text-slate-600"}`},t.kind)),
+                /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS_D[normalizeKind(t)]||KIND_COLORS[normalizeKind(t)]||"bg-slate-100 text-slate-600"}`},normalizeKind(t))),
               /*#__PURE__*/React.createElement("td",{className:`whitespace-nowrap px-3 py-2.5 text-right tabular-nums font-semibold ${t.cancelled?"line-through text-slate-400":t.amount>0?"text-[#047857]":t.amount<0?"text-[#B91C1C]":"text-slate-500"}`},
                 (t.amount>=0?"+":"")+vnd(t.amount)),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-500 text-xs"},t.note||""),
@@ -7169,7 +7174,7 @@ function Finance({setActive, onOpenOrder}) {
               t.orderId ? /*#__PURE__*/React.createElement("button",{className:"inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium bg-[#fef9f0] text-[#92400e] hover:bg-amber-100", onClick:()=>onOpenOrder&&onOpenOrder(t.orderId)},t.orderId) : /*#__PURE__*/React.createElement("span",{className:"text-slate-300"},"")),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-700"},t.entity),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
-              /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS[t.kind]||"bg-slate-100 text-slate-600 "}`},t.kind)),
+              /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${KIND_COLORS[normalizeKind(t)]||"bg-slate-100 text-slate-600 "}`},normalizeKind(t))),
             /*#__PURE__*/React.createElement("td",{className:"whitespace-nowrap px-3 py-2.5 text-slate-600 text-xs"},t.acc),
             /*#__PURE__*/React.createElement("td",{className:`whitespace-nowrap px-3 py-2.5 text-right tabular-nums font-semibold ${t.cancelled?"line-through text-slate-400":t.amount > 0 ? "text-[#047857]" : t.amount < 0 ? "text-[#B91C1C]" : "text-slate-500"}`},
               (t.amount>=0?"+":"")+vnd(t.amount)),
