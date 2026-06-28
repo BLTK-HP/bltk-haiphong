@@ -4,7 +4,7 @@ import { ORDER_ITEM_FIXES, NEW_ORDERS_TO_ADD } from './orderItemFixes.js'
 import { TCB_CTY_T6_2026 } from './tcbT6Fix.js'
 import { TCB_CTY_HISTORY_2026 } from './tcbCtyHistory.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
-import { collection, getDocs, deleteDoc, doc as fsDoc, where } from 'firebase/firestore'
+import { collection, getDocs, deleteDoc, doc as fsDoc, where, writeBatch } from 'firebase/firestore'
 import { db, storage } from './firebase.js'
 import { AuthProvider, useAuth, ROLES, ALLOWED, createUserProfile } from './useAuth.js'
 import { auth } from './firebase.js'
@@ -6929,13 +6929,24 @@ function SyncBankModal({ onClose, txns }) {
   const isT6 = t => String(t.date || '').includes('/06/2026') || String(t.date || '').startsWith('2026-06');
   const t15List = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
   const t6List  = txns.filter(t => t.acc === 'TCB-CTY' && isT6(t));
+  const batchOp = async (items, op) => {
+    const CHUNK = 400;
+    for (let i = 0; i < items.length; i += CHUNK) {
+      const batch = writeBatch(db);
+      items.slice(i, i + CHUNK).forEach(item => op(batch, item));
+      await batch.commit();
+    }
+  };
   const handleSync = async () => {
     setSyncing(true);
     try {
-      for (const t of [...t15List, ...t6List]) await deleteDocument("txns", t._id || String(t.id));
-      for (const txn of TCB_CTY_HISTORY_2026) await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
-      for (const txn of TCB_CTY_T6_2026)      await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
-      setDone({ old: t15List.length + t6List.length, imported: TCB_CTY_HISTORY_2026.length + TCB_CTY_T6_2026.length });
+      const toDelete = [...t15List, ...t6List];
+      // Xoá batch
+      await batchOp(toDelete, (batch, t) => batch.delete(fsDoc(db, "txns", t._id || String(t.id))));
+      // Import batch T1-T5 + T6
+      const toAdd = [...TCB_CTY_HISTORY_2026, ...TCB_CTY_T6_2026];
+      await batchOp(toAdd, (batch, txn) => batch.set(fsDoc(db, "txns", txn.ref), { ...txn, id: txn.ref, year: parseInt(String(txn.date).match(/\d{4}/)?.[0] || '2026') }));
+      setDone({ old: toDelete.length, imported: toAdd.length });
       notify("Đã đồng bộ sao kê TCB T1-T6/2026 ✓");
     } catch(e) { notify("Lỗi: " + e.message); }
     finally { setSyncing(false); }
@@ -8403,11 +8414,15 @@ function App({ profile, logout }) {
         // Xoá toàn bộ GD T6 TCB-CTY hiện có
         const t6Old = txns.filter(t => t.acc === 'TCB-CTY' && String(t.date || '').includes('/06/2026'));
         console.log(`[tcb-t6] Xoá ${t6Old.length} GD T6 TCB-CTY cũ...`);
-        for (const t of t6Old) await deleteDocument("txns", t._id || String(t.id));
-        // Fix #1: dùng ref ngân hàng làm doc ID — idempotent (re-import không tạo trùng)
-        console.log(`[tcb-t6] Thêm ${TCB_CTY_T6_2026.length} GD mới từ sao kê...`);
-        for (const txn of TCB_CTY_T6_2026) {
-          await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
+        const batchDel6 = writeBatch(db);
+        t6Old.forEach(t => batchDel6.delete(fsDoc(db, "txns", t._id || String(t.id))));
+        if (t6Old.length) await batchDel6.commit();
+        console.log(`[tcb-t6] Thêm ${TCB_CTY_T6_2026.length} GD mới...`);
+        const CHUNK = 400;
+        for (let i = 0; i < TCB_CTY_T6_2026.length; i += CHUNK) {
+          const b = writeBatch(db);
+          TCB_CTY_T6_2026.slice(i, i+CHUNK).forEach(txn => b.set(fsDoc(db,"txns",txn.ref), {...txn, id:txn.ref, year:2026}));
+          await b.commit();
         }
         localStorage.setItem('bltk_tcb_t6_fix_v1', 'done');
         console.log("[tcb-t6] Hoàn thành ✓");
@@ -8417,10 +8432,10 @@ function App({ profile, logout }) {
     })();
   }, [appLoaded]);
 
-  // Auto-migration v2: xoá toàn bộ GD TCB-CTY T1-T5/2026 (mọi format ngày), import lại đúng từ PDF
+  // Auto-migration v3: batch xoá+import GD TCB-CTY T1-T5/2026 (mọi format ngày)
   React.useEffect(() => {
     if (!appLoaded) return;
-    if (localStorage.getItem('bltk_tcb_history_v2') === 'done') return;
+    if (localStorage.getItem('bltk_tcb_history_v3') === 'done') return;
     (async () => {
       try {
         console.log("[tcb-history-v2] Bắt đầu sửa GD TCB-CTY T1-T5/2026...");
@@ -8432,14 +8447,20 @@ function App({ profile, logout }) {
         };
         const t15Old = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
         console.log(`[tcb-history-v2] Xoá ${t15Old.length} GD T1-T5 TCB-CTY...`);
-        for (const t of t15Old) await deleteDocument("txns", t._id || String(t.id));
-        // Fix #1: dùng ref ngân hàng làm doc ID — idempotent
-        console.log(`[tcb-history-v2] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
-        for (const txn of TCB_CTY_HISTORY_2026) {
-          await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
+        const CHUNK = 400;
+        for (let i = 0; i < t15Old.length; i += CHUNK) {
+          const b = writeBatch(db);
+          t15Old.slice(i, i+CHUNK).forEach(t => b.delete(fsDoc(db,"txns", t._id || String(t.id))));
+          await b.commit();
         }
-        localStorage.setItem('bltk_tcb_history_v2', 'done');
-        console.log("[tcb-history-v2] Hoàn thành ✓");
+        console.log(`[tcb-history-v2] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
+        for (let i = 0; i < TCB_CTY_HISTORY_2026.length; i += CHUNK) {
+          const b = writeBatch(db);
+          TCB_CTY_HISTORY_2026.slice(i, i+CHUNK).forEach(txn => b.set(fsDoc(db,"txns",txn.ref), {...txn, id:txn.ref, year:2026}));
+          await b.commit();
+        }
+        localStorage.setItem('bltk_tcb_history_v3', 'done');
+        console.log("[tcb-history-v3] Hoàn thành ✓");
       } catch(e) {
         console.error("[tcb-history-v2] Lỗi:", e);
       }
