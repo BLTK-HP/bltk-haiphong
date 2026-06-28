@@ -6903,8 +6903,9 @@ function Finance({setActive, onOpenOrder}) {
   });
   const thuKinds = {}, chiKinds = {};
   kindBaseTxns.forEach(t => {
-    if (t.amount > 0) thuKinds[t.kind||"Khác"] = (thuKinds[t.kind||"Khác"]||0) + t.amount;
-    if (t.amount < 0) chiKinds[t.kind||"Khác"] = (chiKinds[t.kind||"Khác"]||0) + Math.abs(t.amount);
+    const k = normalizeKind(t) || "Khác";
+    if (t.amount > 0) thuKinds[k] = (thuKinds[k]||0) + t.amount;
+    if (t.amount < 0) chiKinds[k] = (chiKinds[k]||0) + Math.abs(t.amount);
   });
   const THU_KINDS = ["Thu tiền hàng","Thu tiền đặt cọc","Thu tiền thuê nhà","Thu khác"];
   const knownThuKinds = new Set(THU_KINDS);
@@ -6913,8 +6914,8 @@ function Finance({setActive, onOpenOrder}) {
   const thuGroups = [...thuOrdered, ...thuOther];
   const totalThu = thuGroups.reduce((s,g)=>s+g.total,0);
 
-  const chiMainItems = Object.entries(chiKinds).filter(([,v])=>v>=200000).map(([kind,total])=>({kind,total}));
-  const chiSmallItems = Object.entries(chiKinds).filter(([,v])=>v<200000).map(([kind,total])=>({kind,total}));
+  const chiMainItems = Object.entries(chiKinds).filter(([,v])=>patOnly||v>=200000).map(([kind,total])=>({kind,total}));
+  const chiSmallItems = patOnly ? [] : Object.entries(chiKinds).filter(([,v])=>v<200000).map(([kind,total])=>({kind,total}));
   const chiSmallTotal = chiSmallItems.reduce((s,i)=>s+i.total,0);
   const totalChi = Object.values(chiKinds).reduce((s,v)=>s+v,0);
 
