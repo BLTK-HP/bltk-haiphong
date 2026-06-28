@@ -304,6 +304,10 @@ const NAV = [{
   label: "Tài chính",
   icon: Wallet
 }, {
+  key: "personal_finance",
+  label: "Tài khoản cá nhân",
+  icon: CreditCard
+}, {
   key: "sales",
   label: "Bán hàng",
   icon: ShoppingCart,
@@ -410,6 +414,7 @@ const NAV = [{
 }];
 const LABELS = {
   finance: "Tài chính",
+  personal_finance: "Tài khoản cá nhân",
   sales_draft: "Báo giá",
   sales_orders: "Danh sách đơn hàng",
   purchase: "Mua hàng",
@@ -1317,10 +1322,10 @@ function Dashboard({ orders = [], purchaseList = [] }) {
         /*#__PURE__*/React.createElement("div", {className:"grid grid-cols-3 border-b border-[#fed7aa] bg-[#ffedd5] px-4 py-2"},
           /*#__PURE__*/React.createElement("div", {className:"text-[11px] italic text-[#92400e]"}, "Biên gộp (DT − GV)"),
           /*#__PURE__*/React.createElement("div", {className:"text-right text-[11px] tabular-nums font-semibold "+(accrualRev === 0 ? "text-slate-300" : accrualGrossProfit > 0 ? "text-emerald-700" : "text-[#B91C1C]")},
-            accrualRev > 0 ? (accrualGrossProfit >= 0 ? "" : "−")+vnd(Math.abs(accrualGrossProfit))+" ("+grossMargin+"%)" : "—"
+            accrualRev > 0 ? (accrualGrossProfit >= 0 ? "" : "−")+vnd(Math.abs(accrualGrossProfit)) : "—"
           ),
           /*#__PURE__*/React.createElement("div", {className:"text-right text-[11px] tabular-nums font-semibold "+(pendingRev === 0 ? "text-slate-300" : pendingGrossProfit > 0 ? "text-emerald-600" : "text-[#B91C1C]")},
-            pendingRev > 0 ? (pendingGrossProfit >= 0 ? "" : "−")+vnd(Math.abs(pendingGrossProfit))+" ("+pendingGrossMargin+"%)" : "—"
+            pendingRev > 0 ? (pendingGrossProfit >= 0 ? "" : "−")+vnd(Math.abs(pendingGrossProfit)) : "—"
           )
         ),
 
@@ -6749,11 +6754,11 @@ function ReconcileBtn({ txns, setTxns, orders }) {
   );
 }
 
-function Finance({setActive, onOpenOrder}) {
+function Finance({setActive, onOpenOrder, patOnly = false}) {
   const notify = useToast();
   const { profile } = useAuth();
   const {bankAccounts} = useBankAccounts();
-  const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
+  const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động" && (patOnly ? a.key === "TCB-PAT" : a.key !== "TCB-PAT"));
   const {txns, setTxns}       = useTxns();
   const [orders]              = useCollection("orders");
   const [q, setQ]             = useState("");
@@ -7332,7 +7337,7 @@ function ReportSales({orders = [], onOpenOrder}) {
           /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs border-t border-slate-100 pt-1.5 mt-1"},
             /*#__PURE__*/React.createElement("span", {className:"font-medium text-[#92400e]"}, "Lợi nhuận"),
             /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-semibold "+(tDelivProfit>=0?"text-emerald-700":"text-[#B91C1C]")},
-              (tDelivProfit>=0?"":"-")+vnd(Math.abs(tDelivProfit))+" ("+tDelivMargin+"%)"
+              (tDelivProfit>=0?"":"-")+vnd(Math.abs(tDelivProfit))
             ))
         )),
       /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4 shadow-sm flex flex-col justify-center gap-3"},
@@ -7374,7 +7379,7 @@ function ReportSales({orders = [], onOpenOrder}) {
           /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs border-t border-slate-100 pt-1.5 mt-1"},
             /*#__PURE__*/React.createElement("span", {className:"font-medium text-[#92400e]"}, "Biên gộp ước"),
             /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-semibold "+(tUndelivGross>=0?"text-emerald-600":"text-[#B91C1C]")},
-              (tUndelivGross>=0?"":"-")+vnd(Math.abs(tUndelivGross))+" ("+tUndelivGrossMargin+"%)"
+              (tUndelivGross>=0?"":"-")+vnd(Math.abs(tUndelivGross))
             )),
           /*#__PURE__*/React.createElement("p", {className:"text-[10px] italic text-slate-400 text-right"}, "Chưa tính CPBH")
         )),
@@ -7905,6 +7910,8 @@ function Screen({
   switch (active) {
     case "finance":
       return /*#__PURE__*/React.createElement(Finance, {setActive, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
+    case "personal_finance":
+      return /*#__PURE__*/React.createElement(Finance, {setActive, patOnly: true, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "sales_draft":
       return /*#__PURE__*/React.createElement(SalesModule, {
         orders: orders,
