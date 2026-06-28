@@ -7150,7 +7150,7 @@ function Finance({setActive, onOpenOrder}) {
           ["Tất cả","CP cá nhân <500k","CP tiền học","CP điện nước","CP thuê nhà"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k))),
         /*#__PURE__*/React.createElement(PrintBtn, null),
         /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExportTxn}),
-        /*#__PURE__*/React.createElement(ReconcileBtn, {txns, setTxns, orders}))},
+        !patOnly&&/*#__PURE__*/React.createElement(ReconcileBtn, {txns, setTxns, orders}))},
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5"},
         /*#__PURE__*/React.createElement(TableShell, {minW:"1100px",
           head:/*#__PURE__*/React.createElement(React.Fragment,null,
