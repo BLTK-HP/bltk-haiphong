@@ -484,6 +484,9 @@ const NAV = [{
     key: "settings_supplier_costs",
     label: "Bảng giá vốn sản phẩm"
   }, {
+    key: "settings_txn_kinds",
+    label: "Loại giao dịch Thu/Chi"
+  }, {
     key: "admin_clear",
     label: "Xóa dữ liệu test"
   }, {
@@ -514,6 +517,7 @@ const LABELS = {
   settings_numformat: "Định dạng số",
   settings_docnum: "Quy tắc đánh số chứng từ",
   settings_supplier_costs: "Bảng giá vốn sản phẩm",
+  settings_txn_kinds: "Loại giao dịch Thu/Chi",
   settings_print: "Cấu hình mẫu in",
   admin_clear: "Xóa dữ liệu test",
 };
@@ -837,6 +841,10 @@ const INIT_BANK_ACCOUNTS = [
 ];
 const BankCtx = React.createContext(null);
 const useBankAccounts = () => React.useContext(BankCtx);
+const TxnKindsCtx = React.createContext(null);
+const useTxnKinds = () => React.useContext(TxnKindsCtx);
+const DEFAULT_THU_KINDS = ["Đặt cọc","Thanh toán"];
+const DEFAULT_CHI_KINDS = ["CPVC Nhập Hàng","CP Đặt Cọc NCC","CP Thanh Toán NCC","CP Ship ĐH","CP Lắp Đặt","CP Hoàn Hàng","CP Thuê Nhà","CP Tiền Điện","CP Tiền Nước","CP Vận Hành","Hoàn tiền KH","Chi hoa hồng","Chi khác"];
 const TxnCtx = React.createContext(null);
 const useTxns = () => React.useContext(TxnCtx);
 const InvCtx = React.createContext({whInItems: [], setWhInItems: () => {}, whOutItems: [], setWhOutItems: () => {}});
@@ -7116,11 +7124,12 @@ function Finance({setActive, onOpenOrder}) {
     return true;
   }).sort((a, b) => { const da = parseD(a.date), db = parseD(b.date); return da - db !== 0 ? db - da : b.id - a.id; });
 
+  const { txnKinds } = useTxnKinds() || {};
   const baseTxns = txns.filter(t => !t.cancelled && (patOnly ? t.acc === "TCB-PAT" : t.acc !== "TCB-PAT"));
-  const STD_THU = ["Đặt cọc","Thanh toán"];
-  const STD_CHI = ["CPVC Nhập Hàng","CP Đặt Cọc NCC","CP Thanh Toán NCC","CP Ship ĐH","CP Lắp Đặt","CP Hoàn Hàng","CP Thuê Nhà","CP Tiền Điện","CP Tiền Nước","CP Vận Hành","Hoàn tiền KH","Chi hoa hồng","Chi khác"];
-  const allThuKinds = [...new Set([...STD_THU, ...baseTxns.filter(t=>t.amount>0).map(t=>normalizeKind(t)).filter(Boolean)])];
-  const allChiKinds = [...new Set([...STD_CHI, ...baseTxns.filter(t=>t.amount<0).map(t=>normalizeKind(t)).filter(Boolean)])];
+  const configThu = txnKinds?.thuKinds?.length ? txnKinds.thuKinds : DEFAULT_THU_KINDS;
+  const configChi = txnKinds?.chiKinds?.length ? txnKinds.chiKinds : DEFAULT_CHI_KINDS;
+  const allThuKinds = [...new Set([...configThu, ...baseTxns.filter(t=>t.amount>0).map(t=>normalizeKind(t)).filter(Boolean)])];
+  const allChiKinds = [...new Set([...configChi, ...baseTxns.filter(t=>t.amount<0).map(t=>normalizeKind(t)).filter(Boolean)])];
 
   const TXN_PER_PAGE = 25;
   const totalTxnPages = Math.ceil(visibleTxns.length / TXN_PER_PAGE);
@@ -8308,6 +8317,8 @@ function Screen({
       return /*#__PURE__*/React.createElement(SettingsDocNum, null);
     case "settings_supplier_costs":
       return /*#__PURE__*/React.createElement(SettingsSupplierCosts, null);
+    case "settings_txn_kinds":
+      return /*#__PURE__*/React.createElement(SettingsTxnKinds, null);
     case "settings_print":
       return /*#__PURE__*/React.createElement(SettingsPrint, null);
     case "admin_clear":
@@ -8439,6 +8450,19 @@ function App({ profile, logout }) {
       return next;
     });
   };
+  const [txnKinds, setTxnKindsState] = useState({thuKinds: DEFAULT_THU_KINDS, chiKinds: DEFAULT_CHI_KINDS});
+  React.useEffect(() => {
+    if (!settingsLoaded) return;
+    const doc = settingsFS.find(d => d._id === "txnKinds");
+    if (doc?.thuKinds?.length || doc?.chiKinds?.length) {
+      setTxnKindsState({ thuKinds: doc.thuKinds || DEFAULT_THU_KINDS, chiKinds: doc.chiKinds || DEFAULT_CHI_KINDS });
+    }
+  }, [settingsLoaded, settingsFS]);
+  const saveTxnKinds = (thuKinds, chiKinds) => {
+    const next = {thuKinds, chiKinds};
+    setTxnKindsState(next);
+    saveDoc('settings', 'txnKinds', next);
+  };
   const title = LABELS[active] || "";
   const appLoaded = ordersLoaded && purchasesLoaded && whInLoaded && whOutLoaded && txnsLoaded && settingsLoaded;
 
@@ -8535,7 +8559,8 @@ function App({ profile, logout }) {
   }, [appLoaded]);
 
 
-  return /*#__PURE__*/React.createElement(SupplierCostsCtx.Provider, {value: supplierCosts},
+  return /*#__PURE__*/React.createElement(TxnKindsCtx.Provider, {value: {txnKinds, saveTxnKinds}},
+  /*#__PURE__*/React.createElement(SupplierCostsCtx.Provider, {value: supplierCosts},
   /*#__PURE__*/React.createElement(DocNumCtx.Provider, {value: {docNums, setDocNums}},
   /*#__PURE__*/React.createElement(InvCtx.Provider, {value: {whInItems, setWhInItems, whOutItems, setWhOutItems}},
   /*#__PURE__*/React.createElement(TxnCtx.Provider, {value: {txns, setTxns}},
@@ -8639,7 +8664,88 @@ function App({ profile, logout }) {
     onImportToWh: slipOrSlips => { setWhInItems(prev => mergeWhIn(prev, slipOrSlips)); setActive("wh_in"); },
     onImportKho: slips => { setWhInItems(prev => mergeWhIn(prev, slips)); },
     onExportToWh: slips => { setWhOutItems(prev => mergeWhOut(prev, slips)); }
-  }))))))))));
+  })))))))))));
+}
+
+/* ───────── Settings Txn Kinds ───────── */
+function SettingsTxnKinds() {
+  const { txnKinds, saveTxnKinds } = useTxnKinds() || {};
+  const notify = useToast();
+  const thuList = txnKinds?.thuKinds || DEFAULT_THU_KINDS;
+  const chiList = txnKinds?.chiKinds || DEFAULT_CHI_KINDS;
+  const [editGroup, setEditGroup] = React.useState(null); // "thu" | "chi"
+  const [editIdx, setEditIdx]     = React.useState(null);
+  const [editVal, setEditVal]     = React.useState("");
+  const [addGroup, setAddGroup]   = React.useState(null);
+  const [addVal, setAddVal]       = React.useState("");
+
+  const startEdit = (group, idx, val) => { setEditGroup(group); setEditIdx(idx); setEditVal(val); setAddGroup(null); };
+  const cancelEdit = () => { setEditGroup(null); setEditIdx(null); };
+  const saveEdit = () => {
+    if (!editVal.trim()) return;
+    const list = editGroup === "thu" ? [...thuList] : [...chiList];
+    list[editIdx] = editVal.trim();
+    editGroup === "thu" ? saveTxnKinds(list, chiList) : saveTxnKinds(thuList, list);
+    notify("Đã lưu");
+    cancelEdit();
+  };
+  const deleteItem = (group, idx) => {
+    if (!window.confirm("Xoá loại này?")) return;
+    const list = group === "thu" ? thuList.filter((_,i)=>i!==idx) : chiList.filter((_,i)=>i!==idx);
+    group === "thu" ? saveTxnKinds(list, chiList) : saveTxnKinds(thuList, list);
+    notify("Đã xoá");
+  };
+  const startAdd = (group) => { setAddGroup(group); setAddVal(""); setEditGroup(null); };
+  const confirmAdd = () => {
+    if (!addVal.trim()) return;
+    const list = addGroup === "thu" ? [...thuList, addVal.trim()] : [...chiList, addVal.trim()];
+    addGroup === "thu" ? saveTxnKinds(list, chiList) : saveTxnKinds(thuList, list);
+    notify("Đã thêm");
+    setAddGroup(null);
+  };
+  const moveItem = (group, idx, dir) => {
+    const list = [...(group === "thu" ? thuList : chiList)];
+    const to = idx + dir;
+    if (to < 0 || to >= list.length) return;
+    [list[idx], list[to]] = [list[to], list[idx]];
+    group === "thu" ? saveTxnKinds(list, chiList) : saveTxnKinds(thuList, list);
+  };
+
+  const KindList = ({group, list, color}) => /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white overflow-hidden"},
+    /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between px-4 py-3 border-b border-slate-100"},
+      /*#__PURE__*/React.createElement("span", {className:`text-sm font-semibold ${color}`}, group==="thu" ? "▲ Loại Thu" : "▼ Loại Chi"),
+      /*#__PURE__*/React.createElement("button", {onClick:()=>startAdd(group), className:addBtn}, "+ Thêm")),
+    /*#__PURE__*/React.createElement("table", {className:"tbl-list w-full"},
+      /*#__PURE__*/React.createElement("tbody", null,
+        list.map((k,i)=>/*#__PURE__*/React.createElement("tr", {key:i},
+          /*#__PURE__*/React.createElement("td", {className:"px-4 py-2.5 text-sm text-slate-700 w-8 text-slate-400"}, i+1),
+          /*#__PURE__*/React.createElement("td", {className:"px-2 py-2.5 text-sm font-medium text-slate-800"},
+            editGroup===group && editIdx===i
+              ? /*#__PURE__*/React.createElement("div", {className:"flex gap-2"},
+                  /*#__PURE__*/React.createElement("input", {autoFocus:true, value:editVal, onChange:e=>setEditVal(e.target.value), onKeyDown:e=>{if(e.key==="Enter")saveEdit();if(e.key==="Escape")cancelEdit();}, className:inputF+" py-1 text-sm"}),
+                  /*#__PURE__*/React.createElement("button", {onClick:saveEdit, className:blueBtn}, "Lưu"),
+                  /*#__PURE__*/React.createElement("button", {onClick:cancelEdit, className:ghostBtn}, "Huỷ"))
+              : k),
+          /*#__PURE__*/React.createElement("td", {className:"px-2 py-2 text-right whitespace-nowrap"},
+            /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-1 justify-end"},
+              /*#__PURE__*/React.createElement("button", {onClick:()=>moveItem(group,i,-1), disabled:i===0, className:"px-1 text-slate-400 hover:text-slate-700 disabled:opacity-20"}, "↑"),
+              /*#__PURE__*/React.createElement("button", {onClick:()=>moveItem(group,i,1), disabled:i===list.length-1, className:"px-1 text-slate-400 hover:text-slate-700 disabled:opacity-20"}, "↓"),
+              /*#__PURE__*/React.createElement("button", {onClick:()=>startEdit(group,i,k), className:"text-xs text-blue-600 hover:underline ml-2"}, "Sửa"),
+              /*#__PURE__*/React.createElement("button", {onClick:()=>deleteItem(group,i), className:"text-xs text-red-500 hover:underline ml-1"}, "Xoá"))))),
+        addGroup===group && /*#__PURE__*/React.createElement("tr", null,
+          /*#__PURE__*/React.createElement("td", {colSpan:3, className:"px-4 py-2"},
+            /*#__PURE__*/React.createElement("div", {className:"flex gap-2"},
+              /*#__PURE__*/React.createElement("input", {autoFocus:true, value:addVal, onChange:e=>setAddVal(e.target.value), onKeyDown:e=>{if(e.key==="Enter")confirmAdd();if(e.key==="Escape")setAddGroup(null);}, placeholder:"Tên loại giao dịch...", className:inputF+" py-1 text-sm"}),
+              /*#__PURE__*/React.createElement("button", {onClick:confirmAdd, className:blueBtn}, "Thêm"),
+              /*#__PURE__*/React.createElement("button", {onClick:()=>setAddGroup(null), className:ghostBtn}, "Huỷ")))))));
+
+  return /*#__PURE__*/React.createElement("div", {className:"mx-auto max-w-2xl space-y-4 py-4"},
+    /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between"},
+      /*#__PURE__*/React.createElement("h2", {className:"text-[22px] font-bold text-slate-800"}, "Loại giao dịch Thu/Chi"),
+      /*#__PURE__*/React.createElement("button", {onClick:()=>{if(window.confirm("Khôi phục danh sách mặc định?"))saveTxnKinds(DEFAULT_THU_KINDS,DEFAULT_CHI_KINDS);}, className:ghostBtn}, "Khôi phục mặc định")),
+    /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-500"}, "Danh sách hiển thị trong dropdown chọn loại giao dịch trên màn hình Tài chính. Thêm/sửa/xoá không ảnh hưởng dữ liệu đã lưu."),
+    /*#__PURE__*/React.createElement(KindList, {group:"thu", list:thuList, color:"text-[#047857]"}),
+    /*#__PURE__*/React.createElement(KindList, {group:"chi", list:chiList, color:"text-[#B91C1C]"}));
 }
 
 /* ───────── Settings Supplier Costs ───────── */
