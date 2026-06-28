@@ -1542,6 +1542,8 @@ function SalesModule({
   const [view, setView] = useState(openOrderId ? {edit: openOrderId} : "list");
   React.useEffect(() => { if (openOrderId) { setView({edit: openOrderId}); setOpenOrderId && setOpenOrderId(null); } }, [openOrderId]);
   const [modal, setModal] = useState(null);
+  const [listFromDate, setListFromDate] = useState(localMonthStart());
+  const [listToDate, setListToDate] = useState(localToday());
   const {docNums, setDocNums} = useDocNum();
   const nextId = (prefix) => {
     const row = docNums.find(r => r.prefix === prefix);
@@ -1566,11 +1568,21 @@ function SalesModule({
       setView("list");
     }
   };
-  const saveEdit = (id, o) => {
+  const saveEdit = (id, o, dt) => {
     setOrders(os => os.map(x => x.id === id ? {
       ...x,
       ...o
     } : x));
+    if (dt) {
+      const parts = String(dt).split(" ");
+      const datePart = parts.find(p => p.includes("/")) || "";
+      const [, mm, yy] = datePart.split("/");
+      if (yy && mm) {
+        const endDay = new Date(+yy, +mm, 0).getDate();
+        setListFromDate(`${yy}-${mm.padStart(2,"0")}-01`);
+        setListToDate(`${yy}-${mm.padStart(2,"0")}-${String(endDay).padStart(2,"0")}`);
+      }
+    }
     setView("list");
   };
   const applyKho = (id, payload) => setOrders(os => os.map(o => o.id === id ? {
@@ -1650,7 +1662,7 @@ function SalesModule({
     if (eo) return /*#__PURE__*/React.createElement(CreateOrder, {
       editOrder: eo,
       onBack: () => setView("list"),
-      onSaveEdit: o => saveEdit(eo.id, o),
+      onSaveEdit: o => saveEdit(eo.id, o, eo.dt),
       onQuickSave: o => setOrders(os => os.map(x => x.id === eo.id ? {...x, ...o} : x)),
       onSave: addOrder,
       onConvertDraft: eo.draft
@@ -1689,7 +1701,9 @@ function SalesModule({
     }),
     onBatchKho: () => setBatchModal(true),
     onFixItems: fixDone ? null : runOrderItemFix,
-    fixRunning
+    fixRunning,
+    initFrom: listFromDate,
+    initTo: listToDate
   }), batchModal && /*#__PURE__*/React.createElement(BatchKhoModal, {
     orders: orders.filter(o => !o.draft),
     onClose: () => setBatchModal(false),
@@ -2288,7 +2302,9 @@ function OrderTable({
   onReturn,
   onBatchKho,
   onFixItems,
-  fixRunning
+  fixRunning,
+  initFrom,
+  initTo
 }) {
   const notify = useToast();
   const [q, setQ] = useState("");
@@ -2297,8 +2313,8 @@ function OrderTable({
   const [fPayment, setFPayment] = useState("Tất cả");
   const [fStatus, setFStatus] = useState("Tất cả");
   const [fStaff, setFStaff] = useState("Tất cả");
-  const [fromDate, setFromDate] = useState(localMonthStart());
-  const [toDate, setToDate] = useState(localToday());
+  const [fromDate, setFromDate] = useState(initFrom || localMonthStart());
+  const [toDate, setToDate] = useState(initTo || localToday());
   const [ordPage, setOrdPage] = useState(1);
   React.useEffect(() => setOrdPage(1), [q, fDelivery, fPayment, fStatus, fStaff, fromDate, toDate]);
   const [usersForFilter] = useCollection("users");
@@ -2318,6 +2334,9 @@ function OrderTable({
   const ORD_PER_PAGE = 30;
   const totalOrdPages = Math.ceil(rows.length / ORD_PER_PAGE);
   const pagedOrders = rows.slice((ordPage - 1) * ORD_PER_PAGE, ordPage * ORD_PER_PAGE);
+  const sumTotal = rows.reduce((s, o) => s + calc(o).total, 0);
+  const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
+  const sumRemain = rows.reduce((s, o) => s + Math.max(0, calc(o).remaining), 0);
   const onExport = () => exportCSV("danh-sach-don-hang", ["Số ĐH", "Ngày", "Khách hàng", "SĐT", "Địa chỉ", "Thành tiền", "Đã trả", "Còn lại", "Giao hàng", "Trạng thái", "Nhân viên"], rows.map(o => {
     const c = calc(o);
     return [o.id, o.dt, o.name, o.phone, o.addr, c.total, o.paid, c.remaining, o.delivery, c.orderStatus, o.staff];
@@ -2528,25 +2547,15 @@ function OrderTable({
       title: "Sửa đơn",
       onClick: () => onEdit(o)
     }))));
-  }), (() => {
-    const sumTotal = rows.reduce((s, o) => s + calc(o).total, 0);
-    const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
-    const sumRemain = rows.reduce((s, o) => s + Math.max(0, calc(o).remaining), 0);
-    return /*#__PURE__*/React.createElement("tr", {
-      className: "bg-[#fed7aa] font-semibold text-slate-800"
-    }, /*#__PURE__*/React.createElement("td", {
-      colSpan: 4,
-      className: "px-3 py-3",
-    }, "TỔNG CỘNG (", rows.length, " ĐƠN)"), /*#__PURE__*/React.createElement("td", {
-      className: "whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums text-[#92400e]", style: {fontWeight:700}
-    }, num(sumTotal)), /*#__PURE__*/React.createElement("td", {
-      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${sumPaid > 0 ? "text-[#D97706]" : "text-[#94A3B8]"}`, style: {fontWeight:700}
-    }, sumPaid > 0 ? num(sumPaid) : ""), /*#__PURE__*/React.createElement("td", {
-      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${sumRemain > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`, style: {fontWeight:700}
-    }, sumRemain > 0 ? num(sumRemain) : ""), /*#__PURE__*/React.createElement("td", {
-      colSpan: 6
-    }));
-  })())),
+  }))),
+  /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl border border-[#fed7aa] bg-[#fed7aa] px-4 py-2.5 text-sm font-semibold text-slate-800"
+  },
+    /*#__PURE__*/React.createElement("span", {className: "mr-auto"}, "TỔNG CỘNG (", rows.length, " ĐƠN)"),
+    /*#__PURE__*/React.createElement("span", {className: "whitespace-nowrap tabular-nums text-[#92400e]"}, num(sumTotal)),
+    /*#__PURE__*/React.createElement("span", {className: `whitespace-nowrap tabular-nums ${sumPaid > 0 ? "text-[#D97706]" : "text-[#94A3B8]"}`}, sumPaid > 0 ? num(sumPaid) : ""),
+    /*#__PURE__*/React.createElement("span", {className: `whitespace-nowrap tabular-nums ${sumRemain > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`}, sumRemain > 0 ? num(sumRemain) : "")
+  ),
   totalOrdPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-1 px-1 flex-wrap"},
     /*#__PURE__*/React.createElement("span", {className: "text-xs text-slate-500"},
       `${(ordPage-1)*ORD_PER_PAGE+1}–${Math.min(ordPage*ORD_PER_PAGE, rows.length)} / ${rows.length} đơn`),
@@ -4510,8 +4519,11 @@ function PurchaseList({
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
 function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders = [], purchaseList = [], setPurchaseList, initSearch = "", onMounted, onOpenOrder}) {
+  const notify = useToast();
   const { profile: _whProfile } = useAuth();
   const _staffName = _whProfile?.name || "Quản lý";
+  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
+  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= _pISO(f)) && (!t || d <= new Date(_pISO(t).setHours(23,59,59))); };
   const [q, setQ] = useState(initSearch);
   React.useEffect(() => { if (initSearch) setQ(initSearch); if (onMounted) onMounted(); }, []);
   const [doc, setDoc] = useState(null);
@@ -7607,7 +7619,7 @@ function ReportSales({orders = [], onOpenOrder}) {
             /*#__PURE__*/React.createElement("span", {className:"text-sm font-bold tabular-nums "+(tDelivProfit>=0?"text-emerald-700":"text-[#B91C1C]")},
               (tDelivProfit>=0?"":"-")+vnd(Math.abs(tDelivProfit)))),
           undelivered.length > 0 && /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between"},
-            /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-500"}, "Biên gộp ước (chưa giao)"),
+            /*#__PURE__*/React.createElement("span", {className:"text-xs text-slate-500"}, "Lãi gộp tạm (chưa giao)"),
             /*#__PURE__*/React.createElement("span", {className:"text-sm font-semibold tabular-nums "+(tUndelivGross>=0?"text-emerald-600":"text-[#B91C1C]")},
               (tUndelivGross>=0?"":"-")+vnd(Math.abs(tUndelivGross)))))),
       /*#__PURE__*/React.createElement("div", {className:"rounded-xl border border-slate-200 bg-white p-4 shadow-sm"},
@@ -7616,10 +7628,10 @@ function ReportSales({orders = [], onOpenOrder}) {
         /*#__PURE__*/React.createElement("p", {className:"mt-2 text-2xl font-semibold tabular-nums text-right text-[#B91C1C]"}, vnd(tUndelivered)),
         undelivered.length > 0 && /*#__PURE__*/React.createElement("div", {className:"mt-3 space-y-1.5 border-t border-slate-100 pt-3"},
           /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs"},
-            /*#__PURE__*/React.createElement("span", {className:"text-slate-400"}, "Giá vốn ước"),
+            /*#__PURE__*/React.createElement("span", {className:"text-slate-400"}, "Giá vốn tạm"),
             /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-slate-500"}, "−"+vnd(tUndelivCost))),
           /*#__PURE__*/React.createElement("div", {className:"flex justify-between text-xs border-t border-slate-100 pt-1.5 mt-1"},
-            /*#__PURE__*/React.createElement("span", {className:"font-medium text-[#92400e]"}, "Biên gộp ước"),
+            /*#__PURE__*/React.createElement("span", {className:"font-medium text-[#92400e]"}, "Lãi gộp tạm"),
             /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-semibold "+(tUndelivGross>=0?"text-emerald-600":"text-[#B91C1C]")},
               (tUndelivGross>=0?"":"-")+vnd(Math.abs(tUndelivGross))
             )),
