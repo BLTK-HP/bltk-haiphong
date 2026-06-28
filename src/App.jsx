@@ -3437,7 +3437,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const nowStr = () => { const d = new Date(), pad = n => String(n).padStart(2,"0"); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   const effectiveOrderId = editOrder?.id || (!isDraft ? pendingOrderId : "");
   const autoAddTxn = (p) => {
-    const nextId = _txns.length ? Math.max(..._txns.map(t=>t.id))+1 : 1;
+    const nextId = _txns.length ? Math.max(..._txns.map(t=>Number(t.id)||0))+1 : 1;
     const d = new Date(), pad = n => String(n).padStart(2,"0");
     const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const accKey = bankAccounts.find(a => a.bank === p.account)?.key || p.account || "";
@@ -3466,7 +3466,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   };
   const CHI_KIND_MAP = {"Hoàn tiền hàng":"Hoàn tiền KH","Chi phí Ship hàng":"Chi vận chuyển","Chi phí hoa hồng":"Chi hoa hồng","Chi phí lắp đặt":"Chi lắp đặt"};
   const autoAddChi = (type, amount, acc) => {
-    const nextId = _txns.length ? Math.max(..._txns.map(t=>t.id))+1 : 1;
+    const nextId = _txns.length ? Math.max(..._txns.map(t=>Number(t.id)||0))+1 : 1;
     const d = new Date(), pad = n => String(n).padStart(2,"0");
     const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const accKey = bankAccounts.find(a => a.bank === acc)?.key || acc || "";
@@ -4527,7 +4527,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   React.useEffect(() => setWhInPage(1), [q, fSup, fProd, fromDate, toDate]);
   const {txns = [], setTxns} = useTxns() || {};
   const lotRemaining = r => { const tot=(r.costNcc+(r.fee||0))*r.qtyIn-(r.returns||[]).reduce((s,x)=>s+(x.amount||0),0); const paid=r.paid||(r.pay==="Đã thanh toán"?tot:0); return Math.max(0,tot-paid); };
-  const nextTxnId = txns.length ? Math.max(...txns.map(t=>t.id))+1 : 1;
+  const nextTxnId = txns.length ? Math.max(...txns.map(t=>Number(t.id)||0))+1 : 1;
   const handlePaySave = t => { setTxns(p=>[t,...p]); if(payModal) setItems(xs=>xs.map(r=>(r.lot===payModal.lot&&r.prod===payModal.prod)?{...r,paid:(r.paid||0)+Math.abs(t.amount)}:r)); setPayModal(null); notify("Đã lưu phiếu chi thanh toán NCC"); };
   const setKho = (lot, kho) => setItems(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
   const doReturnNcc = (rec, ret) => {
@@ -6051,7 +6051,7 @@ function Suppliers() {
   const { txns = [], setTxns } = useTxns() || {};
   const lotRemaining = r => { const tot=(r.costNcc+(r.fee||0))*r.qtyIn-(r.returns||[]).reduce((s,x)=>s+(x.amount||0),0); const paid=r.paid||(r.pay==="Đã thanh toán"?tot:0); return Math.max(0,tot-paid); };
   const debtOf = name => whInItems.filter(r=>r.supplier===name).reduce((s,r)=>s+lotRemaining(r),0);
-  const nextTxnId = txns.length ? Math.max(...txns.map(t=>t.id))+1 : 1;
+  const nextTxnId = txns.length ? Math.max(...txns.map(t=>Number(t.id)||0))+1 : 1;
   const handlePaySave = t => { setTxns(p=>[t,...p]); setPayModal(null); notify("Đã lưu phiếu chi"); };
   const save = f => {
     setItems(xs => form && form.name ? xs.map(s => s === form ? {
@@ -6916,6 +6916,53 @@ function ReconcileBtn({ txns, setTxns, orders }) {
   );
 }
 
+// Fix #3: Đồng bộ sao kê TCB-CTY thủ công — thay thế auto-migration
+function SyncBankModal({ onClose, txns }) {
+  const notify = useToast();
+  const [syncing, setSyncing] = React.useState(false);
+  const [done, setDone] = React.useState(null);
+  const isT15 = t => {
+    const d = String(t.date || '');
+    return ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026'].some(m => d.includes(m))
+        || ['2026-01','2026-02','2026-03','2026-04','2026-05'].some(m => d.startsWith(m));
+  };
+  const isT6 = t => String(t.date || '').includes('/06/2026') || String(t.date || '').startsWith('2026-06');
+  const t15List = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
+  const t6List  = txns.filter(t => t.acc === 'TCB-CTY' && isT6(t));
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      for (const t of [...t15List, ...t6List]) await deleteDocument("txns", t._id || String(t.id));
+      for (const txn of TCB_CTY_HISTORY_2026) await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
+      for (const txn of TCB_CTY_T6_2026)      await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
+      setDone({ old: t15List.length + t6List.length, imported: TCB_CTY_HISTORY_2026.length + TCB_CTY_T6_2026.length });
+      notify("Đã đồng bộ sao kê TCB T1-T6/2026 ✓");
+    } catch(e) { notify("Lỗi: " + e.message); }
+    finally { setSyncing(false); }
+  };
+  return /*#__PURE__*/React.createElement(Modal, {title:"Đồng bộ sao kê TCB-CTY", maxW:"max-w-lg", onClose},
+    !done
+      ? /*#__PURE__*/React.createElement("div", {className:"space-y-4 py-2"},
+          /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-600"}, "Thao tác này sẽ xoá GD TCB-CTY hiện có và import lại từ sao kê ngân hàng:"),
+          /*#__PURE__*/React.createElement("ul", {className:"text-sm text-slate-700 space-y-1 list-disc ml-4"},
+            /*#__PURE__*/React.createElement("li", null, `Xoá ${t15List.length} GD TCB-CTY T1-T5/2026 hiện có`),
+            /*#__PURE__*/React.createElement("li", null, `Xoá ${t6List.length} GD TCB-CTY T6/2026 hiện có`),
+            /*#__PURE__*/React.createElement("li", null, `Import ${TCB_CTY_HISTORY_2026.length} GD T1-T5 từ sao kê PDF`),
+            /*#__PURE__*/React.createElement("li", null, `Import ${TCB_CTY_T6_2026.length} GD T6 từ sao kê XLSX`)),
+          /*#__PURE__*/React.createElement("p", {className:"text-xs text-amber-700 bg-amber-50 rounded-lg p-3"}, "Phiếu thu/chi thủ công và GD TCB-PAT không bị ảnh hưởng."),
+          /*#__PURE__*/React.createElement("div", {className:"flex justify-end gap-2 pt-1"},
+            /*#__PURE__*/React.createElement("button", {onClick:onClose, className:"rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"}, "Huỷ"),
+            /*#__PURE__*/React.createElement("button", {onClick:handleSync, disabled:syncing, className:"rounded-lg bg-[#92400e] px-4 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:opacity-50"},
+              syncing ? "Đang đồng bộ..." : "Xác nhận đồng bộ")))
+      : /*#__PURE__*/React.createElement("div", {className:"space-y-3 py-2"},
+          /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-2 text-green-700"},
+            /*#__PURE__*/React.createElement(Check, {className:"h-5 w-5"}),
+            /*#__PURE__*/React.createElement("span", {className:"font-medium"}, "Đồng bộ hoàn tất!")),
+          /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-600"}, `Đã xoá ${done.old} GD cũ và import ${done.imported} GD mới từ sao kê ngân hàng.`),
+          /*#__PURE__*/React.createElement("div", {className:"flex justify-end"},
+            /*#__PURE__*/React.createElement("button", {onClick:onClose, className:"rounded-lg bg-slate-100 px-4 py-2 text-sm hover:bg-slate-200"}, "Đóng"))));
+}
+
 function Finance({setActive, onOpenOrder}) {
   const notify = useToast();
   const { profile } = useAuth();
@@ -6935,6 +6982,7 @@ function Finance({setActive, onOpenOrder}) {
   const [modal, setModal]     = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [editTxn, setEditTxn] = useState(null);
+  const [syncModal, setSyncModal] = useState(false);
   const [txnPage, setTxnPage] = useState(1);
   const [detailPage, setDetailPage] = useState(1);
   const [dFromDate, setDFromDate] = useState(localMonthStart);
@@ -6942,7 +6990,7 @@ function Finance({setActive, onOpenOrder}) {
   const [dQ, setDQ]               = useState("");
   const [dDir, setDDir]           = useState("Tất cả");
   const [fKind, setFKind]         = useState("Tất cả");
-  const nextId = txns.length ? Math.max(...txns.map(t=>t.id))+1 : 1;
+  const nextId = txns.length ? Math.max(...txns.map(t=>Number(t.id)||0))+1 : 1;
   React.useEffect(() => { setTxnPage(1); }, [q, fromDate, toDate, fAcc, fDir, fKind]);
   React.useEffect(() => { setDetailPage(1); setDFromDate(localMonthStart); setDToDate(localToday); setDQ(""); setDDir("Tất cả"); }, [fAccDetail]);
 
@@ -7213,7 +7261,8 @@ function Finance({setActive, onOpenOrder}) {
       modal==="chi" && /*#__PURE__*/React.createElement(PhieuChiModal,{onClose:()=>setModal(null),onSave:addChi,nextId,kinds:patOnly?["CP cá nhân <500k","CP tiền học","CP điện nước","CP thuê nhà"]:null,initAcc:patOnly?"TCB-PAT":null}),
       modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null),onSave:addXfer,nextId}),
       cancelTarget && /*#__PURE__*/React.createElement(HuyGiaoDichModal,{onClose:()=>setCancelTarget(null),onConfirm:reason=>cancelTxn(cancelTarget,reason)}),
-      editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}));
+      editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}),
+      syncModal && /*#__PURE__*/React.createElement(SyncBankModal,{onClose:()=>setSyncModal(false),txns}));
   }
 
   return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
@@ -7236,7 +7285,9 @@ function Finance({setActive, onOpenOrder}) {
         /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("chi"), className:"inline-flex items-center gap-1.5 rounded-lg bg-[#92400e] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#78350f]"},
           /*#__PURE__*/React.createElement(Minus, {className:"h-4 w-4"}), "Lập phiếu chi"),
         /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("chuyen"), className:"inline-flex items-center gap-1.5 rounded-lg bg-[#78350f] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#78350f]"},
-          /*#__PURE__*/React.createElement(ArrowLeftRight, {className:"h-4 w-4"}), "Chuyển tiền nội bộ"))},
+          /*#__PURE__*/React.createElement(ArrowLeftRight, {className:"h-4 w-4"}), "Chuyển tiền nội bộ"),
+        isAdmin && !patOnly && /*#__PURE__*/React.createElement("button", {onClick:()=>setSyncModal(true), className:"inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"},
+          /*#__PURE__*/React.createElement(RefreshCw, {className:"h-4 w-4"}), "Đồng bộ sao kê TCB"))},
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5 overflow-x-auto"},
         /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
           /*#__PURE__*/React.createElement("thead", null,
@@ -8214,21 +8265,27 @@ function App({ profile, logout }) {
   const setPurchaseList = u => syncFS("purchases", r => r.lot)(purchaseList, u);
   const setWhInItems = u => syncFS("wh_in", r => (r.lot||"")+"~~"+(r.prod||""))(whInItems, u);
   const setWhOutItems = u => syncFS("wh_out", r => r.slip)(whOutItems, u);
-  const BANKS_VER = "v8";
-  const [bankAccounts, setBankAccounts] = useState(() => {
-    try {
-      if (localStorage.getItem('bltk_banks_ver') !== BANKS_VER) {
-        localStorage.setItem('bltk_banks_ver', BANKS_VER);
-        return INIT_BANK_ACCOUNTS;
-      }
-      const saved = JSON.parse(localStorage.getItem('bltk_banks'));
-      if (!saved) return INIT_BANK_ACCOUNTS;
-      return saved;
-    } catch { return INIT_BANK_ACCOUNTS; }
-  });
+  // Fix #2: bankAccounts lưu trên Firestore thay vì localStorage — đồng nhất mọi thiết bị/trình duyệt
+  const [settingsFS, settingsLoaded] = useCollection("settings");
+  const [bankAccounts, setBankAccountsState] = useState(INIT_BANK_ACCOUNTS);
   React.useEffect(() => {
-    localStorage.setItem('bltk_banks', JSON.stringify(bankAccounts));
-  }, [bankAccounts]);
+    if (!settingsLoaded) return;
+    const doc = settingsFS.find(d => d._id === "bankAccounts");
+    if (doc?.accounts?.length) {
+      setBankAccountsState(doc.accounts);
+    } else {
+      // Lần đầu: seed từ localStorage (nếu có) hoặc INIT_BANK_ACCOUNTS
+      const local = (() => { try { return JSON.parse(localStorage.getItem('bltk_banks')) || null; } catch { return null; } })();
+      const seed = local || INIT_BANK_ACCOUNTS;
+      setBankAccountsState(seed);
+      saveDoc("settings", "bankAccounts", { accounts: seed });
+    }
+  }, [settingsLoaded, settingsFS]);
+  const setBankAccounts = updater => {
+    const next = typeof updater === 'function' ? updater(bankAccounts) : updater;
+    setBankAccountsState(next);
+    saveDoc("settings", "bankAccounts", { accounts: next });
+  };
   const [txnsFS, txnsLoaded] = useCollection("txns");
   const txns = txnsFS;
   const setTxns = u => syncFS("txns", t => String(t.id))(txns, u);
@@ -8242,7 +8299,7 @@ function App({ profile, logout }) {
   });
   React.useEffect(() => { localStorage.setItem("bltk_docnums", JSON.stringify(docNums)); }, [docNums]);
   const title = LABELS[active] || "";
-  const appLoaded = ordersLoaded && purchasesLoaded && whInLoaded && whOutLoaded && txnsLoaded;
+  const appLoaded = ordersLoaded && purchasesLoaded && whInLoaded && whOutLoaded && txnsLoaded && settingsLoaded;
 
   // Auto-migration: sửa items thiếu + thêm đơn mới + re-tạo wh_in/wh_out đúng
   React.useEffect(() => {
@@ -8346,15 +8403,11 @@ function App({ profile, logout }) {
         // Xoá toàn bộ GD T6 TCB-CTY hiện có
         const t6Old = txns.filter(t => t.acc === 'TCB-CTY' && String(t.date || '').includes('/06/2026'));
         console.log(`[tcb-t6] Xoá ${t6Old.length} GD T6 TCB-CTY cũ...`);
-        for (const t of t6Old) await deleteDocument("txns", String(t.id));
-        // Tìm id lớn nhất còn lại
-        const remaining = txns.filter(t => !t6Old.find(o => o.id === t.id));
-        const maxId = remaining.length ? Math.max(...remaining.map(t => Number(t.id) || 0)) : 0;
-        // Ghi 47 GD mới từ sao kê ngân hàng
+        for (const t of t6Old) await deleteDocument("txns", t._id || String(t.id));
+        // Fix #1: dùng ref ngân hàng làm doc ID — idempotent (re-import không tạo trùng)
         console.log(`[tcb-t6] Thêm ${TCB_CTY_T6_2026.length} GD mới từ sao kê...`);
-        for (let i = 0; i < TCB_CTY_T6_2026.length; i++) {
-          const newId = maxId + i + 1;
-          await saveDoc("txns", String(newId), { ...TCB_CTY_T6_2026[i], id: newId });
+        for (const txn of TCB_CTY_T6_2026) {
+          await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
         }
         localStorage.setItem('bltk_tcb_t6_fix_v1', 'done');
         console.log("[tcb-t6] Hoàn thành ✓");
@@ -8379,13 +8432,11 @@ function App({ profile, logout }) {
         };
         const t15Old = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
         console.log(`[tcb-history-v2] Xoá ${t15Old.length} GD T1-T5 TCB-CTY...`);
-        for (const t of t15Old) await deleteDocument("txns", String(t.id));
-        const remaining = txns.filter(t => !t15Old.find(o => o.id === t.id));
-        const maxId = remaining.length ? Math.max(...remaining.map(t => Number(t.id)||0)) : 0;
+        for (const t of t15Old) await deleteDocument("txns", t._id || String(t.id));
+        // Fix #1: dùng ref ngân hàng làm doc ID — idempotent
         console.log(`[tcb-history-v2] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
-        for (let i = 0; i < TCB_CTY_HISTORY_2026.length; i++) {
-          const newId = maxId + i + 1;
-          await saveDoc("txns", String(newId), { ...TCB_CTY_HISTORY_2026[i], id: newId });
+        for (const txn of TCB_CTY_HISTORY_2026) {
+          await saveDoc("txns", txn.ref, { ...txn, id: txn.ref });
         }
         localStorage.setItem('bltk_tcb_history_v2', 'done');
         console.log("[tcb-history-v2] Hoàn thành ✓");
