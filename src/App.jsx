@@ -7151,15 +7151,15 @@ function Finance({setActive, onOpenOrder}) {
           head:/*#__PURE__*/React.createElement(React.Fragment,null,
             /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:90}},"Ngày"),
             /*#__PURE__*/React.createElement(Th,{style:{width:90,minWidth:90}},"Số phiếu"),
-            /*#__PURE__*/React.createElement(Th,{style:{width:90,minWidth:90}},"Số đơn hàng"),
+            !patOnly&&/*#__PURE__*/React.createElement(Th,{style:{width:90,minWidth:90}},"Số đơn hàng"),
             /*#__PURE__*/React.createElement(Th,{style:{minWidth:160}},"Đối tượng"),
-            /*#__PURE__*/React.createElement(Th,{center:true,style:{width:95,minWidth:95}},"Loại giao dịch"),
+            /*#__PURE__*/React.createElement(Th,{center:true,style:{width:patOnly?160:95,minWidth:patOnly?160:95}},"Loại giao dịch"),
             /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Tài khoản"),
             /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Số tiền"),
             /*#__PURE__*/React.createElement(Th,{style:{minWidth:200}},"Nội dung"),
             /*#__PURE__*/React.createElement(Th,{style:{minWidth:80}},"Người tạo"),
             /*#__PURE__*/React.createElement(Th,{center:true},""),
-            /*#__PURE__*/React.createElement(Th,{center:true},""))},
+            !patOnly&&/*#__PURE__*/React.createElement(Th,{center:true},""))},
           pagedTxns.map(t=>/*#__PURE__*/React.createElement("tr",{key:t.id,className:t.cancelled?"opacity-50 bg-slate-50":""},
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-xs text-slate-500"}, (() => {
               const parts = String(t.date||"").split(" ");
@@ -7170,7 +7170,7 @@ function Finance({setActive, onOpenOrder}) {
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 tabular-nums"},
               /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${t.amount > 0 ? "bg-[#dcfce7] text-[#047857]" : t.amount < 0 ? "bg-[#fee2e2] text-[#B91C1C]" : "bg-slate-100 text-slate-600"}`},
                 fmtDocId(t.amount >= 0 ? "PT" : "PC", t.id))),
-            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
+            !patOnly&&/*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5"},
               t.orderId ? /*#__PURE__*/React.createElement("button",{className:"inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium bg-[#fef9f0] text-[#92400e] hover:bg-amber-100", onClick:()=>onOpenOrder&&onOpenOrder(t.orderId)},t.orderId) : /*#__PURE__*/React.createElement("span",{className:"text-slate-300"},"")),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-700"},t.entity),
             /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
@@ -7183,7 +7183,7 @@ function Finance({setActive, onOpenOrder}) {
             /*#__PURE__*/React.createElement("td",{className:"px-2 py-2 text-center"},
               !t.cancelled&&/*#__PURE__*/React.createElement("button",{onClick:()=>toggleCheck(t.id),title:t.checked?"Bỏ đối chiếu":"Đã đối chiếu",className:`h-5 w-5 rounded border-2 flex items-center justify-center transition mx-auto ${t.checked?"border-green-500 bg-green-500 text-white":"border-slate-300 hover:border-amber-400"}`},
                 t.checked&&/*#__PURE__*/React.createElement(Check,{className:"h-3 w-3 stroke-[3]"}))),
-            /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
+            !patOnly&&/*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
               t.cancelled
                 ?/*#__PURE__*/React.createElement("button",{onClick:()=>restoreTxn(t.id),className:"rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"},"Khôi phục")
                 :/*#__PURE__*/React.createElement("button",{onClick:()=>cancelTxn(t.id),className:"rounded px-2 py-0.5 text-xs font-medium bg-red-50 text-[#B91C1C] hover:bg-red-100"},"Huỷ"))))))),
