@@ -8483,68 +8483,6 @@ function App({ profile, logout }) {
     })();
   }, [appLoaded]);
 
-  // Auto-migration: đồng bộ GD tài chính T6/2026 TCB-CTY từ sao kê ngân hàng
-  React.useEffect(() => {
-    if (!appLoaded) return;
-    if (true) return; // disabled — đã migrate bằng admin script
-    (async () => {
-      try {
-        console.log("[tcb-t6] Bắt đầu đồng bộ sao kê T6 TCB-CTY...");
-        // Xoá toàn bộ GD T6 TCB-CTY hiện có
-        const t6Old = txns.filter(t => t.acc === 'TCB-CTY' && String(t.date || '').includes('/06/2026'));
-        console.log(`[tcb-t6] Xoá ${t6Old.length} GD T6 TCB-CTY cũ...`);
-        const batchDel6 = writeBatch(db);
-        t6Old.forEach(t => batchDel6.delete(fsDoc(db, "txns", t._id || String(t.id))));
-        if (t6Old.length) await batchDel6.commit();
-        console.log(`[tcb-t6] Thêm ${TCB_CTY_T6_2026.length} GD mới...`);
-        const CHUNK = 400;
-        for (let i = 0; i < TCB_CTY_T6_2026.length; i += CHUNK) {
-          const b = writeBatch(db);
-          TCB_CTY_T6_2026.slice(i, i+CHUNK).forEach(txn => b.set(fsDoc(db,"txns",txn.ref), {...txn, id:txn.ref, year:2026}));
-          await b.commit();
-        }
-        localStorage.setItem('bltk_tcb_t6_fix_v1', 'done');
-        console.log("[tcb-t6] Hoàn thành ✓");
-      } catch(e) {
-        console.error("[tcb-t6] Lỗi:", e);
-      }
-    })();
-  }, [appLoaded]);
-
-  // Auto-migration v3: batch xoá+import GD TCB-CTY T1-T5/2026 (mọi format ngày)
-  React.useEffect(() => {
-    if (!appLoaded) return;
-    if (true) return; // disabled — đã migrate bằng admin script
-    (async () => {
-      try {
-        console.log("[tcb-history-v2] Bắt đầu sửa GD TCB-CTY T1-T5/2026...");
-        // Bắt cả 2 format: "DD/MM/YYYY" và "YYYY-MM-DD"
-        const isT15 = t => {
-          const d = String(t.date || '');
-          return ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026'].some(m => d.includes(m))
-              || ['2026-01','2026-02','2026-03','2026-04','2026-05'].some(m => d.startsWith(m));
-        };
-        const t15Old = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
-        console.log(`[tcb-history-v2] Xoá ${t15Old.length} GD T1-T5 TCB-CTY...`);
-        const CHUNK = 400;
-        for (let i = 0; i < t15Old.length; i += CHUNK) {
-          const b = writeBatch(db);
-          t15Old.slice(i, i+CHUNK).forEach(t => b.delete(fsDoc(db,"txns", t._id || String(t.id))));
-          await b.commit();
-        }
-        console.log(`[tcb-history-v2] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
-        for (let i = 0; i < TCB_CTY_HISTORY_2026.length; i += CHUNK) {
-          const b = writeBatch(db);
-          TCB_CTY_HISTORY_2026.slice(i, i+CHUNK).forEach(txn => b.set(fsDoc(db,"txns",txn.ref), {...txn, id:txn.ref, year:2026}));
-          await b.commit();
-        }
-        localStorage.setItem('bltk_tcb_history_v3', 'done');
-        console.log("[tcb-history-v3] Hoàn thành ✓");
-      } catch(e) {
-        console.error("[tcb-history-v2] Lỗi:", e);
-      }
-    })();
-  }, [appLoaded]);
 
   return /*#__PURE__*/React.createElement(DocNumCtx.Provider, {value: {docNums, setDocNums}},
   /*#__PURE__*/React.createElement(InvCtx.Provider, {value: {whInItems, setWhInItems, whOutItems, setWhOutItems}},
