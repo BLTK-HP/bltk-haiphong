@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
 import { ORDER_ITEM_FIXES, NEW_ORDERS_TO_ADD } from './orderItemFixes.js'
 import { TCB_CTY_T6_2026 } from './tcbT6Fix.js'
+import { TCB_CTY_HISTORY_2026 } from './tcbCtyHistory.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc, where } from 'firebase/firestore'
 import { db, storage } from './firebase.js'
@@ -809,7 +810,7 @@ function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
 
 /* ── Bank accounts context (shared Finance ↔ Settings) ── */
 const INIT_BANK_ACCOUNTS = [
-  {id:1, key:"TCB-CTY",  bank:"TCB-CTY BLTK HP", account:"02", owner:"CÔNG TY BTLK HP", branch:"", note:"", openBal:-315593511, status:"Hoạt động"},
+  {id:1, key:"TCB-CTY",  bank:"TCB-CTY BLTK HP", account:"02", owner:"CÔNG TY BTLK HP", branch:"", note:"", openBal:951999, status:"Hoạt động"},
   {id:2, key:"TCB-PAT",  bank:"TCB-PAT",          account:"01", owner:"PAT",              branch:"", note:"", openBal:218663367, status:"Hoạt động"},
   {id:3, key:"Tiền mặt", bank:"TIEN MAT",         account:"TM", owner:"Tiền mặt",         branch:"", note:"", openBal:0,       status:"Hoạt động"},
 ];
@@ -8213,7 +8214,7 @@ function App({ profile, logout }) {
   const setPurchaseList = u => syncFS("purchases", r => r.lot)(purchaseList, u);
   const setWhInItems = u => syncFS("wh_in", r => (r.lot||"")+"~~"+(r.prod||""))(whInItems, u);
   const setWhOutItems = u => syncFS("wh_out", r => r.slip)(whOutItems, u);
-  const BANKS_VER = "v7";
+  const BANKS_VER = "v8";
   const [bankAccounts, setBankAccounts] = useState(() => {
     try {
       if (localStorage.getItem('bltk_banks_ver') !== BANKS_VER) {
@@ -8359,6 +8360,32 @@ function App({ profile, logout }) {
         console.log("[tcb-t6] Hoàn thành ✓");
       } catch(e) {
         console.error("[tcb-t6] Lỗi:", e);
+      }
+    })();
+  }, [appLoaded]);
+
+  // Auto-migration: thay thế GD TCB-CTY T1-T5/2026 sai bằng dữ liệu chính xác từ sao kê PDF
+  React.useEffect(() => {
+    if (!appLoaded) return;
+    if (localStorage.getItem('bltk_tcb_history_v1') === 'done') return;
+    (async () => {
+      try {
+        console.log("[tcb-history] Bắt đầu sửa GD TCB-CTY T1-T5/2026...");
+        const months = ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026'];
+        const t15Old = txns.filter(t => t.acc === 'TCB-CTY' && months.some(m => String(t.date||'').includes(m)));
+        console.log(`[tcb-history] Xoá ${t15Old.length} GD T1-T5 TCB-CTY cũ...`);
+        for (const t of t15Old) await deleteDocument("txns", String(t.id));
+        const remaining = txns.filter(t => !t15Old.find(o => o.id === t.id));
+        const maxId = remaining.length ? Math.max(...remaining.map(t => Number(t.id)||0)) : 0;
+        console.log(`[tcb-history] Thêm ${TCB_CTY_HISTORY_2026.length} GD đúng từ sao kê PDF...`);
+        for (let i = 0; i < TCB_CTY_HISTORY_2026.length; i++) {
+          const newId = maxId + i + 1;
+          await saveDoc("txns", String(newId), { ...TCB_CTY_HISTORY_2026[i], id: newId });
+        }
+        localStorage.setItem('bltk_tcb_history_v1', 'done');
+        console.log("[tcb-history] Hoàn thành ✓");
+      } catch(e) {
+        console.error("[tcb-history] Lỗi:", e);
       }
     })();
   }, [appLoaded]);
