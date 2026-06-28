@@ -2370,9 +2370,8 @@ function OrderTable({
 
     // Sheet 1: Tổng hợp đơn hàng (1 dòng / đơn)
     const h1 = ["STT", "Số ĐH", "Ngày", "Khách hàng", "SĐT", "Địa chỉ",
-      "Mã hàng", "Sản phẩm (SL × đơn giá)", "Tiền hàng",
-      "Phí ship KH", "Phí hoàn KH", "Tổng đơn",
-      "Thanh toán", "Còn lại", "Hoàn tiền",
+      "Tiền hàng", "Phí ship KH", "Phí hoàn KH", "Tổng đơn",
+      "Đặt cọc", "Thanh toán", "Còn lại", "Hoàn tiền",
       "Giao hàng", "Trạng thái", "Nhân viên"];
     const r1 = rows.map((o, i) => {
       const c = calc(o);
@@ -2380,19 +2379,19 @@ function OrderTable({
       const subtotal = its.reduce((s, it) => s + Math.max(0, (it.price||0) * (it.qty||0) - (it.disc||0)), 0);
       const activeRets = (o.returns || []).filter(r => !r.cancelled);
       const retAmt = activeRets.reduce((s, r) => s + (r.amount||0), 0);
-      const skus = its.map(it => it.sku || "").filter(Boolean).join(", ");
-      const prods = its.map(it => `${it.name} ×${it.qty} @${vnd(it.price)}`).join("; ");
+      const pmts = (o.payments || []);
+      const datCoc = pmts.filter(p => p.kind === "Đặt cọc").reduce((s, p) => s + (p.amount||0), 0);
+      const thanhToan = pmts.filter(p => p.kind === "Thanh toán").reduce((s, p) => s + (p.amount||0), 0);
       return [
         i + 1, o.id, o.dt, o.name, o.phone || "", o.addr || "",
-        skus, prods,
         subtotal, o.shippingFee || 0, o.returnFee || 0, c.total,
-        o.paid || 0, Math.max(0, c.remaining), retAmt,
+        datCoc, thanhToan, Math.max(0, c.remaining), retAmt,
         o.delivery || "", c.orderStatus, o.staff || "",
       ];
     });
     const ws1 = XLSX.utils.aoa_to_sheet([h1, ...r1]);
-    applyNumFmt(ws1, [8, 9, 10, 11, 12, 13, 14]);
-    ws1['!cols'] = [4,8,10,14,11,22,18,40,12,10,10,12,12,12,10,14,14,12].map(w => ({ wch: w }));
+    applyNumFmt(ws1, [6, 7, 8, 9, 10, 11, 12, 13]);
+    ws1['!cols'] = [4,8,10,14,11,22,12,10,10,12,12,12,12,10,14,14,12].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws1, "Don hang");
 
     // Sheet 2: Chi tiết từng sản phẩm (1 dòng / sản phẩm)
