@@ -6775,8 +6775,9 @@ function Finance({setActive, onOpenOrder}) {
   const [dToDate, setDToDate]     = useState(localToday);
   const [dQ, setDQ]               = useState("");
   const [dDir, setDDir]           = useState("Tất cả");
+  const [fKind, setFKind]         = useState("Tất cả");
   const nextId = txns.length ? Math.max(...txns.map(t=>t.id))+1 : 1;
-  React.useEffect(() => { setTxnPage(1); }, [q, fromDate, toDate, fAcc, fDir]);
+  React.useEffect(() => { setTxnPage(1); }, [q, fromDate, toDate, fAcc, fDir, fKind]);
   React.useEffect(() => { setDetailPage(1); setDFromDate(localMonthStart); setDToDate(localToday); setDQ(""); setDDir("Tất cả"); }, [fAccDetail]);
 
   const parseD    = s => { const p=s.split(' ')[0].split('/'); return new Date(+p[2],+p[1]-1,+p[0]); };
@@ -6792,6 +6793,7 @@ function Finance({setActive, onOpenOrder}) {
     if (fAcc !== "Tất cả" && t.acc !== fAcc) return false;
     if (fDir === "Thu" && t.amount <= 0) return false;
     if (fDir === "Chi" && t.amount >= 0) return false;
+    if (patOnly && fKind !== "Tất cả" && normalizeKind(t) !== fKind) return false;
     if (q && !`${t.id} ${t.orderId} ${t.note} ${t.entity}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }).sort((a, b) => { const da = parseD(a.date), db = parseD(b.date); return da - db !== 0 ? db - da : b.id - a.id; });
@@ -7144,6 +7146,8 @@ function Finance({setActive, onOpenOrder}) {
           allAccs.map(a=>/*#__PURE__*/React.createElement("option",{key:a},a))),
         /*#__PURE__*/React.createElement("select", {value:fDir, onChange:e=>setFDir(e.target.value), className:`${field} py-1.5 text-sm`},
           ["Tất cả","Thu","Chi"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k))),
+        patOnly&&/*#__PURE__*/React.createElement("select", {value:fKind, onChange:e=>setFKind(e.target.value), className:`${field} py-1.5 text-sm`},
+          ["Tất cả","CP cá nhân <500k","CP tiền học","CP điện nước","CP thuê nhà"].map(k=>/*#__PURE__*/React.createElement("option",{key:k},k))),
         /*#__PURE__*/React.createElement(PrintBtn, null),
         /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExportTxn}),
         /*#__PURE__*/React.createElement(ReconcileBtn, {txns, setTxns, orders}))},
