@@ -1592,7 +1592,7 @@ function SalesModule({
     returned: true
   } : o));
   const [fixRunning, setFixRunning] = useState(false);
-  const [fixDone, setFixDone] = useState(false);
+  const [fixDone, setFixDone] = useState(() => localStorage.getItem('bltk_order_fix_done') === '1');
   const runOrderItemFix = async () => {
     const totalOps = ORDER_ITEM_FIXES.length + NEW_ORDERS_TO_ADD.length;
     if (!window.confirm(`Thực hiện:\n• Cập nhật items: ${ORDER_ITEM_FIXES.length} đơn\n• Thêm mới: ${NEW_ORDERS_TO_ADD.length} đơn (T12/2025 + T6/2026)\n\nTổng ${totalOps} thao tác. Không thể hoàn tác.`)) return;
@@ -1606,6 +1606,7 @@ function SalesModule({
       for (const o of NEW_ORDERS_TO_ADD) {
         await saveDoc("orders", o.id, o);
       }
+      localStorage.setItem('bltk_order_fix_done', '1');
       setFixDone(true);
     } catch(e) { alert("Lỗi: " + e.message); }
     setFixRunning(false);
