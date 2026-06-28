@@ -304,10 +304,6 @@ const NAV = [{
   label: "Tài chính",
   icon: Wallet
 }, {
-  key: "personal_finance",
-  label: "Tài khoản cá nhân",
-  icon: CreditCard
-}, {
   key: "sales",
   label: "Bán hàng",
   icon: ShoppingCart,
@@ -414,7 +410,6 @@ const NAV = [{
 }];
 const LABELS = {
   finance: "Tài chính",
-  personal_finance: "Tài khoản cá nhân",
   sales_draft: "Báo giá",
   sales_orders: "Danh sách đơn hàng",
   purchase: "Mua hàng",
@@ -6754,9 +6749,12 @@ function ReconcileBtn({ txns, setTxns, orders }) {
   );
 }
 
-function Finance({setActive, onOpenOrder, patOnly = false}) {
+function Finance({setActive, onOpenOrder}) {
   const notify = useToast();
   const { profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
+  const [finTab, setFinTab] = React.useState("cty");
+  const patOnly = isAdmin && finTab === "pat";
   const {bankAccounts} = useBankAccounts();
   const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động" && (patOnly ? a.key === "TCB-PAT" : a.key !== "TCB-PAT"));
   const {txns, setTxns}       = useTxns();
@@ -7042,6 +7040,16 @@ function Finance({setActive, onOpenOrder, patOnly = false}) {
   }
 
   return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
+
+    isAdmin && /*#__PURE__*/React.createElement("div", {className:"flex gap-1 border-b border-slate-200 mb-1"},
+      /*#__PURE__*/React.createElement("button", {
+        onClick:()=>setFinTab("cty"),
+        className:`px-4 py-2 text-sm font-medium border-b-2 transition ${finTab==="cty" ? "border-[#92400e] text-[#92400e]" : "border-transparent text-slate-500 hover:text-slate-700"}`
+      }, "Tài khoản công ty"),
+      /*#__PURE__*/React.createElement("button", {
+        onClick:()=>setFinTab("pat"),
+        className:`px-4 py-2 text-sm font-medium border-b-2 transition ${finTab==="pat" ? "border-[#92400e] text-[#92400e]" : "border-transparent text-slate-500 hover:text-slate-700"}`
+      }, "Tài khoản cá nhân")),
 
     /*#__PURE__*/React.createElement(Card, {title: "Sổ quỹ",
       right: /*#__PURE__*/React.createElement("div", {className:"flex flex-wrap items-center gap-2"},
@@ -7910,8 +7918,6 @@ function Screen({
   switch (active) {
     case "finance":
       return /*#__PURE__*/React.createElement(Finance, {setActive, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
-    case "personal_finance":
-      return /*#__PURE__*/React.createElement(Finance, {setActive, patOnly: true, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "sales_draft":
       return /*#__PURE__*/React.createElement(SalesModule, {
         orders: orders,

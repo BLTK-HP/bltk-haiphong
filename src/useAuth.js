@@ -15,7 +15,7 @@ export const ROLES = {
   warehouse: { label: "Nhân viên kho",      color: "bg-amber-50 text-amber-700 ring-1 ring-amber-200" },
 };
 
-const ALL_SCREENS = ["sales_orders","sales_draft","sales_create","contracts","purchase","wh_in","wh_out","wh_stock","pc_products","pc_customers","pc_suppliers","finance","personal_finance","settings","settings_payment","settings_numformat","settings_docnum","settings_print","admin_clear","import_orders","import_products","import_txns","users","dashboard","rp_sales","rp_preorder","rp_staff","rp_finance","debt_cust","debt_ncc"];
+const ALL_SCREENS = ["sales_orders","sales_draft","sales_create","contracts","purchase","wh_in","wh_out","wh_stock","pc_products","pc_customers","pc_suppliers","finance","settings","settings_payment","settings_numformat","settings_docnum","settings_print","admin_clear","import_orders","import_products","import_txns","users","dashboard","rp_sales","rp_preorder","rp_staff","rp_finance","debt_cust","debt_ncc"];
 
 // Màn hình nào role nào được xem
 export const ALLOWED = {
