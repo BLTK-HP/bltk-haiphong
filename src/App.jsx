@@ -7276,6 +7276,10 @@ function Finance({setActive, onOpenOrder}) {
     });
     const dThuKinds = [...new Set(txns.filter(t=>t.acc===fAccDetail&&!t.cancelled&&t.amount>0).map(t=>normalizeKind(t)).filter(Boolean))].sort();
     const dChiKinds = [...new Set(txns.filter(t=>t.acc===fAccDetail&&!t.cancelled&&t.amount<0).map(t=>normalizeKind(t)).filter(Boolean))].sort();
+    const nonCancelledAcc = accTxns.filter(t=>!t.cancelled);
+    const allAccChecked = nonCancelledAcc.length>0 && nonCancelledAcc.every(t=>t.checked);
+    const someAccChecked = nonCancelledAcc.some(t=>t.checked);
+    const toggleAllAcc = () => { const ids=new Set(nonCancelledAcc.map(t=>t.id)); setTxns(p=>p.map(t=>ids.has(t.id)?{...t,checked:!allAccChecked}:t)); };
     const ACC_PER_PAGE = 25;
     const totalAccPages = Math.ceil(accTxns.length/ACC_PER_PAGE);
     const pagedAccTxns = accTxns.slice((detailPage-1)*ACC_PER_PAGE, detailPage*ACC_PER_PAGE);
@@ -7340,7 +7344,10 @@ function Finance({setActive, onOpenOrder}) {
               /*#__PURE__*/React.createElement(Th,{center:true,style:{width:155,minWidth:155}},"Loại giao dịch"),
               /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Số tiền"),
               /*#__PURE__*/React.createElement(Th,{style:{minWidth:200}},"Nội dung"),
-              /*#__PURE__*/React.createElement(Th,{center:true,style:{width:44,minWidth:44}},""))},
+              /*#__PURE__*/React.createElement(Th,{center:true,style:{width:44,minWidth:44}},
+                nonCancelledAcc.length>0&&/*#__PURE__*/React.createElement("button",{onClick:toggleAllAcc,className:`h-5 w-5 rounded border-2 flex items-center justify-center transition mx-auto ${allAccChecked?"border-green-500 bg-green-500 text-white":someAccChecked?"border-amber-400 bg-amber-50":"border-slate-300 hover:border-amber-400"}`},
+                  allAccChecked&&/*#__PURE__*/React.createElement(Check,{className:"h-3 w-3 stroke-[3]"}),
+                  someAccChecked&&!allAccChecked&&/*#__PURE__*/React.createElement("span",{className:"block w-2.5 h-0.5 bg-amber-500 rounded"}))))},
             pagedAccTxns.map((t,i)=>/*#__PURE__*/React.createElement("tr",{key:t.id,className:t.cancelled?"opacity-50 bg-slate-50":""},
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-xs text-slate-500"},(() => {
                 const parts = String(t.date||"").split(" ");
