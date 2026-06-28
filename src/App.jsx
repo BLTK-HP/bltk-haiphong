@@ -1,10 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import PRODUCTS from './products.js'
 import { ORDER_ITEM_FIXES, NEW_ORDERS_TO_ADD } from './orderItemFixes.js'
-import { TCB_CTY_T6_2026 } from './tcbT6Fix.js'
-import { TCB_CTY_HISTORY_2026 } from './tcbCtyHistory.js'
-import { TCB_PAT_HISTORY_2026 } from './tcbPatHistory.js'
-import { TCB_PAT_T6_2026 } from './tcbPatT6.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc, where, writeBatch } from 'firebase/firestore'
 import { db, storage } from './firebase.js'
@@ -6930,124 +6926,6 @@ function ReconcileBtn({ txns, setTxns, orders }) {
   );
 }
 
-// Fix #3: Đồng bộ sao kê TCB-CTY thủ công — thay thế auto-migration
-function SyncBankModal({ onClose, txns }) {
-  const notify = useToast();
-  const [syncing, setSyncing] = React.useState(false);
-  const [done, setDone] = React.useState(null);
-  const isT15 = t => {
-    const d = String(t.date || '');
-    return ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026'].some(m => d.includes(m))
-        || ['2026-01','2026-02','2026-03','2026-04','2026-05'].some(m => d.startsWith(m));
-  };
-  const isT6 = t => String(t.date || '').includes('/06/2026') || String(t.date || '').startsWith('2026-06');
-  const t15List = txns.filter(t => t.acc === 'TCB-CTY' && isT15(t));
-  const t6List  = txns.filter(t => t.acc === 'TCB-CTY' && isT6(t));
-  const batchOp = async (items, op) => {
-    const CHUNK = 400;
-    for (let i = 0; i < items.length; i += CHUNK) {
-      const batch = writeBatch(db);
-      items.slice(i, i + CHUNK).forEach(item => op(batch, item));
-      await batch.commit();
-    }
-  };
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      const toDelete = [...t15List, ...t6List];
-      // Xoá batch
-      await batchOp(toDelete, (batch, t) => batch.delete(fsDoc(db, "txns", t._id || String(t.id))));
-      // Import batch T1-T5 + T6
-      const toAdd = [...TCB_CTY_HISTORY_2026, ...TCB_CTY_T6_2026];
-      await batchOp(toAdd, (batch, txn) => batch.set(fsDoc(db, "txns", txn.ref), { ...txn, id: txn.ref, year: parseInt(String(txn.date).match(/\d{4}/)?.[0] || '2026') }));
-      setDone({ old: toDelete.length, imported: toAdd.length });
-      notify("Đã đồng bộ sao kê TCB T1-T6/2026 ✓");
-    } catch(e) { notify("Lỗi: " + e.message); }
-    finally { setSyncing(false); }
-  };
-  return /*#__PURE__*/React.createElement(Modal, {title:"Đồng bộ sao kê TCB-CTY", maxW:"max-w-lg", onClose},
-    !done
-      ? /*#__PURE__*/React.createElement("div", {className:"space-y-4 py-2"},
-          /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-600"}, "Thao tác này sẽ xoá GD TCB-CTY hiện có và import lại từ sao kê ngân hàng:"),
-          /*#__PURE__*/React.createElement("ul", {className:"text-sm text-slate-700 space-y-1 list-disc ml-4"},
-            /*#__PURE__*/React.createElement("li", null, `Xoá ${t15List.length} GD TCB-CTY T1-T5/2026 hiện có`),
-            /*#__PURE__*/React.createElement("li", null, `Xoá ${t6List.length} GD TCB-CTY T6/2026 hiện có`),
-            /*#__PURE__*/React.createElement("li", null, `Import ${TCB_CTY_HISTORY_2026.length} GD T1-T5 từ sao kê PDF`),
-            /*#__PURE__*/React.createElement("li", null, `Import ${TCB_CTY_T6_2026.length} GD T6 từ sao kê XLSX`)),
-          /*#__PURE__*/React.createElement("p", {className:"text-xs text-amber-700 bg-amber-50 rounded-lg p-3"}, "Phiếu thu/chi thủ công và GD TCB-PAT không bị ảnh hưởng."),
-          /*#__PURE__*/React.createElement("div", {className:"flex justify-end gap-2 pt-1"},
-            /*#__PURE__*/React.createElement("button", {onClick:onClose, className:"rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"}, "Huỷ"),
-            /*#__PURE__*/React.createElement("button", {onClick:handleSync, disabled:syncing, className:"rounded-lg bg-[#92400e] px-4 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:opacity-50"},
-              syncing ? "Đang đồng bộ..." : "Xác nhận đồng bộ")))
-      : /*#__PURE__*/React.createElement("div", {className:"space-y-3 py-2"},
-          /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-2 text-green-700"},
-            /*#__PURE__*/React.createElement(Check, {className:"h-5 w-5"}),
-            /*#__PURE__*/React.createElement("span", {className:"font-medium"}, "Đồng bộ hoàn tất!")),
-          /*#__PURE__*/React.createElement("p", {className:"text-sm text-slate-600"}, `Đã xoá ${done.old} GD cũ và import ${done.imported} GD mới từ sao kê ngân hàng.`),
-          /*#__PURE__*/React.createElement("div", {className:"flex justify-end"},
-            /*#__PURE__*/React.createElement("button", {onClick:onClose, className:"rounded-lg bg-slate-100 px-4 py-2 text-sm hover:bg-slate-200"}, "Đóng"))));
-}
-
-// Đồng bộ sao kê TCB-PAT — reset openBal + import T1-T6
-function SyncBankPatModal({ onClose, txns, bankAccounts }) {
-  const notify = useToast();
-  const [syncing, setSyncing] = React.useState(false);
-  const [done, setDone] = React.useState(null);
-  const isT16 = t => {
-    const d = String(t.date || '');
-    return ['/01/2026','/02/2026','/03/2026','/04/2026','/05/2026','/06/2026'].some(m => d.includes(m))
-        || ['2026-01','2026-02','2026-03','2026-04','2026-05','2026-06'].some(m => d.startsWith(m));
-  };
-  const oldList = txns.filter(t => t.acc === 'TCB-PAT' && isT16(t));
-  const toAdd = [...TCB_PAT_HISTORY_2026, ...TCB_PAT_T6_2026];
-  const batchOp = async (items, op) => {
-    const CHUNK = 400;
-    for (let i = 0; i < items.length; i += CHUNK) {
-      const batch = writeBatch(db);
-      items.slice(i, i + CHUNK).forEach(item => op(batch, item));
-      await batch.commit();
-    }
-  };
-  const handleSync = async () => {
-    setSyncing(true);
-    try {
-      // 1. Sửa openBal TCB-PAT → 5,030,341
-      const patAcc = bankAccounts.find(a => a.key === 'TCB-PAT');
-      if (patAcc) {
-        const accId = patAcc._id || String(patAcc.id);
-        await saveDoc('bankAccounts', accId, { ...patAcc, openBal: 5030341 });
-      }
-      // 2. Xoá GD cũ TCB-PAT
-      await batchOp(oldList, (batch, t) => batch.delete(fsDoc(db, "txns", t._id || String(t.id))));
-      // 3. Import T1-T6
-      await batchOp(toAdd, (batch, txn) => batch.set(fsDoc(db, "txns", txn.ref), { ...txn, id: txn.ref, year: 2026 }));
-      setDone({ old: oldList.length, imported: toAdd.length });
-      notify("Đã đồng bộ sao kê TCB-PAT T1-T6/2026 ✓");
-    } catch(e) { notify("Lỗi: " + e.message); }
-    finally { setSyncing(false); }
-  };
-  return React.createElement(Modal, {title:"Đồng bộ sao kê TCB-PAT", maxW:"max-w-lg", onClose},
-    !done
-      ? React.createElement("div", {className:"space-y-4 py-2"},
-          React.createElement("p", {className:"text-sm text-slate-600"}, "Thao tác này sẽ:"),
-          React.createElement("ul", {className:"text-sm text-slate-700 space-y-1 list-disc ml-4"},
-            React.createElement("li", null, "Sửa số dư đầu kỳ TCB-PAT → 5,030,341đ (01/01/2026)"),
-            React.createElement("li", null, `Xoá ${oldList.length} GD TCB-PAT hiện có`),
-            React.createElement("li", null, `Import ${TCB_PAT_HISTORY_2026.length} GD T1-T5 từ sao kê Excel`),
-            React.createElement("li", null, `Import ${TCB_PAT_T6_2026.length} GD T6 từ sao kê PDF + 28/06`)),
-          React.createElement("p", {className:"text-xs text-amber-700 bg-amber-50 rounded-lg p-3"}, "Số dư cuối kỳ sau khi đồng bộ: 295,998,463đ (27-28/06/2026). Phiếu thu/chi thủ công và GD TCB-CTY không bị ảnh hưởng."),
-          React.createElement("div", {className:"flex justify-end gap-2 pt-1"},
-            React.createElement("button", {onClick:onClose, className:"rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"}, "Huỷ"),
-            React.createElement("button", {onClick:handleSync, disabled:syncing, className:"rounded-lg bg-[#92400e] px-4 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:opacity-50"},
-              syncing ? "Đang đồng bộ..." : "Xác nhận đồng bộ")))
-      : React.createElement("div", {className:"space-y-3 py-2"},
-          React.createElement("div", {className:"flex items-center gap-2 text-green-700"},
-            React.createElement(Check, {className:"h-5 w-5"}),
-            React.createElement("span", {className:"font-medium"}, "Đồng bộ hoàn tất!")),
-          React.createElement("p", {className:"text-sm text-slate-600"}, `Đã xoá ${done.old} GD cũ và import ${done.imported} GD mới. openBal TCB-PAT → 5,030,341đ.`),
-          React.createElement("div", {className:"flex justify-end"},
-            React.createElement("button", {onClick:onClose, className:"rounded-lg bg-slate-100 px-4 py-2 text-sm hover:bg-slate-200"}, "Đóng"))));
-}
 
 function Finance({setActive, onOpenOrder}) {
   const notify = useToast();
@@ -7068,8 +6946,6 @@ function Finance({setActive, onOpenOrder}) {
   const [modal, setModal]     = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [editTxn, setEditTxn] = useState(null);
-  const [syncModal, setSyncModal] = useState(false);
-  const [syncPatModal, setSyncPatModal] = useState(false);
   const [txnPage, setTxnPage] = useState(1);
   const [detailPage, setDetailPage] = useState(1);
   const [dFromDate, setDFromDate] = useState(localMonthStart);
@@ -7349,8 +7225,7 @@ function Finance({setActive, onOpenOrder}) {
       modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null),onSave:addXfer,nextId}),
       cancelTarget && /*#__PURE__*/React.createElement(HuyGiaoDichModal,{onClose:()=>setCancelTarget(null),onConfirm:reason=>cancelTxn(cancelTarget,reason)}),
       editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}),
-      syncModal && /*#__PURE__*/React.createElement(SyncBankModal,{onClose:()=>setSyncModal(false),txns}),
-      syncPatModal && React.createElement(SyncBankPatModal,{onClose:()=>setSyncPatModal(false),txns,bankAccounts}));
+);
   }
 
   return /*#__PURE__*/React.createElement("div", {className:"space-y-4"},
@@ -7374,10 +7249,7 @@ function Finance({setActive, onOpenOrder}) {
           /*#__PURE__*/React.createElement(Minus, {className:"h-4 w-4"}), "Lập phiếu chi"),
         /*#__PURE__*/React.createElement("button", {onClick:()=>setModal("chuyen"), className:"inline-flex items-center gap-1.5 rounded-lg bg-[#78350f] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#78350f]"},
           /*#__PURE__*/React.createElement(ArrowLeftRight, {className:"h-4 w-4"}), "Chuyển tiền nội bộ"),
-        isAdmin && !patOnly && /*#__PURE__*/React.createElement("button", {onClick:()=>setSyncModal(true), className:"inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"},
-          /*#__PURE__*/React.createElement(RefreshCw, {className:"h-4 w-4"}), "Đồng bộ sao kê TCB"),
-        isAdmin && patOnly && /*#__PURE__*/React.createElement("button", {onClick:()=>setSyncPatModal(true), className:"inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"},
-          /*#__PURE__*/React.createElement(RefreshCw, {className:"h-4 w-4"}), "Đồng bộ sao kê TCB-PAT"))},
+)},
       /*#__PURE__*/React.createElement("div", {className:"-mx-5 -mb-5 overflow-x-auto"},
         /*#__PURE__*/React.createElement("table", {className:"w-full text-sm tbl-list"},
           /*#__PURE__*/React.createElement("thead", null,
