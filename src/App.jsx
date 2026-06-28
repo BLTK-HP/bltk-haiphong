@@ -6784,6 +6784,7 @@ function Finance({setActive, onOpenOrder}) {
   const toD   = toDate   ? parseISO(toDate)   : null;
 
   const visibleTxns = txns.filter(t => {
+    if (patOnly ? t.acc !== "TCB-PAT" : t.acc === "TCB-PAT") return false;
     const d = parseD(t.date);
     if (fromD && d < fromD) return false;
     if (toD   && d > toD)   return false;
@@ -6805,6 +6806,7 @@ function Finance({setActive, onOpenOrder}) {
   };
   const summaryTxns = txns.filter(t => {
     if (t.cancelled) return false;
+    if (patOnly ? t.acc !== "TCB-PAT" : t.acc === "TCB-PAT") return false;
     const d = parseD(t.date);
     if (fromD && d < fromD) return false;
     if (toD   && d > toD)   return false;
