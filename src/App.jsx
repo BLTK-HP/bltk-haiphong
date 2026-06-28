@@ -7089,14 +7089,19 @@ function Finance({setActive, onOpenOrder}) {
   const [dQ, setDQ]               = useState("");
   const [dDir, setDDir]           = useState("Tất cả");
   const [fKind, setFKind]         = useState("Tất cả");
+  const [dKind, setDKind]         = useState("Tất cả");
   const nextId = txns.length ? Math.max(...txns.map(t=>Number(t.id)||0))+1 : 1;
   React.useEffect(() => { setTxnPage(1); }, [q, fromDate, toDate, fAcc, fDir, fKind]);
-  React.useEffect(() => { setDetailPage(1); setDFromDate(localMonthStart); setDToDate(localToday); setDQ(""); setDDir("Tất cả"); }, [fAccDetail]);
+  React.useEffect(() => { setDetailPage(1); setDFromDate(localMonthStart); setDToDate(localToday); setDQ(""); setDDir("Tất cả"); setDKind("Tất cả"); }, [fAccDetail]);
 
   const parseD    = s => { const p=s.split(' ')[0].split('/'); return new Date(+p[2],+p[1]-1,+p[0]); };
   const parseISO  = s => { const [y,m,d]=s.split('-'); return new Date(+y,+m-1,+d); };
   const fromD = fromDate ? parseISO(fromDate) : null;
   const toD   = toDate   ? parseISO(toDate)   : null;
+  const normalizeKind = t => {
+    if (patOnly && t.amount < 0 && Math.abs(t.amount) < 500000) return "CP cá nhân <500k";
+    return t.kind;
+  };
 
   const visibleTxns = txns.filter(t => {
     if (patOnly ? t.acc !== "TCB-PAT" : t.acc === "TCB-PAT") return false;
@@ -7106,10 +7111,14 @@ function Finance({setActive, onOpenOrder}) {
     if (fAcc !== "Tất cả" && t.acc !== fAcc) return false;
     if (fDir === "Thu" && t.amount <= 0) return false;
     if (fDir === "Chi" && t.amount >= 0) return false;
-    if (patOnly && fKind !== "Tất cả" && normalizeKind(t) !== fKind) return false;
+    if (fKind !== "Tất cả" && normalizeKind(t) !== fKind) return false;
     if (q && !`${t.id} ${t.orderId} ${t.note} ${t.entity}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }).sort((a, b) => { const da = parseD(a.date), db = parseD(b.date); return da - db !== 0 ? db - da : b.id - a.id; });
+
+  const baseTxns = txns.filter(t => !t.cancelled && (patOnly ? t.acc === "TCB-PAT" : t.acc !== "TCB-PAT"));
+  const allThuKinds = [...new Set(baseTxns.filter(t=>t.amount>0).map(t=>normalizeKind(t)).filter(Boolean))].sort();
+  const allChiKinds = [...new Set(baseTxns.filter(t=>t.amount<0).map(t=>normalizeKind(t)).filter(Boolean))].sort();
 
   const TXN_PER_PAGE = 25;
   const totalTxnPages = Math.ceil(visibleTxns.length / TXN_PER_PAGE);
@@ -7179,10 +7188,6 @@ function Finance({setActive, onOpenOrder}) {
   const onExportTxn = () => exportCSV("lich-su-giao-dich", ["Ngày","Số phiếu","Số đơn hàng","Đối tượng","Loại GD","Tài khoản","Số tiền","Nội dung","Người tạo"],
     visibleTxns.map((t,i) => [t.date, fmtDocId(t.amount>=0?"PT":"PC",i+1), t.orderId||"", t.entity||"", t.kind||"", t.acc||"", t.amount, t.note||"", t.staff||""]));
 
-  const normalizeKind = t => {
-    if (patOnly && t.amount < 0 && Math.abs(t.amount) < 500000) return "CP cá nhân <500k";
-    return t.kind;
-  };
   const THU = "bg-[#dcfce7] text-[#047857]";
   const CHI = "bg-[#fee2e2] text-[#B91C1C]";
   const KIND_COLORS = {
@@ -7263,9 +7268,12 @@ function Finance({setActive, onOpenOrder}) {
       if (dToD   && d > dToD)   return false;
       if (dDir==="Thu" && t.amount<=0) return false;
       if (dDir==="Chi" && t.amount>=0) return false;
+      if (dKind!=="Tất cả" && normalizeKind(t)!==dKind) return false;
       if (dQ && !`${t.id} ${t.orderId} ${t.note} ${t.entity}`.toLowerCase().includes(dQ.toLowerCase())) return false;
       return true;
     });
+    const dThuKinds = [...new Set(txns.filter(t=>t.acc===fAccDetail&&!t.cancelled&&t.amount>0).map(t=>normalizeKind(t)).filter(Boolean))].sort();
+    const dChiKinds = [...new Set(txns.filter(t=>t.acc===fAccDetail&&!t.cancelled&&t.amount<0).map(t=>normalizeKind(t)).filter(Boolean))].sort();
     const ACC_PER_PAGE = 25;
     const totalAccPages = Math.ceil(accTxns.length/ACC_PER_PAGE);
     const pagedAccTxns = accTxns.slice((detailPage-1)*ACC_PER_PAGE, detailPage*ACC_PER_PAGE);
@@ -7327,7 +7335,13 @@ function Finance({setActive, onOpenOrder}) {
               /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:90}},"Ngày"),
               /*#__PURE__*/React.createElement(Th,{style:{width:60,minWidth:60}},"Số phiếu"),
               /*#__PURE__*/React.createElement(Th,{style:{minWidth:180}},"Đối tượng"),
-              /*#__PURE__*/React.createElement(Th,{center:true,style:{width:155,minWidth:155}},"Loại giao dịch"),
+              /*#__PURE__*/React.createElement(Th,{center:true,style:{width:155,minWidth:155}},
+                /*#__PURE__*/React.createElement("select",{value:dKind,onChange:e=>setDKind(e.target.value),className:"w-full text-[11px] font-semibold text-[#7c2d12] bg-transparent border-0 outline-none cursor-pointer"},
+                  /*#__PURE__*/React.createElement("option",{value:"Tất cả"},"Loại giao dịch"),
+                  dThuKinds.length>0&&/*#__PURE__*/React.createElement("optgroup",{label:"▲ Thu"},
+                    dThuKinds.map(k=>/*#__PURE__*/React.createElement("option",{key:k,value:k},k))),
+                  dChiKinds.length>0&&/*#__PURE__*/React.createElement("optgroup",{label:"▼ Chi"},
+                    dChiKinds.map(k=>/*#__PURE__*/React.createElement("option",{key:k,value:k},k))))),
               /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Số tiền"),
               /*#__PURE__*/React.createElement(Th,{style:{minWidth:200}},"Nội dung"),
               /*#__PURE__*/React.createElement(Th,{center:true,style:{width:44,minWidth:44}},""))},
@@ -7459,8 +7473,6 @@ function Finance({setActive, onOpenOrder}) {
           allAccs.map(a=>/*#__PURE__*/React.createElement("option",{key:a},a))),
         /*#__PURE__*/React.createElement("select", {value:fDir, onChange:e=>setFDir(e.target.value), className:`${field} py-1.5 text-sm`},
           [["Tất cả","Thu / Chi"],["Thu","Thu"],["Chi","Chi"]].map(([v,l])=>/*#__PURE__*/React.createElement("option",{key:v,value:v},l))),
-        patOnly&&/*#__PURE__*/React.createElement("select", {value:fKind, onChange:e=>setFKind(e.target.value), className:`${field} py-1.5 text-sm`},
-          [["Tất cả","Loại GD"],["CP cá nhân <500k","CP cá nhân <500k"],["CP tiền học","CP tiền học"],["CP điện nước","CP điện nước"],["CP thuê nhà","CP thuê nhà"]].map(([v,l])=>/*#__PURE__*/React.createElement("option",{key:v,value:v},l))),
         /*#__PURE__*/React.createElement(PrintBtn, null),
         /*#__PURE__*/React.createElement(ExportBtn, {onClick: onExportTxn}),
         !patOnly&&/*#__PURE__*/React.createElement(ReconcileBtn, {txns, setTxns, orders}))},
@@ -7471,7 +7483,13 @@ function Finance({setActive, onOpenOrder}) {
             /*#__PURE__*/React.createElement(Th,{style:{width:90,minWidth:90}},"Số phiếu"),
             !patOnly&&/*#__PURE__*/React.createElement(Th,{style:{width:90,minWidth:90}},"Số đơn hàng"),
             /*#__PURE__*/React.createElement(Th,{style:{minWidth:160}},"Đối tượng"),
-            /*#__PURE__*/React.createElement(Th,{center:true,style:{width:patOnly?160:95,minWidth:patOnly?160:95}},"Loại giao dịch"),
+            /*#__PURE__*/React.createElement(Th,{center:true,style:{width:patOnly?160:140,minWidth:patOnly?160:140}},
+              /*#__PURE__*/React.createElement("select",{value:fKind,onChange:e=>{setFKind(e.target.value);setTxnPage(1);},className:"w-full text-[11px] font-semibold text-[#7c2d12] bg-transparent border-0 outline-none cursor-pointer"},
+                /*#__PURE__*/React.createElement("option",{value:"Tất cả"},"Loại giao dịch"),
+                allThuKinds.length>0&&/*#__PURE__*/React.createElement("optgroup",{label:"▲ Thu"},
+                  allThuKinds.map(k=>/*#__PURE__*/React.createElement("option",{key:k,value:k},k))),
+                allChiKinds.length>0&&/*#__PURE__*/React.createElement("optgroup",{label:"▼ Chi"},
+                  allChiKinds.map(k=>/*#__PURE__*/React.createElement("option",{key:k,value:k},k))))),
             /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Tài khoản"),
             /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Số tiền"),
             /*#__PURE__*/React.createElement(Th,{style:{minWidth:200}},"Nội dung"),
