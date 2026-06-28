@@ -667,6 +667,7 @@ const Th = ({
 const TableShell = ({
   head,
   children,
+  foot,
   minW,
   stickyHead = true
 }) => /*#__PURE__*/React.createElement("div", {
@@ -681,7 +682,9 @@ const TableShell = ({
   className: "border-b border-slate-100 bg-amber-50 text-left text-xs uppercase tracking-wide text-amber-900/60"
 }, head)), /*#__PURE__*/React.createElement("tbody", {
   className: "divide-y divide-slate-50"
-}, children)));
+}, children), foot && /*#__PURE__*/React.createElement("tfoot", {
+  style: { position: "sticky", bottom: 0, zIndex: 10 }
+}, foot)));
 const TabBar = ({
   tabs,
   active,
@@ -2529,6 +2532,12 @@ function OrderTable({
   }))), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-slate-400"
   }), /*#__PURE__*/React.createElement(TableShell, {
+    foot: /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa] text-sm font-semibold text-slate-800"},
+      /*#__PURE__*/React.createElement("td", {colSpan: 4, className: "px-4 py-2.5"}, "TỔNG CỘNG (", rows.length, " ĐƠN)"),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums text-[#92400e]"}, num(sumTotal)),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumPaid > 0 ? "#D97706" : "#94A3B8"}}, sumPaid > 0 ? num(sumPaid) : ""),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumRemain > 0 ? "#B91C1C" : "#94A3B8"}}, sumRemain > 0 ? num(sumRemain) : ""),
+      /*#__PURE__*/React.createElement("td", {colSpan: 6})),
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
       style: { width: 90 }
     }, "Ngày"), /*#__PURE__*/React.createElement(Th, {
@@ -2667,14 +2676,6 @@ function OrderTable({
       onClick: () => onEdit(o)
     }))));
   }))),
-  /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl border border-[#fed7aa] bg-[#fed7aa] px-4 py-2.5 text-sm font-semibold text-slate-800"
-  },
-    /*#__PURE__*/React.createElement("span", {className: "mr-auto"}, "TỔNG CỘNG (", rows.length, " ĐƠN)"),
-    /*#__PURE__*/React.createElement("span", {className: "whitespace-nowrap tabular-nums text-[#92400e]"}, num(sumTotal)),
-    /*#__PURE__*/React.createElement("span", {className: `whitespace-nowrap tabular-nums ${sumPaid > 0 ? "text-[#D97706]" : "text-[#94A3B8]"}`}, sumPaid > 0 ? num(sumPaid) : ""),
-    /*#__PURE__*/React.createElement("span", {className: `whitespace-nowrap tabular-nums ${sumRemain > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`}, sumRemain > 0 ? num(sumRemain) : "")
-  ),
   totalOrdPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-1 px-1 flex-wrap"},
     /*#__PURE__*/React.createElement("span", {className: "text-xs text-slate-500"},
       `${(ordPage-1)*ORD_PER_PAGE+1}–${Math.min(ordPage*ORD_PER_PAGE, rows.length)} / ${rows.length} đơn`),
