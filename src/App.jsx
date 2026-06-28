@@ -8486,7 +8486,7 @@ function App({ profile, logout }) {
   // Auto-migration: đồng bộ GD tài chính T6/2026 TCB-CTY từ sao kê ngân hàng
   React.useEffect(() => {
     if (!appLoaded) return;
-    if (localStorage.getItem('bltk_tcb_t6_fix_v1') === 'done') return;
+    if (true) return; // disabled — đã migrate bằng admin script
     (async () => {
       try {
         console.log("[tcb-t6] Bắt đầu đồng bộ sao kê T6 TCB-CTY...");
@@ -8514,7 +8514,7 @@ function App({ profile, logout }) {
   // Auto-migration v3: batch xoá+import GD TCB-CTY T1-T5/2026 (mọi format ngày)
   React.useEffect(() => {
     if (!appLoaded) return;
-    if (localStorage.getItem('bltk_tcb_history_v3') === 'done') return;
+    if (true) return; // disabled — đã migrate bằng admin script
     (async () => {
       try {
         console.log("[tcb-history-v2] Bắt đầu sửa GD TCB-CTY T1-T5/2026...");
