@@ -2356,10 +2356,78 @@ function OrderTable({
   const sumTotal = rows.reduce((s, o) => s + calc(o).total, 0);
   const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
   const sumRemain = rows.reduce((s, o) => s + Math.max(0, calc(o).remaining), 0);
-  const onExport = () => exportCSV("danh-sach-don-hang", ["Số ĐH", "Ngày", "Khách hàng", "SĐT", "Địa chỉ", "Thành tiền", "Đã trả", "Còn lại", "Giao hàng", "Trạng thái", "Nhân viên"], rows.map(o => {
-    const c = calc(o);
-    return [o.id, o.dt, o.name, o.phone, o.addr, c.total, o.paid, c.remaining, o.delivery, c.orderStatus, o.staff];
-  }));
+  const onExport = () => {
+    const wb = XLSX.utils.book_new();
+    const applyNumFmt = (ws, numCols) => {
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      for (let R = 1; R <= range.e.r; R++) {
+        numCols.forEach(C => {
+          const addr = XLSX.utils.encode_cell({ r: R, c: C });
+          if (ws[addr] && typeof ws[addr].v === 'number') ws[addr].z = '#,##0';
+        });
+      }
+    };
+
+    // Sheet 1: Tổng hợp đơn hàng (1 dòng / đơn)
+    const h1 = ["STT", "Số ĐH", "Ngày", "Khách hàng", "SĐT", "Địa chỉ",
+      "Mã hàng", "Sản phẩm (SL × đơn giá)", "Tiền hàng",
+      "Phí ship KH", "Phí hoàn KH", "Tổng đơn",
+      "Thanh toán", "Còn lại", "Hoàn tiền",
+      "Giao hàng", "Trạng thái", "Nhân viên"];
+    const r1 = rows.map((o, i) => {
+      const c = calc(o);
+      const its = o.items || [];
+      const subtotal = its.reduce((s, it) => s + Math.max(0, (it.price||0) * (it.qty||0) - (it.disc||0)), 0);
+      const activeRets = (o.returns || []).filter(r => !r.cancelled);
+      const retAmt = activeRets.reduce((s, r) => s + (r.amount||0), 0);
+      const skus = its.map(it => it.sku || "").filter(Boolean).join(", ");
+      const prods = its.map(it => `${it.name} ×${it.qty} @${vnd(it.price)}`).join("; ");
+      return [
+        i + 1, o.id, o.dt, o.name, o.phone || "", o.addr || "",
+        skus, prods,
+        subtotal, o.shippingFee || 0, o.returnFee || 0, c.total,
+        o.paid || 0, Math.max(0, c.remaining), retAmt,
+        o.delivery || "", c.orderStatus, o.staff || "",
+      ];
+    });
+    const ws1 = XLSX.utils.aoa_to_sheet([h1, ...r1]);
+    applyNumFmt(ws1, [8, 9, 10, 11, 12, 13, 14]);
+    ws1['!cols'] = [4,8,10,14,11,22,18,40,12,10,10,12,12,12,10,14,14,12].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws1, "Don hang");
+
+    // Sheet 2: Chi tiết từng sản phẩm (1 dòng / sản phẩm)
+    const h2 = ["Số ĐH", "Ngày", "Khách hàng", "Mã SP", "Tên sản phẩm", "SL", "Đơn giá", "Giảm giá", "Thành tiền SP"];
+    const r2 = rows.flatMap(o =>
+      (o.items || []).map(it => [
+        o.id, o.dt, o.name,
+        it.sku || "", it.name || "",
+        it.qty || 0, it.price || 0, it.disc || 0,
+        Math.max(0, (it.price||0) * (it.qty||0) - (it.disc||0)),
+      ])
+    );
+    const ws2 = XLSX.utils.aoa_to_sheet([h2, ...r2]);
+    applyNumFmt(ws2, [5, 6, 7, 8]);
+    ws2['!cols'] = [10,10,14,10,32,5,12,10,12].map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(wb, ws2, "Chi tiet SP");
+
+    // Sheet 3: Hoàn hàng (1 dòng / lần hoàn)
+    const hasRet = rows.some(o => (o.returns||[]).some(r => !r.cancelled));
+    if (hasRet) {
+      const h3 = ["Số ĐH", "Ngày ĐH", "Khách hàng", "Sản phẩm hoàn", "Ngày hoàn", "SL hoàn", "Tiền hoàn", "Phí hoàn", "Ghi chú"];
+      const r3 = rows.flatMap(o =>
+        (o.returns || []).filter(r => !r.cancelled).map(r => [
+          o.id, o.dt, o.name,
+          r.prod || "", r.date || "", r.qty || 0, r.amount || 0, r.fee || 0, r.note || "",
+        ])
+      );
+      const ws3 = XLSX.utils.aoa_to_sheet([h3, ...r3]);
+      applyNumFmt(ws3, [5, 6, 7]);
+      ws3['!cols'] = [10,10,14,24,10,6,12,10,20].map(w => ({ wch: w }));
+      XLSX.utils.book_append_sheet(wb, ws3, "Hoan hang");
+    }
+
+    XLSX.writeFile(wb, "danh-sach-don-hang.xlsx");
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
