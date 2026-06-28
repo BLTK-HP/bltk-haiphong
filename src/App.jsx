@@ -846,7 +846,7 @@ const useDocNum = () => React.useContext(DocNumCtx);
 const yr2 = () => String(new Date().getFullYear()).slice(-2);
 const fmtDocId = (prefix, num) => prefix + yr2() + String(num).padStart(4, "0");
 const txnDocId = t => isNaN(Number(t.id))
-  ? (t.ref || String(t.id).slice(0, 14))
+  ? ""
   : fmtDocId(t.amount >= 0 ? "PT" : "PC", t.id);
 
 /* ── Toast nhẹ để báo thao tác đã chạy ── */
