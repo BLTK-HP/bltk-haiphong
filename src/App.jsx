@@ -6570,16 +6570,17 @@ function PhieuThuModal({onClose, onSave, nextId}) {
       /*#__PURE__*/React.createElement("div",null,/*#__PURE__*/React.createElement("label",{className:lbl},"Nội dung"),
         /*#__PURE__*/React.createElement("input",{value:note,onChange:e=>setNote(e.target.value),placeholder:"Nội dung...",className:inputF}))));
 }
-function PhieuChiModal({onClose, onSave, nextId, initEntity="", initOrderId="", initKind="Chi phí", initAmount=0, initNote="", kinds=null}) {
+function PhieuChiModal({onClose, onSave, nextId, initEntity="", initOrderId="", initKind="Chi phí", initAmount=0, initNote="", kinds=null, initAcc=null}) {
   const { profile: _chiProfile } = useAuth();
   const _staffName = _chiProfile?.name || "Quản lý";
   const {bankAccounts} = useBankAccounts();
   const {txns = []} = useTxns() || {};
   const activeAccs = bankAccounts.filter(a => a.status === "Hoạt động");
-  const [acc, setAcc]       = useState(activeAccs[0]?.key || "");
+  const [acc, setAcc]       = useState(initAcc || activeAccs[0]?.key || "");
   const [entity, setEntity] = useState(initEntity);
   const [orderId, setOrderId] = useState(initOrderId);
-  const [kind, setKind]     = useState(initKind);
+  const resolvedInitKind = kinds && !kinds.includes(initKind) ? kinds[0] : initKind;
+  const [kind, setKind]     = useState(resolvedInitKind);
   const [amount, setAmount] = useState(initAmount);
   const [note, setNote]     = useState(initNote);
   React.useEffect(() => {
@@ -7035,7 +7036,7 @@ function Finance({setActive, onOpenOrder}) {
           Array.from({length:totalAccPages},(_,i)=>i+1).map(n=>/*#__PURE__*/React.createElement("button",{key:n,onClick:()=>setDetailPage(n),className:`min-w-[2rem] rounded px-2 py-1 text-sm font-medium ${detailPage===n?"bg-[#92400e] text-white":"text-slate-600 hover:bg-slate-100"}`},n)),
           /*#__PURE__*/React.createElement("button",{disabled:detailPage===totalAccPages,onClick:()=>setDetailPage(p=>Math.min(totalAccPages,p+1)),className:"rounded px-2 py-1 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-30"},"Sau"))),
       modal==="thu" && /*#__PURE__*/React.createElement(PhieuThuModal,{onClose:()=>setModal(null),onSave:addTxn,nextId}),
-      modal==="chi" && /*#__PURE__*/React.createElement(PhieuChiModal,{onClose:()=>setModal(null),onSave:addChi,nextId}),
+      modal==="chi" && /*#__PURE__*/React.createElement(PhieuChiModal,{onClose:()=>setModal(null),onSave:addChi,nextId,kinds:patOnly?["CP cá nhân <500k","CP tiền học","CP điện nước","CP thuê nhà"]:null,initAcc:patOnly?"TCB-PAT":null}),
       modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null),onSave:addXfer,nextId}),
       cancelTarget && /*#__PURE__*/React.createElement(HuyGiaoDichModal,{onClose:()=>setCancelTarget(null),onConfirm:reason=>cancelTxn(cancelTarget,reason)}),
       editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}));
@@ -7207,7 +7208,7 @@ function Finance({setActive, onOpenOrder}) {
     ),
 
     modal==="thu"    && /*#__PURE__*/React.createElement(PhieuThuModal,  {onClose:()=>setModal(null), onSave:addTxn,  nextId}),
-    modal==="chi"    && /*#__PURE__*/React.createElement(PhieuChiModal,  {onClose:()=>setModal(null), onSave:addChi,  nextId}),
+    modal==="chi"    && /*#__PURE__*/React.createElement(PhieuChiModal,  {onClose:()=>setModal(null), onSave:addChi,  nextId, kinds:patOnly?["CP cá nhân <500k","CP tiền học","CP điện nước","CP thuê nhà"]:null,initAcc:patOnly?"TCB-PAT":null}),
     modal==="chuyen" && /*#__PURE__*/React.createElement(ChuyenTienModal,{onClose:()=>setModal(null), onSave:addXfer, nextId}),
     cancelTarget && /*#__PURE__*/React.createElement(HuyGiaoDichModal,{onClose:()=>setCancelTarget(null),onConfirm:reason=>cancelTxn(cancelTarget,reason)}),
     editTxn && /*#__PURE__*/React.createElement(EditTxnModal,{txn:editTxn,onClose:()=>setEditTxn(null),onSave:saveTxnEdit}));
