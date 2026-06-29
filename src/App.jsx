@@ -3763,14 +3763,14 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     exported,
     payments,
     logs,
-    deliveries,
+    ...(deliveries.length ? { deliveries } : {}),
     items: lines.filter(l => l.name).map(l => ({
       name: l.name,
       price: l.price,
       qty: l.qty,
       disc: lineDisc(l),
       cost: l.cost,
-      deliveredQty: l.deliveredQty || 0
+      ...(l.deliveredQty ? { deliveredQty: l.deliveredQty } : {})
     }))
   });
   const onAddProduct = p => setProds(xs => [{
@@ -8547,9 +8547,9 @@ function App({ profile, logout }) {
     const prevMap = Object.fromEntries(current.map(o => [getId(o), o]));
     const nextMap = Object.fromEntries(next.map(o => [getId(o), o]));
     Object.entries(nextMap).forEach(([id, o]) => {
-      if (JSON.stringify(prevMap[id]) !== JSON.stringify(o)) saveDoc(colName, id, o).catch(console.error);
+      if (JSON.stringify(prevMap[id]) !== JSON.stringify(o)) saveDoc(colName, id, o).catch(err => { console.error(`[syncFS] ${colName}/${id}`, err); });
     });
-    Object.keys(prevMap).forEach(id => { if (!nextMap[id]) deleteDocument(colName, id).catch(console.error); });
+    Object.keys(prevMap).forEach(id => { if (!nextMap[id]) deleteDocument(colName, id).catch(err => { console.error(`[syncFS] delete ${colName}/${id}`, err); }); });
   };
   const setOrders = u => syncFS("orders", o => o.id)(orders, u);
   const setPurchaseList = u => syncFS("purchases", r => r.lot)(purchaseList, u);
