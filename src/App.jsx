@@ -827,20 +827,22 @@ const DATE_PRESETS = ["Đầu năm đến hiện tại","Năm nay","Sáu tháng 
 function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
   const [pFrom, setPFrom] = React.useState(initFrom || localMonthStart());
   const [pTo, setPTo]   = React.useState(initTo   || localToday());
+  const [open, setOpen]  = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const handler = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
   const lbl = "mb-1 block text-[13px] font-medium text-slate-500";
-  const filterBtn = "inline-flex items-center gap-1.5 self-end rounded-lg border border-amber-600 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100";
-  const onPreset = e => {
-    const range = getPresetRange(e.target.value);
+  const applyPreset = preset => {
+    const range = getPresetRange(preset);
     if (!range) return;
     setPFrom(range[0]); setPTo(range[1]);
     onApply(range[0], range[1]);
-    e.target.value = "";
+    setOpen(false);
   };
-  const presetSelect = /*#__PURE__*/React.createElement("div", null,
-    /*#__PURE__*/React.createElement("label", {className:lbl}, "Thời gian"),
-    /*#__PURE__*/React.createElement("select", {onChange:onPreset, defaultValue:"", className:field},
-      /*#__PURE__*/React.createElement("option", {value:"", disabled:true}, "Chọn nhanh…"),
-      DATE_PRESETS.map(p => /*#__PURE__*/React.createElement("option", {key:p, value:p}, p))));
+  const filterBtn = "inline-flex items-center gap-1.5 self-end rounded-lg border border-amber-600 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100";
   if (compact) return /*#__PURE__*/React.createElement(React.Fragment, null,
     /*#__PURE__*/React.createElement("input", {type:"date", value:pFrom, onChange:e=>setPFrom(e.target.value), className:`${field} py-1.5 text-sm`}),
     /*#__PURE__*/React.createElement("span", {className:"text-slate-400 text-sm"}, "–"),
@@ -848,15 +850,25 @@ function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
     /*#__PURE__*/React.createElement("button", {onClick:()=>onApply(pFrom,pTo), className:"inline-flex items-center gap-1 rounded-lg border border-amber-600 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"},
       /*#__PURE__*/React.createElement(Search, {className:"h-3.5 w-3.5"}), "Lọc"));
   return /*#__PURE__*/React.createElement(React.Fragment, null,
-    presetSelect,
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className:lbl}, "Từ ngày"),
       /*#__PURE__*/React.createElement("input", {type:"date", value:pFrom, onChange:e=>setPFrom(e.target.value), className:field})),
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className:lbl}, "Đến ngày"),
       /*#__PURE__*/React.createElement("input", {type:"date", value:pTo, onChange:e=>setPTo(e.target.value), className:field})),
-    /*#__PURE__*/React.createElement("button", {onClick:()=>onApply(pFrom,pTo), className:filterBtn},
-      /*#__PURE__*/React.createElement(Search, {className:"h-4 w-4"}), "Lọc"));
+    /*#__PURE__*/React.createElement("div", {className:"relative self-end", ref},
+      /*#__PURE__*/React.createElement("div", {className:"flex"},
+        /*#__PURE__*/React.createElement("button", {onClick:()=>onApply(pFrom,pTo), className:"inline-flex items-center gap-1.5 rounded-l-lg border border-r-0 border-amber-600 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100"},
+          /*#__PURE__*/React.createElement(Search, {className:"h-4 w-4"}), "Lọc"),
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setOpen(v=>!v), className:"inline-flex items-center rounded-r-lg border border-amber-600 bg-amber-50 px-2 py-2 text-sm text-amber-800 hover:bg-amber-100"},
+          /*#__PURE__*/React.createElement(ChevronDown, {className:"h-4 w-4"}))),
+      open && /*#__PURE__*/React.createElement("div", {className:"absolute left-0 top-full z-50 mt-1 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
+        DATE_PRESETS.map((p,i) => /*#__PURE__*/React.createElement(React.Fragment, {key:p},
+          (i===2||i===4) && /*#__PURE__*/React.createElement("div", {className:"my-1 border-t border-slate-100"}),
+          /*#__PURE__*/React.createElement("button", {
+            onClick:()=>applyPreset(p),
+            className:"w-full px-4 py-1.5 text-left text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-800"
+          }, p))))));
 }
 
 /* ── Supplier costs context ── */
