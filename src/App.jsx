@@ -785,7 +785,7 @@ const PrintBtn = ({
 }), " In");
 
 /* ── Thanh lọc Từ ngày – Đến ngày + tìm kiếm dùng chung (E3) ── */
-function RangeBar({ q, setQ, placeholder = "Tìm kiếm…", from, setFrom, to, setTo, onExport, extra }) {
+function RangeBar({ q, setQ, placeholder = "Tìm kiếm…", from, setFrom, to, setTo, onExport, extra, noPrint }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-end gap-2"
   },
@@ -801,7 +801,7 @@ function RangeBar({ q, setQ, placeholder = "Tìm kiếm…", from, setFrom, to, 
     value: q, onChange: e => setQ(e.target.value), placeholder: placeholder,
     className: `${field} w-full`
   })), extra,
-  /*#__PURE__*/React.createElement(PrintBtn, null),
+  !noPrint && /*#__PURE__*/React.createElement(PrintBtn, null),
   onExport && /*#__PURE__*/React.createElement(ExportBtn, { onClick: onExport }));
 }
 
@@ -4720,6 +4720,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
     to: toDate, setTo: setToDate,
     onExport: onExport,
     extra: nccExtra,
+    noPrint: true,
   }), /*#__PURE__*/React.createElement(TableShell, {
     minW: "1500px",
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
