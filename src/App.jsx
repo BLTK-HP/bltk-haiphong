@@ -7578,7 +7578,7 @@ function Finance({setActive, onOpenOrder}) {
               const totalIn  = accTxns.filter(t=>!t.cancelled&&t.amount>0).reduce((s,t)=>s+t.amount,0);
               const totalOut = accTxns.filter(t=>!t.cancelled&&t.amount<0).reduce((s,t)=>s+t.amount,0);
               return /*#__PURE__*/React.createElement("tr", {className:"bg-[#fed7aa] text-sm font-semibold text-slate-800"},
-                /*#__PURE__*/React.createElement("td", {colSpan:2, className:"px-4 py-2.5"}, "TỔNG CỘNG (", accTxns.length, " GD)"),
+                /*#__PURE__*/React.createElement("td", {colSpan: patOnly ? 2 : 3, className:"px-4 py-2.5"}, "TỔNG CỘNG (", accTxns.length, " GD)"),
                 /*#__PURE__*/React.createElement("td", {colSpan:2}),
                 /*#__PURE__*/React.createElement("td", {className:"px-4 py-2.5 text-right tabular-nums whitespace-nowrap"},
                   totalIn>0  && /*#__PURE__*/React.createElement("span", {className:"text-[#047857]"}, "+", vnd(totalIn)),
@@ -7589,6 +7589,7 @@ function Finance({setActive, onOpenOrder}) {
             head:/*#__PURE__*/React.createElement(React.Fragment,null,
               /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:90}},"Ngày"),
               /*#__PURE__*/React.createElement(Th,{style:{width:60,minWidth:60}},"Số phiếu"),
+              !patOnly && /*#__PURE__*/React.createElement(Th,{center:true,style:{width:90,minWidth:90}},"Số đơn"),
               /*#__PURE__*/React.createElement(Th,{style:{minWidth:180}},"Đối tượng"),
               /*#__PURE__*/React.createElement(Th,{center:true,style:{width:155,minWidth:155}},"Loại giao dịch"),
               /*#__PURE__*/React.createElement(Th,{center:true,style:{minWidth:110}},"Số tiền"),
@@ -7607,6 +7608,8 @@ function Finance({setActive, onOpenOrder}) {
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 tabular-nums"},
                 /*#__PURE__*/React.createElement("span",{className:`inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium ${t.amount>0?"bg-[#dcfce7] text-[#047857]":t.amount<0?"bg-[#fee2e2] text-[#B91C1C]":"bg-slate-100 text-slate-600"}`},
                   fmtDocId(t.amount>=0?"PT":"PC",(detailPage-1)*ACC_PER_PAGE+i+1))),
+              !patOnly && /*#__PURE__*/React.createElement("td",{className:"px-2 py-2 text-center"},
+                t.orderId ? /*#__PURE__*/React.createElement("span",{className:"inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-amber-50 text-amber-800 ring-1 ring-amber-200 whitespace-nowrap"},t.orderId) : null),
               /*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-slate-700"},t.entity),
               /*#__PURE__*/React.createElement("td",{className:"px-2 py-2 text-center"},
                 /*#__PURE__*/React.createElement("select",{
