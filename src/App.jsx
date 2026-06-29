@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import PRODUCTS from './products.js'
-import { ORDER_ITEM_FIXES, NEW_ORDERS_TO_ADD } from './orderItemFixes.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc, where, writeBatch } from 'firebase/firestore'
 import { db, storage } from './firebase.js'
@@ -8458,97 +8457,6 @@ function App({ profile, logout }) {
   const title = LABELS[active] || "";
   const appLoaded = ordersLoaded && purchasesLoaded && whInLoaded && whOutLoaded && txnsLoaded && settingsLoaded;
 
-  // Auto-migration: sửa items thiếu + thêm đơn mới + re-tạo wh_in/wh_out đúng
-  React.useEffect(() => {
-    if (!appLoaded) return;
-    if (localStorage.getItem('bltk_kho_fix_v2') === 'done') return;
-    (async () => {
-      try {
-        console.log("[migration] Bắt đầu...");
-        const fixIds = new Set(ORDER_ITEM_FIXES.map(f => f.id));
-
-        // 1. Tìm wh records thuộc các đơn bị sai
-        const whInDel = whInItems.filter(r => fixIds.has(r.order));
-        const whOutDel = whOutItems.filter(r => fixIds.has(r.order));
-        const processedOrdIds = new Set([...whInDel.map(r => r.order), ...whOutDel.map(r => r.order)]);
-        console.log(`[migration] Xoá ${whInDel.length} wh_in + ${whOutDel.length} wh_out cũ sai`);
-
-        // 2. Xoá wh_in/wh_out cũ
-        for (const r of whInDel) await deleteDocument("wh_in", r._id);
-        for (const r of whOutDel) await deleteDocument("wh_out", r._id);
-
-        // 3. Cập nhật items cho 136 đơn, reset flags nếu đơn đã từng được xử lý kho
-        console.log(`[migration] Cập nhật items cho ${ORDER_ITEM_FIXES.length} đơn...`);
-        for (const fix of ORDER_ITEM_FIXES) {
-          const existing = orders.find(o => o.id === fix.id);
-          if (!existing) continue;
-          const wasProcessed = processedOrdIds.has(fix.id);
-          await saveDoc("orders", fix.id, {
-            ...existing,
-            items: fix.items,
-            expense: fix.expense ?? existing.expense ?? 0,
-            imported: wasProcessed ? false : (existing.imported || false),
-            exported: wasProcessed ? false : (existing.exported || false),
-            pn: wasProcessed ? "" : (existing.pn || ""),
-            px: wasProcessed ? "" : (existing.px || ""),
-            dateIn: wasProcessed ? "" : (existing.dateIn || ""),
-            dateOut: wasProcessed ? "" : (existing.dateOut || ""),
-          });
-        }
-
-        // 4. Thêm 32 đơn mới (T12/2025 + T6/2026)
-        console.log(`[migration] Thêm ${NEW_ORDERS_TO_ADD.length} đơn mới...`);
-        for (const o of NEW_ORDERS_TO_ADD) {
-          if (!orders.find(x => x.id === o.id)) await saveDoc("orders", o.id, o);
-        }
-
-        // 5. Re-tạo wh_in/wh_out đúng cho các đơn đã từng xử lý kho
-        console.log(`[migration] Re-tạo wh cho ${processedOrdIds.size} đơn...`);
-        for (const oid of processedOrdIds) {
-          const fix = ORDER_ITEM_FIXES.find(f => f.id === oid);
-          const existing = orders.find(o => o.id === oid);
-          if (!existing || !fix) continue;
-          const pn = "PN" + oid.replace(/\D/g, "");
-          const px = "PX" + oid.replace(/\D/g, "");
-          const ordDateStr = String(existing.dt || "").match(/\d{2}\/\d{2}\/\d{4}/)?.[0] || "";
-          for (let i = 0; i < fix.items.length; i++) {
-            const it = fix.items[i];
-            const lotId = pn + (fix.items.length > 1 ? "_" + i : "");
-            const wInId = lotId + "~~" + (it.name || "").replace(/\//g,"_");
-            await saveDoc("wh_in", wInId, {
-              lot: lotId, date: ordDateStr, prod: it.name,
-              store: existing.store || "Kho HH", kho: "HH",
-              qtyIn: it.qty, qtyNow: it.qty, qtyRemaining: it.qty,
-              costNcc: it.cost || 0, unitCost: it.cost || 0, fee: 0,
-              supplier: "", order: oid, staff: existing.staff || "", pay: "Chưa thanh toán",
-            });
-            const slip = px + "_" + i;
-            await saveDoc("wh_out", slip, {
-              slip, dt: existing.dt || ordDateStr, order: oid,
-              sku: "", prod: it.name, supplier: "",
-              store: existing.store || "Kho HH", kho: "HH", lot: lotId,
-              qty: it.qty, sale: it.price, unitCost: it.cost || 0,
-              cust: existing.name || "", phone: existing.phone || "",
-              addr: existing.addr || "", orderStatus: existing.orderStatus || "",
-              delivery: existing.delivery || "Đã giao hàng", staff: existing.staff || "",
-            });
-          }
-          // Mark order as processed again
-          await saveDoc("orders", oid, {
-            ...existing, items: fix.items,
-            expense: fix.expense ?? existing.expense ?? 0,
-            imported: true, exported: true,
-            pn, px, dateIn: ordDateStr, dateOut: ordDateStr,
-          });
-        }
-
-        localStorage.setItem('bltk_kho_fix_v2', 'done');
-        console.log("[migration] Hoàn thành ✓");
-      } catch(e) {
-        console.error("[migration] Lỗi:", e);
-      }
-    })();
-  }, [appLoaded]);
 
 
   return /*#__PURE__*/React.createElement(TxnKindsCtx.Provider, {value: {txnKinds, saveTxnKinds}},
