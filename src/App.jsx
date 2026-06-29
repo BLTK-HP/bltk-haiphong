@@ -4680,7 +4680,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const prodNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.prod).filter(Boolean)))];
   const rows = items.filter(r =>
     _inR(r.date, fromDate, toDate) &&
-    (fSup === "Tất cả" || r.supplier === fSup) &&
+    (fSup === "Tất cả" || (r.supplier||"").toLowerCase().includes(fSup.toLowerCase())) &&
     (fProd === "Tất cả" || r.prod === fProd) &&
     (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
   ).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
@@ -4697,8 +4697,20 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
         prodNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
-      /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: field},
-        supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))));
+      /*#__PURE__*/React.createElement("div", {className: "relative"},
+        /*#__PURE__*/React.createElement("input", {
+          list: "sup-datalist",
+          value: fSup === "Tất cả" ? "" : fSup,
+          onChange: e => setFSup(e.target.value || "Tất cả"),
+          placeholder: "Tất cả NCC…",
+          className: `${field} pr-7`
+        }),
+        fSup !== "Tất cả" && /*#__PURE__*/React.createElement("button", {
+          onClick: () => setFSup("Tất cả"),
+          className: "absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none"
+        }, "×"),
+        /*#__PURE__*/React.createElement("datalist", {id: "sup-datalist"},
+          supNames.filter(s => s !== "Tất cả").map(s => /*#__PURE__*/React.createElement("option", {key: s, value: s}))))));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(RangeBar, {
