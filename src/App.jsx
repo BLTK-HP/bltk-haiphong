@@ -1637,26 +1637,6 @@ function SalesModule({
     ...o,
     returned: true
   } : o));
-  const [fixRunning, setFixRunning] = useState(false);
-  const [fixDone, setFixDone] = useState(() => localStorage.getItem('bltk_order_fix_done') === '1');
-  const runOrderItemFix = async () => {
-    const totalOps = ORDER_ITEM_FIXES.length + NEW_ORDERS_TO_ADD.length;
-    if (!window.confirm(`Thực hiện:\n• Cập nhật items: ${ORDER_ITEM_FIXES.length} đơn\n• Thêm mới: ${NEW_ORDERS_TO_ADD.length} đơn (T12/2025 + T6/2026)\n\nTổng ${totalOps} thao tác. Không thể hoàn tác.`)) return;
-    setFixRunning(true);
-    try {
-      for (const fix of ORDER_ITEM_FIXES) {
-        const existing = orders.find(o => o.id === fix.id);
-        if (!existing) continue;
-        await saveDoc("orders", fix.id, { ...existing, items: fix.items, expense: fix.expense ?? existing.expense ?? 0 });
-      }
-      for (const o of NEW_ORDERS_TO_ADD) {
-        await saveDoc("orders", o.id, o);
-      }
-      localStorage.setItem('bltk_order_fix_done', '1');
-      setFixDone(true);
-    } catch(e) { alert("Lỗi: " + e.message); }
-    setFixRunning(false);
-  };
   const [batchModal, setBatchModal] = useState(false);
   const handleBatchKho = (previewOrders) => {
     if (!previewOrders.length) return;
@@ -1733,8 +1713,6 @@ function SalesModule({
       id: o.id
     }),
     onBatchKho: () => setBatchModal(true),
-    onFixItems: fixDone ? null : runOrderItemFix,
-    fixRunning,
     initFrom: listFromDate,
     initTo: listToDate
   }), batchModal && /*#__PURE__*/React.createElement(BatchKhoModal, {
@@ -2334,8 +2312,6 @@ function OrderTable({
   onKho,
   onReturn,
   onBatchKho,
-  onFixItems,
-  fixRunning,
   initFrom,
   initTo
 }) {
@@ -2478,12 +2454,7 @@ function OrderTable({
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center justify-end gap-2"
-  }, onFixItems && /*#__PURE__*/React.createElement("button", {
-    onClick: onFixItems,
-    disabled: fixRunning,
-    className: "rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-sm font-medium text-rose-700 hover:bg-rose-100 disabled:opacity-50",
-    title: "Cập nhật 136 đơn items + thêm 32 đơn mới (T12/2025 + T6/2026)"
-  }, fixRunning ? "Đang cập nhật…" : "⚠ Sửa SP + thêm đơn mới"), onBatchKho && /*#__PURE__*/React.createElement("button", {
+  }, onBatchKho && /*#__PURE__*/React.createElement("button", {
     onClick: onBatchKho,
     className: outlineTealBtn,
     title: "Tự động nhập + xuất kho cho tất cả đơn đã giao hàng"
