@@ -4626,7 +4626,7 @@ function PurchaseList({
 }
 
 /* ───────── Warehouse import (bỏ cột thanh toán) ───────── */
-function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders = [], purchaseList = [], setPurchaseList, initSearch = "", onMounted, onOpenOrder}) {
+function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders = [], setOrders, purchaseList = [], setPurchaseList, initSearch = "", onMounted, onOpenOrder}) {
   const notify = useToast();
   const { profile: _whProfile } = useAuth();
   const _staffName = _whProfile?.name || "Quản lý";
@@ -4643,6 +4643,19 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const [fProd, setFProd] = useState("Tất cả");
   const nccNames = [...new Set([...SUPPLIERS.map(s => s.name), ...items.map(r => r.supplier).filter(Boolean)])].sort();
   const setNcc = (r, val) => setItems(xs => xs.map(x => x.lot === r.lot && x.prod === r.prod ? {...x, supplier: val} : x));
+  const [editCost, setEditCost] = useState(null); // { lot, prod, costNcc, fee }
+  const startEditCost = r => setEditCost({ lot: r.lot, prod: r.prod, costNcc: r.costNcc || 0, fee: r.fee || 0 });
+  const saveCost = r => {
+    if (!editCost) return;
+    const newCostNcc = Number(editCost.costNcc) || 0;
+    const newFee = Number(editCost.fee) || 0;
+    const newUnitCost = r.qtyIn > 0 ? Math.round((newCostNcc * r.qtyIn + newFee) / r.qtyIn) : newCostNcc;
+    setItems(xs => xs.map(x => x.lot === r.lot && x.prod === r.prod ? {...x, costNcc: newCostNcc, fee: newFee, unitCost: newUnitCost} : x));
+    if (r.order && setOrders) {
+      setOrders(os => os.map(o => o.id === r.order ? {...o, items: (o.items||[]).map(it => it.name === r.prod ? {...it, cost: newUnitCost} : it)} : o));
+    }
+    setEditCost(null);
+  };
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const [whInPage, setWhInPage] = useState(1);
@@ -4785,17 +4798,32 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
     className: "px-4 py-3 text-slate-800"
   }, r.prod), /*#__PURE__*/React.createElement("td", {
     className: `px-4 py-3 text-right tabular-nums ${r.qtyIn < 0 ? "text-[#B91C1C]" : "text-slate-600"}`
-  }, r.qtyIn), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-right tabular-nums text-slate-600"
-  }, vnd(r.costNcc)), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-right tabular-nums text-slate-500"
-  }, r.fee ? vnd(r.fee) : ""), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-right tabular-nums font-medium text-[#92400e]"
-  }, vnd(r.costNcc + (r.fee || 0))), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-right tabular-nums font-medium text-[#B91C1C]"
-  }, vnd((r.costNcc + (r.fee || 0)) * r.qtyIn)), /*#__PURE__*/React.createElement("td", {
-    className: "px-4 py-3 text-slate-500"
-  }, r.staff))),
+  }, r.qtyIn),
+  editCost && editCost.lot === r.lot && editCost.prod === r.prod
+    ? /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement("td", {className: "px-2 py-1"},
+          /*#__PURE__*/React.createElement(NumInput, {value: editCost.costNcc, onChange: v => setEditCost(ec => ({...ec, costNcc: v})), className: "w-28 rounded border border-amber-300 px-2 py-1 text-right text-sm focus:outline-none focus:border-amber-500"})),
+        /*#__PURE__*/React.createElement("td", {className: "px-2 py-1"},
+          /*#__PURE__*/React.createElement(NumInput, {value: editCost.fee, onChange: v => setEditCost(ec => ({...ec, fee: v})), className: "w-24 rounded border border-amber-300 px-2 py-1 text-right text-sm focus:outline-none focus:border-amber-500"})),
+        /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-medium text-[#92400e]"},
+          vnd((Number(editCost.costNcc)||0) + (Number(editCost.fee)||0))),
+        /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-medium text-[#B91C1C]"},
+          vnd(((Number(editCost.costNcc)||0) + (Number(editCost.fee)||0)) * r.qtyIn)),
+        /*#__PURE__*/React.createElement("td", {className: "px-2 py-1 whitespace-nowrap"},
+          /*#__PURE__*/React.createElement("button", {onClick: () => saveCost(r), className: "mr-1 rounded bg-amber-500 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-600"}, "Lưu"),
+          /*#__PURE__*/React.createElement("button", {onClick: () => setEditCost(null), className: "rounded border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50"}, "Huỷ")))
+    : /*#__PURE__*/React.createElement(React.Fragment, null,
+        /*#__PURE__*/React.createElement("td", {
+          className: "px-4 py-3 text-right tabular-nums text-slate-600 cursor-pointer hover:bg-amber-50 hover:text-amber-700",
+          title: "Bấm để sửa giá nhập", onClick: () => startEditCost(r)
+        }, vnd(r.costNcc)),
+        /*#__PURE__*/React.createElement("td", {
+          className: "px-4 py-3 text-right tabular-nums text-slate-500 cursor-pointer hover:bg-amber-50 hover:text-amber-700",
+          title: "Bấm để sửa CPMH", onClick: () => startEditCost(r)
+        }, r.fee ? vnd(r.fee) : /*#__PURE__*/React.createElement("span", {className: "text-slate-300 text-xs"}, "—")),
+        /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-medium text-[#92400e]"}, vnd(r.costNcc + (r.fee || 0))),
+        /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-right tabular-nums font-medium text-[#B91C1C]"}, vnd((r.costNcc + (r.fee || 0)) * r.qtyIn)),
+        /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-slate-500"}, r.staff)))),
   /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa]"},
     /*#__PURE__*/React.createElement("td", {className: "px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-800", colSpan: 6}, "TỔNG CỘNG (",rows.length," PHIẾU)"),
     /*#__PURE__*/React.createElement("td", {className: `px-4 py-3 text-right tabular-nums ${rows.reduce((s,r)=>s+r.qtyIn,0)<0?"text-[#B91C1C]":"text-slate-800"}`, style:{fontWeight:700}}, rows.reduce((s,r)=>s+r.qtyIn,0)),
@@ -8282,7 +8310,7 @@ function Screen({
     case "purchase":
       return /*#__PURE__*/React.createElement(PurchaseModule, {onImportToWh, purchaseList, setPurchaseList, setActive});
     case "wh_in":
-      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, setWhOutItems, orders, purchaseList, setPurchaseList, initSearch: whInSearch, onMounted: () => setWhInSearch(""), onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
+      return /*#__PURE__*/React.createElement(WhIn, {whInItems, setWhInItems, setWhOutItems, orders, setOrders, purchaseList, setPurchaseList, initSearch: whInSearch, onMounted: () => setWhInSearch(""), onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "wh_out":
       return /*#__PURE__*/React.createElement(WhOut, {
         whOutItems: whOutItems,
