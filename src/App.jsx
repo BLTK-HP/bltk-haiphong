@@ -1711,7 +1711,7 @@ function SalesModule({
     onEdit: o => setView({
       edit: o.id
     }),
-    onDelete: id => setOrders(os => os.filter(o => o.id !== id)),
+    onDelete: id => deleteDocument("orders", id),
     onKho: o => setModal({
       mode: "kho",
       id: o.id
