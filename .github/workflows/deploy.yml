@@ -14,6 +14,15 @@ jobs:
           node-version: '20'
       - run: npm ci
       - run: npm run build
+
+      - name: Deploy Firestore Rules
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          echo "$FIREBASE_SA" > /tmp/sa.json
+          GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json npx firebase deploy --only firestore:rules --project bltk-haiphong
+          rm -f /tmp/sa.json
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

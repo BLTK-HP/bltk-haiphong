@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function authed() {
+      return request.auth != null;
+    }
+
+    function userRole() {
+      let uid = request.auth.uid;
+      return exists(/databases/$(database)/documents/users/$(uid))
+        ? get(/databases/$(database)/documents/users/$(uid)).data.role
+        : null;
+    }
+
+    function isAdmin()          { return authed() && userRole() == 'admin'; }
+    function isAdminOrManager() { return authed() && userRole() in ['admin', 'manager']; }
+    function isAnyStaff()       { return authed() && userRole() in ['admin', 'manager', 'sales', 'warehouse']; }
+
+    // Đơn hàng, khách hàng, sản phẩm, hợp đồng — tất cả nhân viên
+    match /orders/{id}          { allow read, write: if isAnyStaff(); }
+    match /customers/{id}       { allow read, write: if isAnyStaff(); }
+    match /products/{id}        { allow read, write: if isAnyStaff(); }
+    match /contracts/{id}       { allow read, write: if isAnyStaff(); }
+
+    // Kho và nhập hàng — tất cả nhân viên
+    match /wh_in/{id}           { allow read, write: if isAnyStaff(); }
+    match /wh_out/{id}          { allow read, write: if isAnyStaff(); }
+    match /purchases/{id}       { allow read, write: if isAnyStaff(); }
+    match /supplier_costs/{id}  { allow read, write: if isAnyStaff(); }
+
+    // Tài chính — chỉ admin và manager
+    match /txns/{id}            { allow read, write: if isAdminOrManager(); }
+
+    // Cài đặt — đọc: tất cả; ghi: admin/manager
+    match /settings/{id} {
+      allow read:  if isAnyStaff();
+      allow write: if isAdminOrManager();
+    }
+    match /config/{id} {
+      allow read:  if isAnyStaff();
+      allow write: if isAdminOrManager();
+    }
+
+    // Users — đọc: chính mình hoặc admin/manager; ghi: admin/manager
+    match /users/{uid} {
+      allow read:  if authed() && (request.auth.uid == uid || isAdminOrManager());
+      allow write: if isAdminOrManager();
+    }
+  }
+}

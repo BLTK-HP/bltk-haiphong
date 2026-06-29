@@ -8633,6 +8633,17 @@ function App({ profile, logout }) {
   const [whOutItems, whOutLoaded] = useCollection("wh_out");
 
   // Firestore write helpers (thay thế setState)
+  // Refs luôn giữ giá trị mới nhất — tránh stale-closure khi syncFS được gọi
+  // từ callback sau nhiều render (vd: 2 action liên tiếp trước khi onSnapshot kịp fire)
+  const ordersRef      = React.useRef(orders);
+  const purchaseRef    = React.useRef(purchaseList);
+  const whInRef        = React.useRef(whInItems);
+  const whOutRef       = React.useRef(whOutItems);
+  React.useEffect(() => { ordersRef.current   = orders; },      [orders]);
+  React.useEffect(() => { purchaseRef.current = purchaseList; }, [purchaseList]);
+  React.useEffect(() => { whInRef.current     = whInItems; },   [whInItems]);
+  React.useEffect(() => { whOutRef.current    = whOutItems; },  [whOutItems]);
+
   const syncFS = (colName, getId) => (current, updater) => {
     const next = typeof updater === 'function' ? updater(current) : updater;
     const prevMap = Object.fromEntries(current.map(o => [getId(o), o]));
@@ -8642,10 +8653,10 @@ function App({ profile, logout }) {
     });
     Object.keys(prevMap).forEach(id => { if (!nextMap[id]) deleteDocument(colName, id).catch(err => { console.error(`[syncFS] delete ${colName}/${id}`, err); }); });
   };
-  const setOrders = u => syncFS("orders", o => o.id)(orders, u);
-  const setPurchaseList = u => syncFS("purchases", r => r.lot)(purchaseList, u);
-  const setWhInItems = u => syncFS("wh_in", r => (r.lot||"")+"~~"+(r.prod||""))(whInItems, u);
-  const setWhOutItems = u => syncFS("wh_out", r => r.slip)(whOutItems, u);
+  const setOrders      = u => syncFS("orders",    o => o.id)                           (ordersRef.current,   u);
+  const setPurchaseList = u => syncFS("purchases", r => r.lot)                          (purchaseRef.current,  u);
+  const setWhInItems   = u => syncFS("wh_in",     r => (r.lot||"")+"~~"+(r.prod||"")) (whInRef.current,     u);
+  const setWhOutItems  = u => syncFS("wh_out",    r => r.slip)                         (whOutRef.current,    u);
   // Bảng giá vốn từ Firestore — thay thế SUPPLIER_COSTS hardcode
   const [supplierCostsFS] = useCollection("supplier_costs");
   const supplierCosts = supplierCostsFS.length ? supplierCostsFS : SUPPLIER_COSTS;
@@ -8673,7 +8684,9 @@ function App({ profile, logout }) {
   };
   const [txnsFS, txnsLoaded] = useCollection("txns");
   const txns = txnsFS;
-  const setTxns = u => syncFS("txns", t => String(t.id))(txns, u);
+  const txnsRef = React.useRef(txns);
+  React.useEffect(() => { txnsRef.current = txns; }, [txns]);
+  const setTxns = u => syncFS("txns", t => String(t.id))(txnsRef.current, u);
   const [docNums, setDocNumsState] = useState(DOC_NUM_INIT);
   React.useEffect(() => {
     if (!settingsLoaded) return;
