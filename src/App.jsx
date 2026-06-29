@@ -2676,17 +2676,12 @@ function OrderTable({
       icon: Pencil,
       title: "Sửa đơn",
       onClick: () => onEdit(o)
-    }), confirmDeleteId === o.id
-      ? /*#__PURE__*/React.createElement("button", {
-          className: "rounded px-2 py-0.5 text-xs font-semibold bg-red-600 text-white hover:bg-red-700 whitespace-nowrap",
-          onClick: () => { onDelete(o.id).then(() => notify("Đã xoá đơn " + o.id)).catch(e => notify("Lỗi: " + e.message)); setConfirmDeleteId(null); }
-        }, "Xác nhận xoá")
-      : /*#__PURE__*/React.createElement(IconBtn, {
-          icon: Trash2,
-          tone: "danger",
-          title: "Xoá đơn",
-          onClick: () => setConfirmDeleteId(o.id)
-        }))));
+    }), /*#__PURE__*/React.createElement(IconBtn, {
+      icon: Trash2,
+      tone: "danger",
+      title: "Xoá đơn",
+      onClick: () => { if (window.confirm(`Xoá đơn ${o.id} của ${o.name}?\nThao tác không thể hoàn tác.`)) onDelete(o.id); }
+    }))));
   }))),
   totalOrdPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-1 px-1 flex-wrap"},
     /*#__PURE__*/React.createElement("span", {className: "text-xs text-slate-500"},
