@@ -3574,7 +3574,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
       return t;
     }));
   };
-  const CHI_KIND_MAP = {"Hoàn tiền hàng":"Hoàn tiền KH","Chi phí Ship hàng":"Chi vận chuyển","Chi phí hoa hồng":"Chi hoa hồng","Chi phí lắp đặt":"Chi lắp đặt"};
+  const CHI_KIND_MAP = {"Hoàn tiền hàng":"Hoàn tiền KH","Chi phí Ship hàng":"CP Ship ĐH","Chi phí hoa hồng":"Chi hoa hồng","Chi phí lắp đặt":"CP Lắp Đặt"};
   const autoAddChi = (type, amount, acc) => {
     const nextId = _txns.length ? Math.max(..._txns.map(t=>Number(t.id)||0))+1 : 1;
     const d = new Date(), pad = n => String(n).padStart(2,"0");
