@@ -3548,9 +3548,14 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     if (!needsNewDH) return "";
     const row = _dn && _dn.find(r => r.prefix === "DH");
     const num = row ? row.num : 1;
-    if (_sdn) _sdn(ds => ds.map(r => r.prefix === "DH" ? {...r, num: r.num + 1} : r));
     return fmtDocId("DH", num);
   });
+  // Tăng counter docNums sau render (không được gọi setState của component cha trong render phase)
+  React.useEffect(() => {
+    if (pendingOrderId && _sdn) {
+      _sdn(ds => ds.map(r => r.prefix === "DH" ? {...r, num: r.num + 1} : r));
+    }
+  }, []);
   const nowStr = () => { const d = new Date(), pad = n => String(n).padStart(2,"0"); return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
   const effectiveOrderId = editOrder?.id || (!isDraft ? pendingOrderId : "");
   const autoAddTxn = (p) => {
