@@ -2522,7 +2522,7 @@ function OrderTable({
   }))), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-slate-400"
   }), /*#__PURE__*/React.createElement(TableShell, {
-    foot: /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa] text-sm font-semibold text-slate-800"},
+    foot: /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa] text-sm font-bold text-slate-800"},
       /*#__PURE__*/React.createElement("td", {colSpan: 4, className: "px-4 py-2.5"}, "TỔNG CỘNG (", rows.length, " ĐƠN)"),
       /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums text-[#92400e]"}, num(sumTotal)),
       /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumDatCoc > 0 ? "#D97706" : "#94A3B8"}}, sumDatCoc > 0 ? num(sumDatCoc) : ""),
