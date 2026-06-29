@@ -822,7 +822,7 @@ function getPresetRange(preset) {
   if (m >= 0) return [fmt(new Date(y,m,1)), fmt(lastDay(y,m+1))];
   return null;
 }
-const DATE_PRESETS = ["Đầu năm đến hiện tại","Năm nay","Sáu tháng đầu năm","Sáu tháng cuối năm",...Array.from({length:12},(_,i)=>`Tháng ${i+1}`)];
+const DATE_PRESETS = ["Đầu năm đến hiện tại",...Array.from({length:12},(_,i)=>`Tháng ${i+1}`)];
 
 function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
   const [pFrom, setPFrom] = React.useState(initFrom || localMonthStart());
@@ -864,7 +864,7 @@ function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
           /*#__PURE__*/React.createElement(ChevronDown, {className:"h-4 w-4"}))),
       open && /*#__PURE__*/React.createElement("div", {className:"absolute left-0 top-full z-50 mt-1 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"},
         DATE_PRESETS.map((p,i) => /*#__PURE__*/React.createElement(React.Fragment, {key:p},
-          (i===2||i===4) && /*#__PURE__*/React.createElement("div", {className:"my-1 border-t border-slate-100"}),
+          i===1 && /*#__PURE__*/React.createElement("div", {className:"my-1 border-t border-slate-100"}),
           /*#__PURE__*/React.createElement("button", {
             onClick:()=>applyPreset(p),
             className:"w-full px-4 py-1.5 text-left text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-800"
