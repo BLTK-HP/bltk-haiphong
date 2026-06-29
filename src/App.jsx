@@ -3528,7 +3528,12 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [ccostType, setCcostType] = useState("Hoàn tiền hàng");
   const [ccostAmt, setCcostAmt] = useState(0);
   const [ccostAcc, setCcostAcc] = useState("");
-  const [payments, setPayments] = useState(editOrder?.payments || []);
+  const [payments, setPayments] = useState(() => {
+    const arr = editOrder?.payments;
+    if (arr?.length > 0) return arr;
+    if (editOrder?.paid > 0) return [{ kind: "Thanh toán", amount: editOrder.paid, dt: editOrder.dt || "" }];
+    return [];
+  });
   const [returns, setReturns] = useState(editOrder?.returns || []);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [cancelled, setCancelled] = useState(editOrder?.orderStatus === "Huỷ" || editOrder?.orderStatus === "Hủy" || false);
