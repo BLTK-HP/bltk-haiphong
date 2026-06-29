@@ -2673,6 +2673,11 @@ function OrderTable({
       icon: Pencil,
       title: "Sửa đơn",
       onClick: () => onEdit(o)
+    }), /*#__PURE__*/React.createElement(IconBtn, {
+      icon: Trash2,
+      tone: "danger",
+      title: "Xoá đơn",
+      onClick: () => { if (window.confirm(`Xoá đơn ${o.id} của ${o.name}?\nThao tác không thể hoàn tác.`)) onDelete(o.id); }
     }))));
   }))),
   totalOrdPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-1 px-1 flex-wrap"},
