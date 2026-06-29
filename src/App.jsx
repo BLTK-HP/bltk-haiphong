@@ -3533,6 +3533,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [dlvChecked, setDlvChecked] = useState({});
   const [dlvQtys, setDlvQtys] = useState({});
   const [dlvSlipModal, setDlvSlipModal] = useState(null);
+  const [showDlvPanel, setShowDlvPanel] = useState(false);
   const [bottomTab, setBottomTab] = useState("payment");
   const [editReturnIdx, setEditReturnIdx] = useState(null);
   const [dupDismissed, setDupDismissed] = useState(false);
@@ -4043,41 +4044,44 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
                   /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 text-right tabular-nums"}, vnd(returns.filter(r=>!r.cancelled).reduce((s,r)=>s+(r.amount||0),0))),
                   /*#__PURE__*/React.createElement("td", {className:"px-3 py-2 text-right tabular-nums"}, vnd(returns.filter(r=>!r.cancelled).reduce((s,r)=>s+(r.fee||0),0))),
                   /*#__PURE__*/React.createElement("td", {className:"px-3 py-2", colSpan:4})))),
-  isEdit && !editOrder?.draft && lines.filter(l => l.name).some(l => (l.deliveredQty||0) < l.qty) && /*#__PURE__*/React.createElement("div", {className: "rounded-lg border border-amber-200 bg-amber-50 p-4"},
-    /*#__PURE__*/React.createElement("div", {className: "mb-3 flex items-center justify-between"},
-      /*#__PURE__*/React.createElement("h3", {className: "text-sm font-semibold text-amber-800"}, "Giao hàng từng phần"),
+  isEdit && !editOrder?.draft && lines.filter(l => l.name).some(l => (l.deliveredQty||0) < l.qty) && /*#__PURE__*/React.createElement("div", {className: "space-y-2"},
+    /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5"},
+      /*#__PURE__*/React.createElement("label", {className: "flex cursor-pointer items-center gap-2", onClick: () => setShowDlvPanel(v => !v)},
+        /*#__PURE__*/React.createElement("input", {type: "checkbox", readOnly: true, checked: showDlvPanel, className: "h-4 w-4 cursor-pointer rounded border-amber-300 accent-amber-600"}),
+        /*#__PURE__*/React.createElement("span", {className: "text-sm font-semibold text-amber-800"}, "Giao hàng từng phần")),
       deliveries.length > 0 && /*#__PURE__*/React.createElement("div", {className: "flex gap-1"},
         deliveries.map(d => /*#__PURE__*/React.createElement("button", {
           key: d.seq, onClick: () => setDlvSlipModal({...d, custName: cust.name, custPhone: cust.phone||"", custAddr: cust.addr||"", orderId: effectiveOrderId}),
           className: "rounded-full bg-amber-200 px-2 py-0.5 text-xs font-medium text-amber-800 hover:bg-amber-300"
         }, "Lần " + d.seq)))),
-    /*#__PURE__*/React.createElement("table", {className: "w-full text-sm mb-3", style:{borderCollapse:"collapse"}},
-      /*#__PURE__*/React.createElement("thead", null,
-        /*#__PURE__*/React.createElement("tr", {className: "text-xs text-amber-700 border-b border-amber-200"},
-          /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-left font-medium w-8"}, ""),
-          /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-left font-medium"}, "Sản phẩm"),
-          /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-14"}, "Đặt"),
-          /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-16"}, "Đã giao"),
-          /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-14"}, "Còn"),
-          /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-24"}, "Lần này"))),
-      /*#__PURE__*/React.createElement("tbody", null,
-        lines.filter(l => l.name && (l.deliveredQty||0) < l.qty).map(l =>
-          /*#__PURE__*/React.createElement("tr", {key: l.name, className: "border-b border-amber-100"},
-            /*#__PURE__*/React.createElement("td", {className: "py-2"},
-              /*#__PURE__*/React.createElement("input", {type: "checkbox", checked: !!dlvChecked[l.name], onChange: e => { const v = e.target.checked; setDlvChecked(c => ({...c, [l.name]: v})); if (v && !dlvQtys[l.name]) setDlvQtys(q => ({...q, [l.name]: l.qty - (l.deliveredQty||0)})); }, className: "h-4 w-4 rounded border-amber-300"})),
-            /*#__PURE__*/React.createElement("td", {className: "py-2 text-slate-700"}, l.name),
-            /*#__PURE__*/React.createElement("td", {className: "py-2 text-center tabular-nums text-slate-600"}, l.qty),
-            /*#__PURE__*/React.createElement("td", {className: "py-2 text-center tabular-nums text-slate-500"}, l.deliveredQty||0),
-            /*#__PURE__*/React.createElement("td", {className: "py-2 text-center tabular-nums font-medium text-amber-700"}, l.qty - (l.deliveredQty||0)),
-            /*#__PURE__*/React.createElement("td", {className: "py-2 text-center"},
-              dlvChecked[l.name]
-                ? /*#__PURE__*/React.createElement("input", {type: "number", min: 1, max: l.qty-(l.deliveredQty||0), value: dlvQtys[l.name]||"", onChange: e => setDlvQtys(q => ({...q, [l.name]: Math.min(Number(e.target.value), l.qty-(l.deliveredQty||0))})), className: "w-16 rounded border border-amber-300 px-1 py-0.5 text-center text-sm focus:outline-none focus:border-amber-500"})
-                : /*#__PURE__*/React.createElement("span", {className: "text-slate-300"}, "—")))))),
-    /*#__PURE__*/React.createElement("div", {className: "flex justify-end"},
-      /*#__PURE__*/React.createElement("button", {
-        onClick: handlePartialDelivery,
-        className: "inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-      }, "Giao hàng lần " + ((deliveries.length||0)+1)))),
+    showDlvPanel && /*#__PURE__*/React.createElement("div", {className: "rounded-lg border border-amber-200 bg-amber-50 p-4"},
+      /*#__PURE__*/React.createElement("table", {className: "w-full text-sm mb-3", style:{borderCollapse:"collapse"}},
+        /*#__PURE__*/React.createElement("thead", null,
+          /*#__PURE__*/React.createElement("tr", {className: "text-xs text-amber-700 border-b border-amber-200"},
+            /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-left font-medium w-8"}, ""),
+            /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-left font-medium"}, "Sản phẩm"),
+            /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-14"}, "Đặt"),
+            /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-16"}, "Đã giao"),
+            /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-14"}, "Còn"),
+            /*#__PURE__*/React.createElement("th", {className: "py-1.5 text-center font-medium w-24"}, "Lần này"))),
+        /*#__PURE__*/React.createElement("tbody", null,
+          lines.filter(l => l.name && (l.deliveredQty||0) < l.qty).map(l =>
+            /*#__PURE__*/React.createElement("tr", {key: l.name, className: "border-b border-amber-100"},
+              /*#__PURE__*/React.createElement("td", {className: "py-2"},
+                /*#__PURE__*/React.createElement("input", {type: "checkbox", checked: !!dlvChecked[l.name], onChange: e => { const v = e.target.checked; setDlvChecked(c => ({...c, [l.name]: v})); if (v && !dlvQtys[l.name]) setDlvQtys(q => ({...q, [l.name]: l.qty - (l.deliveredQty||0)})); }, className: "h-4 w-4 rounded border-amber-300"})),
+              /*#__PURE__*/React.createElement("td", {className: "py-2 text-slate-700"}, l.name),
+              /*#__PURE__*/React.createElement("td", {className: "py-2 text-center tabular-nums text-slate-600"}, l.qty),
+              /*#__PURE__*/React.createElement("td", {className: "py-2 text-center tabular-nums text-slate-500"}, l.deliveredQty||0),
+              /*#__PURE__*/React.createElement("td", {className: "py-2 text-center tabular-nums font-medium text-amber-700"}, l.qty - (l.deliveredQty||0)),
+              /*#__PURE__*/React.createElement("td", {className: "py-2 text-center"},
+                dlvChecked[l.name]
+                  ? /*#__PURE__*/React.createElement("input", {type: "number", min: 1, max: l.qty-(l.deliveredQty||0), value: dlvQtys[l.name]||"", onChange: e => setDlvQtys(q => ({...q, [l.name]: Math.min(Number(e.target.value), l.qty-(l.deliveredQty||0))})), className: "w-16 rounded border border-amber-300 px-1 py-0.5 text-center text-sm focus:outline-none focus:border-amber-500"})
+                  : /*#__PURE__*/React.createElement("span", {className: "text-slate-300"}, "—")))))),
+      /*#__PURE__*/React.createElement("div", {className: "flex justify-end"},
+        /*#__PURE__*/React.createElement("button", {
+          onClick: handlePartialDelivery,
+          className: "inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
+        }, "Giao hàng lần " + ((deliveries.length||0)+1))))),
   /*#__PURE__*/React.createElement("div", {className: "flex gap-4 items-start"},
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm border border-slate-200"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
