@@ -808,11 +808,39 @@ function RangeBar({ q, setQ, placeholder = "Tìm kiếm…", from, setFrom, to, 
 }
 
 /* ── Shared date-range picker với nút Lọc ── */
+function getPresetRange(preset) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const pad = n => String(n).padStart(2,"0");
+  const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const lastDay = (y, m) => new Date(y, m, 0);
+  if (preset === "Năm nay") return [fmt(new Date(y,0,1)), fmt(new Date(y,11,31))];
+  if (preset === "Đầu năm đến hiện tại") return [fmt(new Date(y,0,1)), fmt(now)];
+  if (preset === "Sáu tháng đầu năm") return [fmt(new Date(y,0,1)), fmt(new Date(y,5,30))];
+  if (preset === "Sáu tháng cuối năm") return [fmt(new Date(y,6,1)), fmt(new Date(y,11,31))];
+  const m = ["Tháng 1","Tháng 2","Tháng 3","Tháng 4","Tháng 5","Tháng 6","Tháng 7","Tháng 8","Tháng 9","Tháng 10","Tháng 11","Tháng 12"].indexOf(preset);
+  if (m >= 0) return [fmt(new Date(y,m,1)), fmt(lastDay(y,m+1))];
+  return null;
+}
+const DATE_PRESETS = ["Đầu năm đến hiện tại","Năm nay","Sáu tháng đầu năm","Sáu tháng cuối năm",...Array.from({length:12},(_,i)=>`Tháng ${i+1}`)];
+
 function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
   const [pFrom, setPFrom] = React.useState(initFrom || localMonthStart());
   const [pTo, setPTo]   = React.useState(initTo   || localToday());
   const lbl = "mb-1 block text-[13px] font-medium text-slate-500";
   const filterBtn = "inline-flex items-center gap-1.5 self-end rounded-lg border border-amber-600 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100";
+  const onPreset = e => {
+    const range = getPresetRange(e.target.value);
+    if (!range) return;
+    setPFrom(range[0]); setPTo(range[1]);
+    onApply(range[0], range[1]);
+    e.target.value = "";
+  };
+  const presetSelect = /*#__PURE__*/React.createElement("div", null,
+    /*#__PURE__*/React.createElement("label", {className:lbl}, "Thời gian"),
+    /*#__PURE__*/React.createElement("select", {onChange:onPreset, defaultValue:"", className:field},
+      /*#__PURE__*/React.createElement("option", {value:"", disabled:true}, "Chọn nhanh…"),
+      DATE_PRESETS.map(p => /*#__PURE__*/React.createElement("option", {key:p, value:p}, p))));
   if (compact) return /*#__PURE__*/React.createElement(React.Fragment, null,
     /*#__PURE__*/React.createElement("input", {type:"date", value:pFrom, onChange:e=>setPFrom(e.target.value), className:`${field} py-1.5 text-sm`}),
     /*#__PURE__*/React.createElement("span", {className:"text-slate-400 text-sm"}, "–"),
@@ -820,6 +848,7 @@ function DateRangeFilter({ initFrom, initTo, onApply, compact = false }) {
     /*#__PURE__*/React.createElement("button", {onClick:()=>onApply(pFrom,pTo), className:"inline-flex items-center gap-1 rounded-lg border border-amber-600 bg-amber-50 px-2.5 py-1.5 text-sm font-medium text-amber-800 hover:bg-amber-100"},
       /*#__PURE__*/React.createElement(Search, {className:"h-3.5 w-3.5"}), "Lọc"));
   return /*#__PURE__*/React.createElement(React.Fragment, null,
+    presetSelect,
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className:lbl}, "Từ ngày"),
       /*#__PURE__*/React.createElement("input", {type:"date", value:pFrom, onChange:e=>setPFrom(e.target.value), className:field})),
