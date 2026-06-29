@@ -4639,8 +4639,8 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const [slipModal, setSlipModal] = useState(null);
   const [nccReturnModal, setNccReturnModal] = useState(null);
   const [payModal, setPayModal] = useState(null);
-  const [fSup, setFSup] = useState("Tất cả");
-  const [fProd, setFProd] = useState("");
+  const [fSup, setFSup] = useState("");
+  const [fProd, setFProd] = useState("Tất cả");
   const nccNames = [...new Set([...SUPPLIERS.map(s => s.name), ...items.map(r => r.supplier).filter(Boolean)])].sort();
   const setNcc = (r, val) => setItems(xs => xs.map(x => x.lot === r.lot && x.prod === r.prod ? {...x, supplier: val} : x));
   const [fromDate, setFromDate] = useState(localMonthStart());
@@ -4677,12 +4677,12 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
     }
     setNccReturnModal(null);
   };
-  const supNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.supplier).filter(Boolean)))];
-  const prodNames = [...Array.from(new Set(items.map(r => r.prod).filter(Boolean))).sort()];
+  const supNames = [...Array.from(new Set(items.map(r => r.supplier).filter(Boolean))).sort()];
+  const prodNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.prod).filter(Boolean))).sort()];
   const rows = items.filter(r =>
     _inR(r.date, fromDate, toDate) &&
-    (fSup === "Tất cả" || r.supplier === fSup) &&
-    (!fProd || r.prod.toLowerCase().includes(fProd.toLowerCase())) &&
+    (!fSup || (r.supplier||"").toLowerCase().includes(fSup.toLowerCase())) &&
+    (fProd === "Tất cả" || r.prod === fProd) &&
     (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
   ).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
   const WHIN_PER_PAGE = 25;
@@ -4694,24 +4694,23 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const nccExtra = /*#__PURE__*/React.createElement(React.Fragment, null,
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Sản phẩm"),
-      /*#__PURE__*/React.createElement("div", {className: "relative"},
-        /*#__PURE__*/React.createElement("input", {
-          list: "prod-datalist", value: fProd,
-          onChange: e => setFProd(e.target.value),
-          placeholder: "Gõ để tìm sản phẩm…",
-          className: `${field} w-52 pr-6`
-        }),
-        fProd && /*#__PURE__*/React.createElement("button", {
-          onClick: () => setFProd(""),
-          className: "absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none"
-        }, "×"),
-        /*#__PURE__*/React.createElement("datalist", {id: "prod-datalist"},
-          prodNames.map(s => /*#__PURE__*/React.createElement("option", {key: s, value: s}))))),
+      /*#__PURE__*/React.createElement("select", {value: fProd, onChange: e => setFProd(e.target.value), className: `${field} min-w-[200px]`},
+        prodNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
-      /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: `${field} min-w-[200px]`},
-        /*#__PURE__*/React.createElement("option", {value: "Tất cả"}, "— Chọn NCC —"),
-        supNames.filter(s => s !== "Tất cả").map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))));
+      /*#__PURE__*/React.createElement("div", {className: "relative"},
+        /*#__PURE__*/React.createElement("input", {
+          list: "ncc-datalist", value: fSup,
+          onChange: e => setFSup(e.target.value),
+          placeholder: "— Chọn NCC —",
+          className: `${field} min-w-[200px] pr-6`
+        }),
+        fSup && /*#__PURE__*/React.createElement("button", {
+          onClick: () => setFSup(""),
+          className: "absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none"
+        }, "×"),
+        /*#__PURE__*/React.createElement("datalist", {id: "ncc-datalist"},
+          supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s, value: s}))))));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(RangeBar, {
