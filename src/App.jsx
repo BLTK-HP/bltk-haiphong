@@ -4681,7 +4681,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const prodNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.prod).filter(Boolean))).sort()];
   const rows = items.filter(r =>
     _inR(r.date, fromDate, toDate) &&
-    (!fSup || (r.supplier||"").toLowerCase().includes(fSup.toLowerCase())) &&
+    (!fSup || r.supplier === fSup) &&
     (fProd === "Tất cả" || r.prod.toLowerCase().includes(fProd.toLowerCase())) &&
     (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
   ).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
@@ -4707,19 +4707,9 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
         }, "×"))),
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
-      /*#__PURE__*/React.createElement("div", {className: "relative"},
-        /*#__PURE__*/React.createElement("input", {
-          list: "ncc-datalist", value: fSup,
-          onChange: e => setFSup(e.target.value),
-          placeholder: "— Chọn NCC —",
-          className: `${field} min-w-[200px] pr-6`
-        }),
-        fSup && /*#__PURE__*/React.createElement("button", {
-          onClick: () => setFSup(""),
-          className: "absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none"
-        }, "×"),
-        /*#__PURE__*/React.createElement("datalist", {id: "ncc-datalist"},
-          supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s, value: s}))))));
+      /*#__PURE__*/React.createElement("select", {value: fSup, onChange: e => setFSup(e.target.value), className: `${field} min-w-[200px]`},
+        /*#__PURE__*/React.createElement("option", {value: ""}, "— Chọn NCC —"),
+        supNames.map(s => /*#__PURE__*/React.createElement("option", {key: s, value: s}, s)))));
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
   }, /*#__PURE__*/React.createElement(RangeBar, {
