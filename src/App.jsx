@@ -2351,6 +2351,7 @@ function OrderTable({
   const totalOrdPages = Math.ceil(rows.length / ORD_PER_PAGE);
   const pagedOrders = rows.slice((ordPage - 1) * ORD_PER_PAGE, ordPage * ORD_PER_PAGE);
   const sumTotal = rows.reduce((s, o) => s + calc(o).total, 0);
+  const sumDatCoc = rows.reduce((s, o) => s + (o.payments||[]).filter(p => p.kind === "Đặt cọc").reduce((a,p) => a+(p.amount||0), 0), 0);
   const sumPaid = rows.reduce((s, o) => s + (o.paid || 0), 0);
   const sumRemain = rows.reduce((s, o) => s + Math.max(0, calc(o).remaining), 0);
   const onExport = () => {
@@ -2524,6 +2525,7 @@ function OrderTable({
     foot: /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa] text-sm font-semibold text-slate-800"},
       /*#__PURE__*/React.createElement("td", {colSpan: 4, className: "px-4 py-2.5"}, "TỔNG CỘNG (", rows.length, " ĐƠN)"),
       /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums text-[#92400e]"}, num(sumTotal)),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumDatCoc > 0 ? "#D97706" : "#94A3B8"}}, sumDatCoc > 0 ? num(sumDatCoc) : ""),
       /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumPaid > 0 ? "#D97706" : "#94A3B8"}}, sumPaid > 0 ? num(sumPaid) : ""),
       /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumRemain > 0 ? "#B91C1C" : "#94A3B8"}}, sumRemain > 0 ? num(sumRemain) : ""),
       /*#__PURE__*/React.createElement("td", {colSpan: 6})),
