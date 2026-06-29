@@ -3725,8 +3725,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const returnPaid = payments.filter(p=>p.kind==="Tiền hàng trả lại").reduce((s,p)=>s+p.amount,0);
   const paidOnly = payments.filter(p=>p.kind==="Thanh toán").reduce((s,p)=>s+p.amount,0);
   const discountExtra = payments.filter(p=>p.kind==="Giảm giá thêm").reduce((s,p)=>s+p.amount,0);
-  const remaining = total - deposit - paidOnly - returnPaid - discountExtra;
-  const payDone = total > 0 && remaining <= 0;
+  const returnAmt = returns.filter(r=>!r.cancelled).reduce((s,r)=>s+(r.amount||0),0);
+  const effectiveTotal = total - returnAmt;
+  const remaining = effectiveTotal - deposit - paidOnly - returnPaid - discountExtra;
+  const payDone = effectiveTotal > 0 && remaining <= 0;
   const payStatus = payDone ? "Đã thanh toán"
     : deliveryConfirmed ? "Chờ thanh toán"
     : "Đã đặt cọc";
@@ -4129,10 +4131,13 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-slate-500"}, "CP đổi trả"),
           /*#__PURE__*/React.createElement("dd", {className:"w-28"},
             /*#__PURE__*/React.createElement(NumInput, {value:returnFee, onChange:setReturnFee, className:"w-full border-0 bg-transparent px-0 py-0 text-right text-sm tabular-nums focus:outline-none"}))),
+        returnAmt > 0 && /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
+          /*#__PURE__*/React.createElement("dt", {className:"text-rose-500"}, "Hoàn hàng"),
+          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-rose-500"}, "−" + vnd(returnAmt))),
         /*#__PURE__*/React.createElement("div", {className:"my-2 border-t border-slate-200"}),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Tổng cộng"),
-          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums font-bold text-slate-900"}, vnd(total))),
+          /*#__PURE__*/React.createElement("dd", {className:"tabular-nums font-bold text-slate-900"}, vnd(effectiveTotal))),
         /*#__PURE__*/React.createElement("div", {className:"flex justify-between"},
           /*#__PURE__*/React.createElement("dt", {className:"text-slate-500"}, "Đã đặt cọc"),
           /*#__PURE__*/React.createElement("dd", {className:"tabular-nums text-slate-800"}, vnd(deposit))),
