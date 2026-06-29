@@ -122,7 +122,7 @@ const INIT_ORDERS = [];
 /* derived order fields */
 function calc(o) {
   const subtotal = (o.items||[]).reduce((s, l) => s + Math.max(0, l.price * l.qty - (l.disc || 0)), 0);
-  const custExpTotal = (o.custExpenses||[]).reduce((s,e) => s+(e.amount||0), 0) + (o.shippingFee||0) + (o.returnFee||0);
+  const custExpTotal = (o.custExpenses||[]).reduce((s,e) => s+(e.amount||0), 0) + (o.shippingFee||0) + (o.installFee||0) + (o.returnFee||0);
   const total = subtotal + custExpTotal;
   const totalCost = (o.items||[]).reduce((s, l) => s + (l.cost||0) * l.qty, 0);
   const remaining = total - (o.paid||0);
@@ -3521,6 +3521,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [custExpenses, setCustExpenses] = useState(editOrder?.custExpenses || []);
   const [compCosts, setCompCosts] = useState(editOrder?.compCosts || []);
   const [shippingFee, setShippingFee] = useState(editOrder?.shippingFee || 0);
+  const [installFee, setInstallFee] = useState(editOrder?.installFee || 0);
   const [returnFee, setReturnFee] = useState(editOrder?.returnFee || 0);
   const [note, setNote] = useState(editOrder?.note || "");
   const [saveTried, setSaveTried] = useState(false);
@@ -3718,7 +3719,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const lineDisc = l => l.discType === "%" ? l.price * l.qty * (l.disc || 0) / 100 : l.disc || 0;
   const lineTotal = l => Math.max(0, l.price * l.qty - lineDisc(l));
   const subtotal = lines.reduce((s, l) => s + lineTotal(l), 0);
-  const custExpTotal = custExpenses.reduce((s,e) => s+e.amount, 0) + shippingFee + returnFee;
+  const custExpTotal = custExpenses.reduce((s,e) => s+e.amount, 0) + shippingFee + installFee + returnFee;
   const total = subtotal + custExpTotal;
   const deposit = payments.filter(p=>p.kind==="Đặt cọc").reduce((s,p)=>s+p.amount,0);
   const returnPaid = payments.filter(p=>p.kind==="Tiền hàng trả lại").reduce((s,p)=>s+p.amount,0);
@@ -3788,6 +3789,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     custExpenses,
     compCosts,
     shippingFee,
+    installFee,
     returnFee,
     returns,
     note,
@@ -4119,6 +4121,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-slate-500"}, "CP giao hàng >15km"),
           /*#__PURE__*/React.createElement("dd", {className:"w-28"},
             /*#__PURE__*/React.createElement(NumInput, {value:shippingFee, onChange:setShippingFee, className:"w-full border-0 bg-transparent px-0 py-0 text-right text-sm tabular-nums focus:outline-none"}))),
+        /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between gap-2"},
+          /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-slate-500"}, "CP lắp đặt"),
+          /*#__PURE__*/React.createElement("dd", {className:"w-28"},
+            /*#__PURE__*/React.createElement(NumInput, {value:installFee, onChange:setInstallFee, className:"w-full border-0 bg-transparent px-0 py-0 text-right text-sm tabular-nums focus:outline-none"}))),
         /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between gap-2"},
           /*#__PURE__*/React.createElement("dt", {className:"shrink-0 text-slate-500"}, "CP đổi trả"),
           /*#__PURE__*/React.createElement("dd", {className:"w-28"},
