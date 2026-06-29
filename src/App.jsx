@@ -4677,7 +4677,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
     }
     setNccReturnModal(null);
   };
-  const supNames = [...new Set([...SUPPLIERS.map(s => s.name), ...items.map(r => r.supplier).filter(Boolean)])].sort();
+  const supNames = [...new Set(items.map(r => r.supplier).filter(Boolean))].sort();
   const prodNames = ["Tất cả", ...Array.from(new Set(items.map(r => r.prod).filter(Boolean))).sort()];
   const rows = items.filter(r =>
     _inR(r.date, fromDate, toDate) &&
