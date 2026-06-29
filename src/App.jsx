@@ -4642,13 +4642,8 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const [payModal, setPayModal] = useState(null);
   const [fSup, setFSup] = useState("Tất cả");
   const [fProd, setFProd] = useState("Tất cả");
-  const [editingNcc, setEditingNcc] = useState(null); // {lot, prod, val}
-  const saveNcc = () => {
-    if (!editingNcc) return;
-    const {lot, prod, val} = editingNcc;
-    setItems(xs => xs.map(r => r.lot === lot && r.prod === prod ? {...r, supplier: val} : r));
-    setEditingNcc(null);
-  };
+  const nccNames = [...new Set([...SUPPLIERS.map(s => s.name), ...items.map(r => r.supplier).filter(Boolean)])].sort();
+  const setNcc = (r, val) => setItems(xs => xs.map(x => x.lot === r.lot && x.prod === r.prod ? {...x, supplier: val} : x));
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const [whInPage, setWhInPage] = useState(1);
@@ -4758,24 +4753,13 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
       timeS ? /*#__PURE__*/React.createElement("span", {className:"block text-slate-400"}, timeS) : null);
   })()), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3 text-slate-500"
-  }, editingNcc && editingNcc.lot === r.lot && editingNcc.prod === r.prod
-    ? /*#__PURE__*/React.createElement("div", {className: "flex items-center gap-1"},
-        /*#__PURE__*/React.createElement("input", {
-          autoFocus: true,
-          list: "ncc-datalist",
-          value: editingNcc.val,
-          onChange: e => setEditingNcc(n => ({...n, val: e.target.value})),
-          onKeyDown: e => { if (e.key === "Enter") saveNcc(); if (e.key === "Escape") setEditingNcc(null); },
-          onBlur: saveNcc,
-          className: "w-full rounded border border-amber-300 px-2 py-0.5 text-sm focus:outline-none focus:border-amber-500"
-        }),
-        /*#__PURE__*/React.createElement("datalist", {id: "ncc-datalist"},
-          supNames.filter(s => s !== "Tất cả").map(s => /*#__PURE__*/React.createElement("option", {key: s, value: s}))))
-    : /*#__PURE__*/React.createElement("button", {
-        onClick: () => setEditingNcc({lot: r.lot, prod: r.prod, val: r.supplier || ""}),
-        title: "Nhấn để sửa NCC",
-        className: `w-full text-left text-slate-700 hover:text-amber-700 ${r.supplier ? "" : "text-slate-300 italic"}`
-      }, r.supplier || "— thêm NCC")), /*#__PURE__*/React.createElement("td", {
+  }, /*#__PURE__*/React.createElement("select", {
+    value: r.supplier || "",
+    onChange: e => setNcc(r, e.target.value),
+    className: `w-full rounded px-1.5 py-0.5 text-sm border-0 outline-none cursor-pointer bg-transparent hover:bg-amber-50 ${r.supplier ? "text-slate-700" : "text-slate-400"}`
+  },
+    /*#__PURE__*/React.createElement("option", {value: ""}, "— chọn NCC —"),
+    nccNames.map(n => /*#__PURE__*/React.createElement("option", {key: n, value: n}, n)))), /*#__PURE__*/React.createElement("td", {
     className: "px-2 py-1.5 text-center text-sm font-medium text-slate-700"
   }, r.kho), /*#__PURE__*/React.createElement("td", {
     className: "px-4 py-3"
