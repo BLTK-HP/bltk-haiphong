@@ -1581,12 +1581,18 @@ function SalesModule({
   const {docNums, setDocNums} = useDocNum();
   const nextId = (prefix) => {
     const row = docNums.find(r => r.prefix === prefix);
-    const num = row ? row.num : 1;
-    if (setDocNums) setDocNums(ds => ds.map(r => r.prefix === prefix ? {...r, num: r.num + 1} : r));
+    let num = row ? row.num : 1;
+    // Bỏ qua các ID đã tồn tại (tránh xung đột khi counter lệch do migrate)
+    while (orders.some(o => o.id === fmtDocId(prefix, num))) num++;
+    if (setDocNums) setDocNums(ds => ds.map(r => r.prefix === prefix ? {...r, num: num + 1} : r));
     return fmtDocId(prefix, num);
   };
   const addOrder = (o, asDraft) => {
-    const id = o.id && !asDraft ? o.id : (asDraft ? nextId("BG") : nextId("DH"));
+    // Nếu pendingOrderId đã tồn tại trong orders, tìm ID mới
+    const proposedId = o.id && !asDraft ? o.id : null;
+    const id = asDraft ? nextId("BG")
+      : (proposedId && !orders.some(x => x.id === proposedId)) ? proposedId
+      : nextId("DH");
     setOrders(p => [mkOrder({
       ...o,
       id,
