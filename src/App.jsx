@@ -4682,7 +4682,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const rows = items.filter(r =>
     _inR(r.date, fromDate, toDate) &&
     (!fSup || (r.supplier||"").toLowerCase().includes(fSup.toLowerCase())) &&
-    (fProd === "Tất cả" || r.prod === fProd) &&
+    (fProd === "Tất cả" || r.prod.toLowerCase().includes(fProd.toLowerCase())) &&
     (!q || `${impCode(r.lot)} ${r.prod} ${r.supplier}`.toLowerCase().includes(q.toLowerCase()))
   ).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
   const WHIN_PER_PAGE = 25;
@@ -4694,8 +4694,17 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const nccExtra = /*#__PURE__*/React.createElement(React.Fragment, null,
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Sản phẩm"),
-      /*#__PURE__*/React.createElement("select", {value: fProd, onChange: e => setFProd(e.target.value), className: `${field} min-w-[200px]`},
-        prodNames.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
+      /*#__PURE__*/React.createElement("div", {className: "relative"},
+        /*#__PURE__*/React.createElement("input", {
+          value: fProd === "Tất cả" ? "" : fProd,
+          onChange: e => setFProd(e.target.value || "Tất cả"),
+          placeholder: "Gõ tên sản phẩm…",
+          className: `${field} min-w-[200px] pr-6`
+        }),
+        fProd !== "Tất cả" && /*#__PURE__*/React.createElement("button", {
+          onClick: () => setFProd("Tất cả"),
+          className: "absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-lg leading-none"
+        }, "×"))),
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[13px] font-medium text-slate-500"}, "Nhà cung cấp"),
       /*#__PURE__*/React.createElement("div", {className: "relative"},
