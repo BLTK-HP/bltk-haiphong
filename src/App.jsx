@@ -2522,12 +2522,12 @@ function OrderTable({
   }))), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-slate-400"
   }), /*#__PURE__*/React.createElement(TableShell, {
-    foot: /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa] text-sm font-bold text-slate-800"},
+    foot: /*#__PURE__*/React.createElement("tr", {className: "bg-[#fed7aa] text-sm text-slate-800", style: {fontWeight: 700}},
       /*#__PURE__*/React.createElement("td", {colSpan: 4, className: "px-4 py-2.5"}, "TỔNG CỘNG (", rows.length, " ĐƠN)"),
-      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums text-[#92400e]"}, num(sumTotal)),
-      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumDatCoc > 0 ? "#D97706" : "#94A3B8"}}, sumDatCoc > 0 ? num(sumDatCoc) : ""),
-      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumPaid > 0 ? "#D97706" : "#94A3B8"}}, sumPaid > 0 ? num(sumPaid) : ""),
-      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {color: sumRemain > 0 ? "#B91C1C" : "#94A3B8"}}, sumRemain > 0 ? num(sumRemain) : ""),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums text-[#92400e]", style: {fontWeight: 700}}, num(sumTotal)),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {fontWeight: 700, color: sumDatCoc > 0 ? "#D97706" : "#94A3B8"}}, sumDatCoc > 0 ? num(sumDatCoc) : ""),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {fontWeight: 700, color: sumPaid > 0 ? "#D97706" : "#94A3B8"}}, sumPaid > 0 ? num(sumPaid) : ""),
+      /*#__PURE__*/React.createElement("td", {className: "px-4 py-2.5 text-right tabular-nums", style: {fontWeight: 700, color: sumRemain > 0 ? "#B91C1C" : "#94A3B8"}}, sumRemain > 0 ? num(sumRemain) : ""),
       /*#__PURE__*/React.createElement("td", {colSpan: 6})),
     head: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Th, {
       style: { width: 90 }
