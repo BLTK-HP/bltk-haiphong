@@ -9694,7 +9694,9 @@ function useIsMobile() {
 function MobileApp({ profile, logout }) {
   const [tab, setTab] = useState("orders");
   const [orders] = useCollection("orders");
+  const [prodsFS] = useCollection("products");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const sortByDate = arr => [...(arr||[])].sort((a,b) => {
     const parse = s => { const p=String(s||"").split(" "); const d=p[0]?.split("/"); return d?.length===3?new Date(d[2],d[1]-1,d[0],parseInt(p[1]||"0"),parseInt((p[1]||"0:0").split(":")[1]||"0")):new Date(0); };
@@ -9757,7 +9759,9 @@ function MobileApp({ profile, logout }) {
   /* ── Màn hình Sản phẩm ── */
   const ScreenProducts = () => {
     const [q, setQ] = useState("");
-    const filtered = PRODUCTS.filter(p => !q || (p.name+p.sku+p.brand||"").toLowerCase().includes(q.toLowerCase()));
+    const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p._id||p.sku, p.img]));
+    const enriched = PRODUCTS.map(p => ({ ...p, img: skuImg[p.sku] || null }));
+    const filtered = enriched.filter(p => !q || (p.name+p.sku+(p.brand||"")).toLowerCase().includes(q.toLowerCase()));
     return React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
       React.createElement("div", {className:"px-3 pt-3"},
         React.createElement("div", {className:"relative mb-3"},
@@ -9766,15 +9770,21 @@ function MobileApp({ profile, logout }) {
             className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
         React.createElement("div", {className:"text-xs text-slate-400 mb-2"}, filtered.length+" sản phẩm"),
         React.createElement("div", {className:"space-y-2"},
-          filtered.slice(0,50).map(p => React.createElement("div", {key:p.sku, className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3"},
+          filtered.slice(0,80).map(p => React.createElement("div", {
+            key:p.sku,
+            className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 active:bg-slate-50",
+            onClick:()=>setSelectedProduct(p),
+          },
             p.img
               ? React.createElement("img", {src:p.img, alt:p.name, className:"w-14 h-14 rounded-lg object-cover shrink-0 bg-slate-100"})
               : React.createElement("div", {className:"w-14 h-14 rounded-lg bg-slate-100 shrink-0 flex items-center justify-center"},
                   React.createElement(Package, {className:"h-6 w-6 text-slate-300"})),
             React.createElement("div", {className:"flex-1 min-w-0"},
-              React.createElement("div", {className:"text-sm font-medium text-slate-800 leading-snug"}, p.name),
+              React.createElement("div", {className:"text-sm font-medium text-slate-800 leading-snug line-clamp-2"}, p.name),
               React.createElement("div", {className:"text-xs text-slate-400 mt-0.5"}, "Mã: "+p.sku),
-              React.createElement("div", {className:"text-sm font-semibold text-[#92400e] mt-0.5"}, num(p.price)+"đ")))))));
+              React.createElement("div", {className:"flex items-baseline gap-2 mt-1 flex-wrap"},
+                p.sale>0 && React.createElement("span", {className:"text-sm font-semibold text-[#92400e]"}, num(p.sale)+"đ"),
+                p.list>0 && React.createElement("span", {className:"text-xs text-slate-400 line-through"}, num(p.list)+"đ"))))))));
   };
 
   /* ── Màn hình Báo giá ── */
@@ -9873,7 +9883,35 @@ function MobileApp({ profile, logout }) {
               pmts.map((p,i) => React.createElement("div", {key:i, className:"flex justify-between text-sm"}, React.createElement("span", {className:"text-slate-500"}, (p.kind||"Thanh toán")+" - "+(p.date||"")), React.createElement("span", {className:"text-amber-600"}, num(p.amount)+"đ"))),
               React.createElement("div", {className:"flex justify-between text-sm font-bold border-t border-slate-100 pt-1.5"}, React.createElement("span", {className:c.remaining>0?"text-red-500":"text-green-600"}, "Còn lại"), React.createElement("span", {className:c.remaining>0?"text-red-500":"text-green-600"}, num(c.remaining)+"đ")))
           );
-        })())));
+        })())),
+    /* Chi tiết sản phẩm overlay */
+    selectedProduct && React.createElement("div", {className:"absolute inset-0 z-50 bg-white flex flex-col"},
+      React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
+        React.createElement("span", {className:"text-white font-semibold text-base"}, "Chi tiết sản phẩm"),
+        React.createElement("button", {onClick:()=>setSelectedProduct(null), className:"text-white/80 hover:text-white"},
+          React.createElement(X, {className:"h-6 w-6"}))),
+      React.createElement("div", {className:"flex-1 overflow-y-auto"},
+        selectedProduct.img
+          ? React.createElement("img", {src:selectedProduct.img, alt:selectedProduct.name, className:"w-full max-h-64 object-contain bg-slate-50"})
+          : React.createElement("div", {className:"w-full h-48 bg-slate-100 flex items-center justify-center"},
+              React.createElement(Package, {className:"h-16 w-16 text-slate-300"})),
+        React.createElement("div", {className:"p-4 space-y-4"},
+          React.createElement("div", null,
+            React.createElement("div", {className:"text-lg font-bold text-slate-800 leading-snug"}, selectedProduct.name),
+            React.createElement("div", {className:"text-sm text-slate-400 mt-1"}, "Mã: "+selectedProduct.sku+(selectedProduct.unit ? " · "+selectedProduct.unit : ""))),
+          React.createElement("div", {className:"bg-orange-50 rounded-xl p-3 space-y-1.5"},
+            selectedProduct.sale>0 && React.createElement("div", {className:"flex justify-between items-center"},
+              React.createElement("span", {className:"text-sm text-slate-600"}, "Giá bán"),
+              React.createElement("span", {className:"text-lg font-bold text-[#92400e]"}, num(selectedProduct.sale)+"đ")),
+            selectedProduct.list>0 && React.createElement("div", {className:"flex justify-between items-center"},
+              React.createElement("span", {className:"text-sm text-slate-500"}, "Giá niêm yết"),
+              React.createElement("span", {className:"text-sm text-slate-400 line-through"}, num(selectedProduct.list)+"đ")),
+            selectedProduct.sale>0 && selectedProduct.list>0 && React.createElement("div", {className:"flex justify-between items-center"},
+              React.createElement("span", {className:"text-sm text-slate-500"}, "Chiết khấu"),
+              React.createElement("span", {className:"text-sm font-medium text-green-600"}, Math.round((1-selectedProduct.sale/selectedProduct.list)*100)+"%"))),
+          selectedProduct.desc && React.createElement("div", null,
+            React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1"}, "Mô tả"),
+            React.createElement("div", {className:"text-sm text-slate-700 whitespace-pre-line"}, selectedProduct.desc))))));
 }
 
 /* ───────── App wrapper với Auth ───────── */
