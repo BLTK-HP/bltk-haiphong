@@ -9697,6 +9697,21 @@ function MobileApp({ profile, logout }) {
   const [prodsFS] = useCollection("products");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productForm, setProductForm] = useState(null);
+  const [savingProd, setSavingProd] = useState(false);
+  const toFsId = sku => String(sku||"").replace(/\//g, "__");
+  const handleSaveProduct = async () => {
+    const f = productForm;
+    if (!f.name || !f.sku) { alert("Vui lòng điền tên và mã sản phẩm"); return; }
+    setSavingProd(true);
+    try {
+      const id = f._id || toFsId(f.sku);
+      const { _id, ...data } = f;
+      await saveDoc("products", id, { ...data, sale: Number(f.sale)||0, list: Number(f.list)||0 });
+      setProductForm(null);
+    } catch(e) { alert("Lỗi lưu: " + e.message); }
+    setSavingProd(false);
+  };
 
   const sortByDate = arr => [...(arr||[])].sort((a,b) => {
     const parse = s => { const p=String(s||"").split(" "); const d=p[0]?.split("/"); return d?.length===3?new Date(d[2],d[1]-1,d[0],parseInt(p[1]||"0"),parseInt((p[1]||"0:0").split(":")[1]||"0")):new Date(0); };
@@ -9762,29 +9777,38 @@ function MobileApp({ profile, logout }) {
     const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p.sku||p._id, p.img]));
     const enriched = PRODUCTS.map(p => ({ ...p, img: skuImg[p.sku] || null }));
     const filtered = enriched.filter(p => !q || (p.name+p.sku+(p.brand||"")).toLowerCase().includes(q.toLowerCase()));
-    return React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
-      React.createElement("div", {className:"px-3 pt-3"},
-        React.createElement("div", {className:"relative mb-3"},
-          React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
-          React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm theo tên, mã...",
-            className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
-        React.createElement("div", {className:"text-xs text-slate-400 mb-2"}, filtered.length+" sản phẩm"),
-        React.createElement("div", {className:"space-y-2"},
-          filtered.slice(0,80).map(p => React.createElement("div", {
-            key:p.sku,
-            className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3 active:bg-slate-50",
-            onClick:()=>setSelectedProduct(p),
-          },
-            p.img
-              ? React.createElement("img", {src:p.img, alt:p.name, className:"w-14 h-14 rounded-lg object-cover shrink-0 bg-slate-100"})
-              : React.createElement("div", {className:"w-14 h-14 rounded-lg bg-slate-100 shrink-0 flex items-center justify-center"},
-                  React.createElement(Package, {className:"h-6 w-6 text-slate-300"})),
-            React.createElement("div", {className:"flex-1 min-w-0"},
-              React.createElement("div", {className:"text-sm font-medium text-slate-800 leading-snug line-clamp-2"}, p.name),
-              React.createElement("div", {className:"text-xs text-slate-400 mt-0.5"}, "Mã: "+p.sku),
-              React.createElement("div", {className:"flex items-baseline gap-2 mt-1 flex-wrap"},
-                p.sale>0 && React.createElement("span", {className:"text-sm font-semibold text-[#92400e]"}, num(p.sale)+"đ"),
-                p.list>0 && React.createElement("span", {className:"text-xs text-slate-400 line-through"}, num(p.list)+"đ"))))))));
+    return React.createElement("div", {className:"flex-1 relative overflow-hidden"},
+      React.createElement("div", {className:"absolute inset-0 overflow-y-auto pb-20"},
+        React.createElement("div", {className:"px-3 pt-3"},
+          React.createElement("div", {className:"relative mb-3"},
+            React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
+            React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm theo tên, mã...",
+              className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+          React.createElement("div", {className:"text-xs text-slate-400 mb-2"}, filtered.length+" sản phẩm"),
+          React.createElement("div", {className:"space-y-2"},
+            filtered.slice(0,80).map(p => React.createElement("div", {
+              key:p.sku,
+              className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-2 active:bg-slate-50",
+              onClick:()=>setSelectedProduct(p),
+            },
+              p.img
+                ? React.createElement("img", {src:p.img, alt:p.name, className:"w-14 h-14 rounded-lg object-cover shrink-0 bg-slate-100"})
+                : React.createElement("div", {className:"w-14 h-14 rounded-lg bg-slate-100 shrink-0 flex items-center justify-center"},
+                    React.createElement(Package, {className:"h-6 w-6 text-slate-300"})),
+              React.createElement("div", {className:"flex-1 min-w-0"},
+                React.createElement("div", {className:"text-sm font-medium text-slate-800 leading-snug line-clamp-2"}, p.name),
+                React.createElement("div", {className:"text-xs text-slate-400 mt-0.5"}, "Mã: "+p.sku),
+                React.createElement("div", {className:"flex items-baseline gap-2 mt-1 flex-wrap"},
+                  p.sale>0 && React.createElement("span", {className:"text-sm font-semibold text-[#92400e]"}, num(p.sale)+"đ"),
+                  p.list>0 && React.createElement("span", {className:"text-xs text-slate-400 line-through"}, num(p.list)+"đ"))),
+              React.createElement("button", {
+                className:"shrink-0 p-2 text-slate-400 active:text-[#92400e]",
+                onClick:e=>{ e.stopPropagation(); setProductForm(p); },
+              }, React.createElement(Pencil, {className:"h-4 w-4"}))))))),
+      React.createElement("button", {
+        className:"absolute bottom-4 right-4 h-14 w-14 bg-[#92400e] rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform z-10",
+        onClick:()=>setProductForm({name:"",sku:"",sale:0,list:0,unit:"Cái",desc:""}),
+      }, React.createElement(Plus, {className:"h-7 w-7 text-white"})));
   };
 
   /* ── Màn hình Báo giá ── */
@@ -9917,7 +9941,46 @@ function MobileApp({ profile, logout }) {
                 .flatMap(line => line.split(/(?<=[^\s])(?=\p{Lu}\p{Ll})/u))
                 .filter(Boolean)
                 .map((line, i) => React.createElement("div", {key:i, className:"text-sm text-slate-700"}, line.trim()))
-            ))))));
+            ))))),
+    /* Form thêm / sửa sản phẩm overlay */
+    productForm !== null && React.createElement("div", {className:"absolute inset-0 z-[70] bg-white flex flex-col"},
+      React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
+        React.createElement("span", {className:"text-white font-semibold text-base"}, productForm._id ? "Sửa sản phẩm" : "Thêm sản phẩm"),
+        React.createElement("div", {className:"flex items-center gap-3"},
+          React.createElement("button", {onClick:handleSaveProduct, disabled:savingProd, className:"text-white/90 hover:text-white"},
+            React.createElement(Check, {className:"h-6 w-6"})),
+          React.createElement("button", {onClick:()=>setProductForm(null), className:"text-white/80 hover:text-white"},
+            React.createElement(X, {className:"h-6 w-6"})))),
+      React.createElement("div", {className:"flex-1 overflow-y-auto p-4 space-y-3"},
+        React.createElement("div", null,
+          React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Tên sản phẩm *"),
+          React.createElement("input", {value:productForm.name||"", onChange:e=>setProductForm(p=>({...p,name:e.target.value})),
+            placeholder:"Nhập tên sản phẩm", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+        React.createElement("div", null,
+          React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Mã SKU *"),
+          React.createElement("input", {value:productForm.sku||"", onChange:e=>setProductForm(p=>({...p,sku:e.target.value})),
+            disabled:!!productForm._id, placeholder:"Nhập mã SKU",
+            className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"})),
+        React.createElement("div", {className:"grid grid-cols-2 gap-3"},
+          React.createElement("div", null,
+            React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Giá bán"),
+            React.createElement("input", {type:"number", value:productForm.sale||"", onChange:e=>setProductForm(p=>({...p,sale:e.target.value})),
+              placeholder:"0", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+          React.createElement("div", null,
+            React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Giá niêm yết"),
+            React.createElement("input", {type:"number", value:productForm.list||"", onChange:e=>setProductForm(p=>({...p,list:e.target.value})),
+              placeholder:"0", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}))),
+        React.createElement("div", null,
+          React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Đơn vị"),
+          React.createElement("input", {value:productForm.unit||"", onChange:e=>setProductForm(p=>({...p,unit:e.target.value})),
+            placeholder:"Cái, Bộ, ...", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+        React.createElement("div", null,
+          React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Mô tả"),
+          React.createElement("textarea", {value:productForm.desc||"", onChange:e=>setProductForm(p=>({...p,desc:e.target.value})),
+            rows:4, placeholder:"Mô tả sản phẩm...", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none resize-none"})),
+        React.createElement("button", {onClick:handleSaveProduct, disabled:savingProd,
+          className:"w-full bg-[#92400e] text-white rounded-xl py-3 font-semibold text-sm active:opacity-80 disabled:opacity-50"},
+          savingProd ? "Đang lưu..." : (productForm._id ? "Lưu thay đổi" : "Thêm sản phẩm")))));
 }
 
 /* ───────── App wrapper với Auth ───────── */
