@@ -9759,7 +9759,7 @@ function MobileApp({ profile, logout }) {
   /* ── Màn hình Sản phẩm ── */
   const ScreenProducts = () => {
     const [q, setQ] = useState("");
-    const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p._id||p.sku, p.img]));
+    const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p.sku||p._id, p.img]));
     const enriched = PRODUCTS.map(p => ({ ...p, img: skuImg[p.sku] || null }));
     const filtered = enriched.filter(p => !q || (p.name+p.sku+(p.brand||"")).toLowerCase().includes(q.toLowerCase()));
     return React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
