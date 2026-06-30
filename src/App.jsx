@@ -9696,15 +9696,18 @@ function MobileApp({ profile, logout }) {
   const [orders] = useCollection("orders");
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const visibleOrders = [...(orders||[])].sort((a,b) => {
+  const sortByDate = arr => [...(arr||[])].sort((a,b) => {
     const parse = s => { const p=String(s||"").split(" "); const d=p[0]?.split("/"); return d?.length===3?new Date(d[2],d[1]-1,d[0],parseInt(p[1]||"0"),parseInt((p[1]||"0:0").split(":")[1]||"0")):new Date(0); };
     return parse(b.dt) - parse(a.dt);
-  }).filter(o => !o.draft);
+  });
+  const visibleOrders = sortByDate(orders).filter(o => !o.draft);
+  const visibleQuotes = sortByDate(orders).filter(o => o.draft);
 
   const tabs = [
-    { key:"orders",   icon: React.createElement(BookText, {className:"h-5 w-5"}),   label:"Đơn hàng" },
-    { key:"create",   icon: React.createElement(Plus,     {className:"h-6 w-6"}),   label:"Tạo đơn",  fab: true },
-    { key:"products", icon: React.createElement(Package,  {className:"h-5 w-5"}),   label:"Sản phẩm" },
+    { key:"orders",   icon: React.createElement(BookText,  {className:"h-5 w-5"}), label:"Đơn hàng" },
+    { key:"quotes",   icon: React.createElement(FileText,  {className:"h-5 w-5"}), label:"Báo giá" },
+    { key:"create",   icon: React.createElement(Plus,      {className:"h-6 w-6"}), label:"Tạo đơn", fab: true },
+    { key:"products", icon: React.createElement(Package,   {className:"h-5 w-5"}), label:"Sản phẩm" },
   ];
 
   const statusColor = s => ({
@@ -9774,13 +9777,43 @@ function MobileApp({ profile, logout }) {
               React.createElement("div", {className:"text-sm font-semibold text-[#92400e] mt-0.5"}, num(p.price)+"đ")))))));
   };
 
+  /* ── Màn hình Báo giá ── */
+  const ScreenQuotes = () => React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
+    visibleQuotes.length === 0
+      ? React.createElement("div", {className:"flex-1 flex items-center justify-center pt-20 text-center text-slate-400"},
+          React.createElement(FileText, {className:"h-12 w-12 mx-auto mb-3 opacity-30"}),
+          React.createElement("p", {className:"text-sm"}, "Chưa có báo giá nào"))
+      : React.createElement("div", {className:"px-3 pt-3 space-y-2"},
+          visibleQuotes.map(o => {
+            const c = calc(o);
+            return React.createElement("div", {
+              key: o.id,
+              className: "bg-white rounded-xl border border-slate-200 p-3 shadow-sm active:bg-slate-50",
+              onClick: () => setSelectedOrder(o),
+            },
+              React.createElement("div", {className:"flex items-start justify-between gap-2 mb-1"},
+                React.createElement("div", {className:"flex items-center gap-1.5 flex-wrap"},
+                  React.createElement("span", {className:"font-bold text-[#92400e] text-sm"}, o.id),
+                  React.createElement("span", {className:"text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700"}, "Báo giá")),
+                React.createElement("div", {className:"text-right shrink-0"},
+                  React.createElement("div", {className:"text-sm font-semibold text-slate-700"}, num(c.total)+"đ"))),
+              React.createElement("div", {className:"text-sm font-medium text-slate-800"}, o.name),
+              React.createElement("div", {className:"text-xs text-slate-400 mt-0.5 flex items-center gap-1"},
+                React.createElement("span", null, o.phone||""),
+                o.phone && o.dt && React.createElement("span", null,"·"),
+                React.createElement("span", null, o.dt||""),
+                o.staff && React.createElement("span", null, "· "+o.staff)));
+          })
+        )
+  );
+
   /* ── Màn hình Tạo đơn ── */
   const ScreenCreate = () => React.createElement("div", {className:"flex-1 flex items-center justify-center"},
     React.createElement("div", {className:"text-center text-slate-400"},
       React.createElement(Plus, {className:"h-12 w-12 mx-auto mb-3 opacity-30"}),
       React.createElement("p", {className:"text-sm"}, "Tính năng tạo đơn đang phát triển")));
 
-  const screens = { orders: ScreenOrders, create: ScreenCreate, products: ScreenProducts };
+  const screens = { orders: ScreenOrders, quotes: ScreenQuotes, create: ScreenCreate, products: ScreenProducts };
   const Screen = screens[tab] || ScreenOrders;
 
   return React.createElement("div", {className:"flex flex-col h-screen bg-slate-50 overflow-hidden"},
@@ -9810,7 +9843,7 @@ function MobileApp({ profile, logout }) {
     /* Chi tiết đơn hàng overlay */
     selectedOrder && React.createElement("div", {className:"absolute inset-0 z-50 bg-white flex flex-col"},
       React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
-        React.createElement("span", {className:"text-white font-semibold text-base"}, "Chi tiết đơn hàng"),
+        React.createElement("span", {className:"text-white font-semibold text-base"}, selectedOrder?.draft ? "Chi tiết báo giá" : "Chi tiết đơn hàng"),
         React.createElement("button", {onClick:()=>setSelectedOrder(null), className:"text-white/80 hover:text-white"},
           React.createElement(X, {className:"h-6 w-6"}))),
       React.createElement("div", {className:"flex-1 overflow-y-auto p-4 space-y-4"},
