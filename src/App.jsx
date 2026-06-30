@@ -2666,9 +2666,9 @@ function OrderTable({
       className: "inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset bg-[#fef9f0] text-[#92400e] ring-[#b45309]"
     }, o.id)), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3",
-      style: { minWidth: 130, maxWidth: 130 }
+      style: { minWidth: 130 }
     }, /*#__PURE__*/React.createElement("div", {
-      className: "text-slate-800 truncate"
+      className: "text-slate-800"
     }, o.name), /*#__PURE__*/React.createElement("div", {
       className: "text-xs text-slate-400"
     }, /*#__PURE__*/React.createElement(Phone, {
