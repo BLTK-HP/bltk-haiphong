@@ -9911,7 +9911,13 @@ function MobileApp({ profile, logout }) {
               React.createElement("span", {className:"text-sm font-medium text-green-600"}, Math.round((1-selectedProduct.sale/selectedProduct.list)*100)+"%"))),
           selectedProduct.desc && React.createElement("div", null,
             React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1"}, "Mô tả"),
-            React.createElement("div", {className:"text-sm text-slate-700 whitespace-pre-line"}, selectedProduct.desc))))));
+            React.createElement("div", {className:"space-y-0.5"},
+              selectedProduct.desc
+                .split(/\r?\n/)
+                .flatMap(line => line.split(/(?<=[^\s])(?=\p{Lu}\p{Ll})/u))
+                .filter(Boolean)
+                .map((line, i) => React.createElement("div", {key:i, className:"text-sm text-slate-700"}, line.trim()))
+            ))))));
 }
 
 /* ───────── App wrapper với Auth ───────── */
