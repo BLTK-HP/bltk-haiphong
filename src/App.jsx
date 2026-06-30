@@ -2651,6 +2651,7 @@ function OrderTable({
     const c = calc(o);
     const isCancel = c.orderStatus === "Huỷ";
     const datCoc = (o.payments||[]).filter(p => p.kind === "Đặt cọc").reduce((s,p) => s+(p.amount||0), 0);
+    const thanhToan = (o.payments||[]).filter(p => p.kind !== "Đặt cọc").reduce((s,p) => s+(p.amount||0), 0);
     return /*#__PURE__*/React.createElement("tr", {
       key: o.id,
       className: `align-top hover:bg-slate-50/60 ${isCancel ? "opacity-60 grayscale text-slate-400 bg-slate-50" : "bg-white"}`,
@@ -2681,8 +2682,8 @@ function OrderTable({
     }, num(c.total)), /*#__PURE__*/React.createElement("td", {
       className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${datCoc > 0 ? "text-[#D97706]" : "text-[#94A3B8]"}`
     }, datCoc > 0 ? num(datCoc) : ""), /*#__PURE__*/React.createElement("td", {
-      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${o.paid > 0 ? "text-[#D97706]" : "text-[#94A3B8]"}`
-    }, o.paid > 0 ? num(o.paid) : ""), /*#__PURE__*/React.createElement("td", {
+      className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${thanhToan > 0 ? "text-[#D97706]" : "text-[#94A3B8]"}`
+    }, thanhToan > 0 ? num(thanhToan) : ""), /*#__PURE__*/React.createElement("td", {
       className: `whitespace-nowrap px-3 py-3 text-right text-sm tabular-nums ${c.remaining > 0 ? "text-[#B91C1C]" : "text-[#94A3B8]"}`
     }, c.remaining > 0 ? num(c.remaining) : ""), /*#__PURE__*/React.createElement("td", {
       className: "px-3 py-3 text-center"
