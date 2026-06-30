@@ -1886,6 +1886,8 @@ function PaymentModal({
   };
   const [account, setAccount] = useState(initial?.account || accounts[0]);
   const [note, setNote] = useState(initial?.note || "");
+  const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
+  const [payDate, setPayDate] = useState(todayISO);
   const lbl = "mb-1 block text-[13px] font-medium text-slate-500";
   const inp = "w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:border-[#92400e] focus:outline-none";
   return /*#__PURE__*/React.createElement(Modal, {
@@ -1897,7 +1899,7 @@ function PaymentModal({
       onClick: onClose,
       className: "rounded-lg border border-slate-200 px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50"
     }, "Huỷ"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => { const _now = new Date(); onConfirm({kind, amount, account, note, staff: _staffName, date: _now.toLocaleDateString("vi-VN"), datetime: _now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) + " " + _now.toLocaleDateString("vi-VN")}); },
+      onClick: () => { const _now = new Date(); const [yr,mo,dy] = payDate.split("-"); const dateViVN = `${dy}/${mo}/${yr}`; onConfirm({kind, amount, account, note, staff: _staffName, date: dateViVN, datetime: _now.toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"}) + " " + dateViVN}); },
       disabled: amount <= 0 && kind !== "Giảm giá thêm",
       className: "rounded-lg bg-[#92400e] px-3.5 py-2 text-sm font-medium text-white hover:bg-[#78350f] disabled:bg-slate-300"
     }, "Xác nhận"))
@@ -1931,6 +1933,14 @@ function PaymentModal({
     value: note,
     onChange: e => setNote(e.target.value),
     placeholder: "Ghi chú khoản thu…"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: lbl
+  }, "Ngày"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: inp,
+    value: payDate,
+    max: todayISO(),
+    onChange: e => setPayDate(e.target.value)
   }))));
 }
 const stockOfStatic = name => { const p = PRODUCTS.find(x => x.name === name); return p ? p.stock : 0; };
@@ -3642,7 +3652,8 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const autoAddTxn = (p) => {
     const nextId = _txns.length ? Math.max(..._txns.map(t=>Number(t.id)||0))+1 : 1;
     const d = new Date(), pad = n => String(n).padStart(2,"0");
-    const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const timePart = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const dateStr = p.date ? `${p.date} ${timePart}` : `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${timePart}`;
     const accKey = bankAccounts.find(a => a.bank === p.account)?.key || p.account || "";
     _setTxns(xs => [{
       id: nextId,
@@ -4201,7 +4212,8 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
           /*#__PURE__*/React.createElement("dt", {className:"font-bold text-slate-800"}, "Còn lại"),
           /*#__PURE__*/React.createElement("dd", {className:`tabular-nums font-bold ${remaining>0?"text-[#B91C1C]":"text-[#92400e]"}`}, vnd(remaining) || "0"))),
       /*#__PURE__*/React.createElement("div", {className:"mt-5 flex gap-3"},
-        /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal(true), className:"flex-1 rounded-xl bg-[#92400e] py-2 text-sm font-medium text-white hover:bg-[#78350f]"}, "Thanh toán")))),
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal("Đặt cọc"), className:"flex-1 rounded-xl border border-[#92400e] py-2 text-sm font-medium text-[#92400e] hover:bg-orange-50"}, "Đặt cọc"),
+        /*#__PURE__*/React.createElement("button", {onClick:()=>setPayModal("Thanh toán"), className:"flex-1 rounded-xl bg-[#92400e] py-2 text-sm font-medium text-white hover:bg-[#78350f]"}, "Thanh toán")))),
     /*#__PURE__*/React.createElement("div", {className:"flex-1 rounded-xl bg-white shadow-sm"},
       /*#__PURE__*/React.createElement("div", {className:"flex items-center justify-between h-14 px-4 border-b border-slate-200"},
         /*#__PURE__*/React.createElement("p", {className:"text-[13px] font-semibold text-[#92400e]"}, "Lịch sử thanh toán")),
@@ -4270,6 +4282,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   payModal && /*#__PURE__*/React.createElement(PaymentModal, {
     accounts: ACCOUNTS,
     remaining: remaining,
+    initial: typeof payModal === "string" ? { kind: payModal } : undefined,
     onClose: () => setPayModal(false),
     onConfirm: p => {
       const txnId = autoAddTxn(p);
