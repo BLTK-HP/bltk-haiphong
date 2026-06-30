@@ -9679,11 +9679,177 @@ function UsersTab() {
   );
 }
 
+/* ───────── Mobile detection hook ───────── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
+/* ───────── Mobile App ───────── */
+function MobileApp({ profile, logout }) {
+  const [tab, setTab] = useState("orders");
+  const [orders] = useCollection("orders");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const visibleOrders = [...(orders||[])].sort((a,b) => {
+    const parse = s => { const p=String(s||"").split(" "); const d=p[0]?.split("/"); return d?.length===3?new Date(d[2],d[1]-1,d[0],parseInt(p[1]||"0"),parseInt((p[1]||"0:0").split(":")[1]||"0")):new Date(0); };
+    return parse(b.dt) - parse(a.dt);
+  }).filter(o => !o.draft);
+
+  const tabs = [
+    { key:"orders",   icon: React.createElement(BookText, {className:"h-5 w-5"}),   label:"Đơn hàng" },
+    { key:"create",   icon: React.createElement(Plus,     {className:"h-6 w-6"}),   label:"Tạo đơn",  fab: true },
+    { key:"products", icon: React.createElement(Package,  {className:"h-5 w-5"}),   label:"Sản phẩm" },
+  ];
+
+  const statusColor = s => ({
+    "Hoàn thành":"bg-green-100 text-green-700","Đang xử lý":"bg-blue-100 text-blue-700",
+    "Chờ xử lý":"bg-amber-100 text-amber-700","Huỷ":"bg-red-100 text-red-400",
+  }[s] || "bg-slate-100 text-slate-500");
+
+  const deliveryColor = s => s==="Đã giao hàng"?"bg-green-100 text-green-700":"bg-orange-100 text-orange-700";
+
+  /* ── Màn hình Đơn hàng ── */
+  const ScreenOrders = () => React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
+    React.createElement("div", {className:"px-3 pt-3 space-y-2"},
+      (visibleOrders).map(o => {
+        const c = calc(o);
+        const pmts = o.payments || [];
+        const datCoc = pmts.filter(p=>p.kind==="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
+        const thanhToan = pmts.filter(p=>p.kind!=="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
+        return React.createElement("div", {
+          key: o.id,
+          className: "bg-white rounded-xl border border-slate-200 p-3 shadow-sm active:bg-slate-50",
+          onClick: () => setSelectedOrder(o),
+        },
+          /* Header */
+          React.createElement("div", {className:"flex items-start justify-between gap-2 mb-1"},
+            React.createElement("div", {className:"flex items-center gap-1.5 flex-wrap"},
+              React.createElement("span", {className:"font-bold text-[#92400e] text-sm"}, o.id),
+              React.createElement("span", {className:`text-[11px] font-medium px-2 py-0.5 rounded-full ${statusColor(c.orderStatus)}`}, c.orderStatus),
+              React.createElement("span", {className:`text-[11px] font-medium px-2 py-0.5 rounded-full ${deliveryColor(o.delivery)}`}, o.delivery||"Chưa giao")),
+            React.createElement("div", {className:"text-right shrink-0"},
+              React.createElement("div", {className:"text-sm font-semibold text-slate-700"}, num(c.total)+"đ"),
+              datCoc>0 && React.createElement("div", {className:"text-[11px] text-amber-600"}, "Cọc: "+num(datCoc)+"đ"),
+              thanhToan>0 && React.createElement("div", {className:"text-[11px] text-amber-600"}, "Trả: "+num(thanhToan)+"đ"),
+              c.remaining>0
+                ? React.createElement("div", {className:"text-[11px] font-semibold text-red-500"}, "Còn: "+num(c.remaining)+"đ")
+                : React.createElement("div", {className:"text-[11px] text-green-600"}, "Đã thu đủ"))),
+          /* KH */
+          React.createElement("div", {className:"text-sm font-medium text-slate-800"}, o.name),
+          React.createElement("div", {className:"text-xs text-slate-400 mt-0.5 flex items-center gap-1"},
+            React.createElement("span", null, o.phone||""),
+            o.phone && o.dt && React.createElement("span", null,"·"),
+            React.createElement("span", null, o.dt||""),
+            o.staff && React.createElement("span", null, "· "+o.staff)));
+      })
+    )
+  );
+
+  /* ── Màn hình Sản phẩm ── */
+  const ScreenProducts = () => {
+    const [q, setQ] = useState("");
+    const filtered = PRODUCTS.filter(p => !q || (p.name+p.sku+p.brand||"").toLowerCase().includes(q.toLowerCase()));
+    return React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
+      React.createElement("div", {className:"px-3 pt-3"},
+        React.createElement("div", {className:"relative mb-3"},
+          React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
+          React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm theo tên, mã...",
+            className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+        React.createElement("div", {className:"text-xs text-slate-400 mb-2"}, filtered.length+" sản phẩm"),
+        React.createElement("div", {className:"space-y-2"},
+          filtered.slice(0,50).map(p => React.createElement("div", {key:p.sku, className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-3"},
+            p.img
+              ? React.createElement("img", {src:p.img, alt:p.name, className:"w-14 h-14 rounded-lg object-cover shrink-0 bg-slate-100"})
+              : React.createElement("div", {className:"w-14 h-14 rounded-lg bg-slate-100 shrink-0 flex items-center justify-center"},
+                  React.createElement(Package, {className:"h-6 w-6 text-slate-300"})),
+            React.createElement("div", {className:"flex-1 min-w-0"},
+              React.createElement("div", {className:"text-sm font-medium text-slate-800 leading-snug"}, p.name),
+              React.createElement("div", {className:"text-xs text-slate-400 mt-0.5"}, "Mã: "+p.sku),
+              React.createElement("div", {className:"text-sm font-semibold text-[#92400e] mt-0.5"}, num(p.price)+"đ")))))));
+  };
+
+  /* ── Màn hình Tạo đơn ── */
+  const ScreenCreate = () => React.createElement("div", {className:"flex-1 flex items-center justify-center"},
+    React.createElement("div", {className:"text-center text-slate-400"},
+      React.createElement(Plus, {className:"h-12 w-12 mx-auto mb-3 opacity-30"}),
+      React.createElement("p", {className:"text-sm"}, "Tính năng tạo đơn đang phát triển")));
+
+  const screens = { orders: ScreenOrders, create: ScreenCreate, products: ScreenProducts };
+  const Screen = screens[tab] || ScreenOrders;
+
+  return React.createElement("div", {className:"flex flex-col h-screen bg-slate-50 overflow-hidden"},
+    /* Header */
+    React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 safe-area-top"},
+      React.createElement("div", {className:"flex items-center gap-2"},
+        React.createElement("img", {src:"/banner.jpg", alt:"BLTK", className:"w-8 h-8 rounded-lg object-cover"}),
+        React.createElement("span", {className:"font-bold text-[#92400e] text-base"}, "BLTK Hải Phòng")),
+      React.createElement("div", {className:"flex items-center gap-2"},
+        React.createElement("span", {className:"text-xs text-slate-500"}, profile?.name||""),
+        React.createElement("button", {onClick:logout, className:"text-xs text-slate-400 border border-slate-200 rounded-lg px-2 py-1"}, "Đăng xuất"))),
+    /* Screen */
+    React.createElement(Screen, null),
+    /* Bottom nav */
+    React.createElement("div", {className:"shrink-0 border-t border-slate-200 bg-white safe-area-bottom"},
+      React.createElement("div", {className:"flex"},
+        tabs.map(t => t.fab
+          ? React.createElement("button", {key:t.key, onClick:()=>setTab(t.key),
+              className:"flex-1 flex flex-col items-center justify-center py-2 gap-0.5"},
+              React.createElement("div", {className:`h-12 w-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 ${tab===t.key?"bg-[#78350f]":"bg-[#92400e]"}`},
+                React.createElement("span", {className:"text-white"}, t.icon)),
+              React.createElement("span", {className:"text-[10px] font-medium text-[#92400e]"}, t.label))
+          : React.createElement("button", {key:t.key, onClick:()=>setTab(t.key),
+              className:`flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors ${tab===t.key?"text-[#92400e]":"text-slate-400"}`},
+              t.icon,
+              React.createElement("span", {className:"text-[10px] font-medium"}, t.label))))),
+    /* Chi tiết đơn hàng overlay */
+    selectedOrder && React.createElement("div", {className:"absolute inset-0 z-50 bg-white flex flex-col"},
+      React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
+        React.createElement("span", {className:"text-white font-semibold text-base"}, "Chi tiết đơn hàng"),
+        React.createElement("button", {onClick:()=>setSelectedOrder(null), className:"text-white/80 hover:text-white"},
+          React.createElement(X, {className:"h-6 w-6"}))),
+      React.createElement("div", {className:"flex-1 overflow-y-auto p-4 space-y-4"},
+        (() => {
+          const o = selectedOrder;
+          const c = calc(o);
+          const pmts = o.payments || [];
+          return React.createElement(React.Fragment, null,
+            /* Thông tin cơ bản */
+            React.createElement("div", {className:"grid grid-cols-2 gap-3"},
+              React.createElement("div", null, React.createElement("div", {className:"text-xs text-slate-400"}, "Mã đơn"), React.createElement("div", {className:"font-bold text-[#92400e]"}, o.id)),
+              React.createElement("div", null, React.createElement("div", {className:"text-xs text-slate-400"}, "Ngày tạo"), React.createElement("div", {className:"text-sm text-slate-700"}, o.dt)),
+              React.createElement("div", null, React.createElement("div", {className:"text-xs text-slate-400"}, "Khách hàng"), React.createElement("div", {className:"text-sm font-medium text-slate-800"}, o.name)),
+              React.createElement("div", null, React.createElement("div", {className:"text-xs text-slate-400"}, "SĐT"), React.createElement("div", {className:"text-sm text-slate-700"}, o.phone||"—")),
+              React.createElement("div", {className:"col-span-2"}, React.createElement("div", {className:"text-xs text-slate-400"}, "Địa chỉ"), React.createElement("div", {className:"text-sm text-slate-700"}, o.addr||"—"))),
+            /* Sản phẩm */
+            React.createElement("div", {className:"bg-slate-50 rounded-xl p-3"},
+              React.createElement("div", {className:"text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide"}, "Sản phẩm"),
+              (o.items||[]).map((it,i) => React.createElement("div", {key:i, className:"flex justify-between items-start py-1.5 border-b border-slate-100 last:border-0"},
+                React.createElement("div", {className:"flex-1 text-sm text-slate-700 pr-2"}, it.name, React.createElement("span", {className:"text-slate-400 ml-1"}, "x"+it.qty)),
+                React.createElement("div", {className:"text-sm font-medium text-slate-800 shrink-0"}, num((it.price||0)*(it.qty||1))+"đ")))),
+            /* Tổng tiền */
+            React.createElement("div", {className:"bg-white border border-slate-200 rounded-xl p-3 space-y-1.5"},
+              React.createElement("div", {className:"flex justify-between text-sm"}, React.createElement("span", {className:"text-slate-500"}, "Tổng tiền hàng"), React.createElement("span", null, num((o.items||[]).reduce((s,it)=>s+(it.price||0)*(it.qty||1),0))+"đ")),
+              o.shippingFee>0 && React.createElement("div", {className:"flex justify-between text-sm"}, React.createElement("span", {className:"text-slate-500"}, "Vận chuyển"), React.createElement("span", null, num(o.shippingFee)+"đ")),
+              React.createElement("div", {className:"flex justify-between text-sm font-semibold border-t border-slate-100 pt-1.5"}, React.createElement("span", {className:"text-[#92400e]"}, "Tổng đơn"), React.createElement("span", {className:"text-[#92400e]"}, num(c.total)+"đ")),
+              pmts.map((p,i) => React.createElement("div", {key:i, className:"flex justify-between text-sm"}, React.createElement("span", {className:"text-slate-500"}, (p.kind||"Thanh toán")+" - "+(p.date||"")), React.createElement("span", {className:"text-amber-600"}, num(p.amount)+"đ"))),
+              React.createElement("div", {className:"flex justify-between text-sm font-bold border-t border-slate-100 pt-1.5"}, React.createElement("span", {className:c.remaining>0?"text-red-500":"text-green-600"}, "Còn lại"), React.createElement("span", {className:c.remaining>0?"text-red-500":"text-green-600"}, num(c.remaining)+"đ")))
+          );
+        })())));
+}
+
 /* ───────── App wrapper với Auth ───────── */
 function AppWithAuth() {
   const { user, profile, logout } = useAuth();
+  const isMobile = useIsMobile();
   if (user === undefined) return React.createElement("div", { className: "min-h-screen flex items-center justify-center text-slate-400" }, "Đang tải...");
   if (!user) return React.createElement(LoginScreen, null);
+  if (isMobile) return React.createElement(MobileApp, { profile, logout });
   return React.createElement(App, { profile, logout });
 }
 
