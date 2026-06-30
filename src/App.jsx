@@ -9774,20 +9774,23 @@ function MobileApp({ profile, logout }) {
   /* ── Màn hình Sản phẩm ── */
   const ScreenProducts = () => {
     const [q, setQ] = useState("");
+    const [limit, setLimit] = useState(50);
     const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p.sku||p._id, p.img]));
     const enriched = PRODUCTS.map(p => ({ ...p, img: skuImg[p.sku] || null }));
     const filtered = enriched.filter(p => !q || (p.name+p.sku+(p.brand||"")).toLowerCase().includes(q.toLowerCase()));
+    const visible = q ? filtered : filtered.slice(0, limit);
+    const hasMore = !q && filtered.length > limit;
     return React.createElement("div", {className:"flex-1 relative overflow-hidden"},
       React.createElement("div", {className:"absolute inset-0 overflow-y-auto pb-20"},
         React.createElement("div", {className:"px-3 pt-3"},
           React.createElement("div", {className:"relative mb-3"},
             React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
-            React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm theo tên, mã...",
+            React.createElement("input", {value:q, onChange:e=>{ setQ(e.target.value); setLimit(50); }, placeholder:"Tìm theo tên, mã...",
               className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
           React.createElement("div", {className:"text-xs text-slate-400 mb-2"},
-            q ? filtered.length+"/"+PRODUCTS.length+" sản phẩm" : filtered.length+" sản phẩm"),
+            q ? filtered.length+"/"+PRODUCTS.length+" sản phẩm" : "Hiện "+visible.length+"/"+PRODUCTS.length+" — tìm kiếm để lọc nhanh"),
           React.createElement("div", {className:"space-y-2"},
-            filtered.map(p => React.createElement("div", {
+            visible.map(p => React.createElement("div", {
               key:p.sku,
               className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-2 active:bg-slate-50",
               onClick:()=>setSelectedProduct(p),
@@ -9805,7 +9808,11 @@ function MobileApp({ profile, logout }) {
               React.createElement("button", {
                 className:"shrink-0 p-2 text-slate-400 active:text-[#92400e]",
                 onClick:e=>{ e.stopPropagation(); setProductForm(p); },
-              }, React.createElement(Pencil, {className:"h-4 w-4"}))))))),
+              }, React.createElement(Pencil, {className:"h-4 w-4"}))))),
+          hasMore && React.createElement("button", {
+            className:"w-full mt-3 py-3 text-sm text-[#92400e] font-medium border border-[#92400e] rounded-xl active:bg-orange-50",
+            onClick:()=>setLimit(l=>l+100),
+          }, "Xem thêm 100 sản phẩm ("+(filtered.length-limit)+" còn lại)"))),
       React.createElement("button", {
         className:"absolute bottom-4 right-4 h-14 w-14 bg-[#92400e] rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform z-10",
         onClick:()=>setProductForm({name:"",sku:"",sale:0,list:0,unit:"Cái",desc:""}),
