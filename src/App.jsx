@@ -9784,9 +9784,10 @@ function MobileApp({ profile, logout }) {
             React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
             React.createElement("input", {value:q, onChange:e=>setQ(e.target.value), placeholder:"Tìm theo tên, mã...",
               className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
-          React.createElement("div", {className:"text-xs text-slate-400 mb-2"}, filtered.length+" sản phẩm"),
+          React.createElement("div", {className:"text-xs text-slate-400 mb-2"},
+            q ? filtered.length+"/"+PRODUCTS.length+" sản phẩm" : filtered.length+" sản phẩm"),
           React.createElement("div", {className:"space-y-2"},
-            filtered.slice(0,80).map(p => React.createElement("div", {
+            filtered.map(p => React.createElement("div", {
               key:p.sku,
               className:"bg-white rounded-xl border border-slate-200 p-3 flex items-center gap-2 active:bg-slate-50",
               onClick:()=>setSelectedProduct(p),
