@@ -7,7 +7,7 @@ import { gzip } from 'zlib';
 import { promisify } from 'util';
 import https from 'https';
 
-const SA_PATH = '/Users/phuonganh/Downloads/JSON/bltk-haiphong-firebase-adminsdk-fbsvc-d6e78d27cb.json';
+const SA_PATH = '/Users/phuonganh/.secrets/bltk-haiphong-firebase-adminsdk-fbsvc-d6e78d27cb.json';
 const SITE_ID = 'bltk-haiphong';
 const DIST_DIR = new URL('./dist', import.meta.url).pathname;
 const gzipAsync = promisify(gzip);

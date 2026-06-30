@@ -5,7 +5,9 @@ App quản lý bán lẻ thú kiểng (BLTK Hải Phòng). React + Firebase Fire
 
 - **URL production**: https://bltk-haiphong.web.app
 - **Build**: `npm run build`
-- **Deploy**: `npx firebase deploy --only hosting`
+- **Deploy nhanh** (~30s): `npm run deploy` — dùng `deploy-local.mjs` + service account, không cần firebase login
+- **Deploy qua CI**: `git push origin main` → GitHub Actions tự build + deploy (~2 phút)
+- **firebase login / npx firebase deploy trực tiếp**: KHÔNG dùng — browser auth fail trên máy này
 
 ## Cấu trúc code
 - `src/App.jsx` — toàn bộ app (9000+ dòng, monolith). **Không dùng JSX** — dùng `React.createElement(...)` trực tiếp.
@@ -72,7 +74,7 @@ Dùng `import_monthly_template.mjs`. **Phải dùng Firebase Admin SDK** (không
 
 ```js
 // Service account tại:
-/Users/phuonganh/Downloads/JSON/bltk-haiphong-firebase-adminsdk-fbsvc-d6e78d27cb.json
+/Users/phuonganh/.secrets/bltk-haiphong-firebase-adminsdk-fbsvc-d6e78d27cb.json
 
 // Pattern auto-ID + dedup:
 const snap = await db.collection("txns").where("acc", "==", ACC).get();
@@ -96,6 +98,16 @@ import { getFirestore } from "firebase-admin/firestore";
 // Sai (gây lỗi "cert is not a function"):
 import admin from "firebase-admin";
 ```
+
+## Component `NumInput` (App.jsx ~line 542)
+
+`NumInput` là controlled input hiển thị số có format (dấu chấm ngăn cách hàng nghìn).
+
+- Khi **focused**: hiện số thô (raw digits) + tự `select()` toàn bộ → user gõ số mới replace ngay
+- Khi **blurred**: hiện số đã format ("30.694.000")
+- **Lý do**: controlled input với format string gây cảm giác "đóng băng" khi user click vào giữa số và gõ
+
+`PaymentModal.handleKind`: khi chuyển từ "Thanh toán" → loại khác thì reset amount về 0 (tránh giữ lại giá trị auto-fill từ `remaining`).
 
 ## CSS / Styling
 - Tailwind CSS
