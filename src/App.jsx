@@ -1914,6 +1914,14 @@ function PaymentModal({
       className: `flex-1 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition ${kind === s ? "border-[#fcd34d] bg-[#fef3c7] text-[#b45309]" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`
     }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: lbl
+  }, "Ngày"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    className: inp,
+    value: payDate,
+    max: todayISO(),
+    onChange: e => setPayDate(e.target.value)
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: lbl
   }, "Số tiền"), /*#__PURE__*/React.createElement(NumInput, {
     className: inp,
     value: amount,
@@ -1933,14 +1941,6 @@ function PaymentModal({
     value: note,
     onChange: e => setNote(e.target.value),
     placeholder: "Ghi chú khoản thu…"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: lbl
-  }, "Ngày"), /*#__PURE__*/React.createElement("input", {
-    type: "date",
-    className: inp,
-    value: payDate,
-    max: todayISO(),
-    onChange: e => setPayDate(e.target.value)
   }))));
 }
 const stockOfStatic = name => { const p = PRODUCTS.find(x => x.name === name); return p ? p.stock : 0; };
@@ -4342,11 +4342,11 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         /*#__PURE__*/React.createElement("option", {value:""}, "— Chọn tài khoản —"),
         bankAccounts.filter(a=>a.status==="Hoạt động").map(a=>/*#__PURE__*/React.createElement("option", {key:a.key, value:a.bank}, a.bank)))),
     /*#__PURE__*/React.createElement("div", null,
-      /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Số tiền"),
-      /*#__PURE__*/React.createElement(NumInput, {value:ccostAmt, onChange:setCcostAmt, className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#92400e]"})),
-    /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Ngày"),
-      /*#__PURE__*/React.createElement("input", {type:"date", value:ccostDate, max:new Date().toISOString().slice(0,10), onChange:e=>setCcostDate(e.target.value), className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"}))))
+      /*#__PURE__*/React.createElement("input", {type:"date", value:ccostDate, max:new Date().toISOString().slice(0,10), onChange:e=>setCcostDate(e.target.value), className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Số tiền"),
+      /*#__PURE__*/React.createElement(NumInput, {value:ccostAmt, onChange:setCcostAmt, className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#92400e]"}))))
   ,
   isEdit && !editOrder?.draft && showKhoModal && /*#__PURE__*/React.createElement(KhoModal, {
     order: {...editOrder, imported, exported, deliveryConfirmed, items: lines.filter(l => l.name).map(l => ({name: l.name, qty: l.qty, price: l.price, cost: l.cost || 0, kho: l.kho || "HH", supplier: l.supplier || ""}))},
