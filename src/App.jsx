@@ -2539,39 +2539,35 @@ function OrderTable({
   })), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-3"
   }, /*#__PURE__*/React.createElement(DateRangeFilter, {initFrom:fromDate, initTo:toDate, onApply:(f,t)=>{setFromDate(f);setToDate(t);}}),
-  /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-[13px] font-medium text-slate-500"
-  }, "Giao hàng"), /*#__PURE__*/React.createElement("select", {
-    value: fDelivery,
-    onChange: e => setFDelivery(e.target.value),
-    className: field
-  }, ["Tất cả", "Đã giao hàng", "Chưa giao hàng"].map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-[13px] font-medium text-slate-500"
-  }, "Thanh toán"), /*#__PURE__*/React.createElement("select", {
-    value: fPayment,
-    onChange: e => setFPayment(e.target.value),
-    className: field
-  }, ["Tất cả", "Đã thanh toán", "Đã đặt cọc", "Chờ thanh toán"].map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-[13px] font-medium text-slate-500"
-  }, "Trạng thái"), /*#__PURE__*/React.createElement("select", {
-    value: fStatus,
-    onChange: e => setFStatus(e.target.value),
-    className: field
-  }, ORDER_TABS.map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "mb-1 block text-[13px] font-medium text-slate-500"
-  }, "Nhân viên"), /*#__PURE__*/React.createElement("select", {
-    value: fStaff,
-    onChange: e => setFStaff(e.target.value),
-    className: field
-  }, staffList.map(s => /*#__PURE__*/React.createElement("option", {
-    key: s
-  }, s)))), /*#__PURE__*/React.createElement("div", {
+  /*#__PURE__*/React.createElement("div", {className: "flex flex-1 gap-3 min-w-0"},
+    /*#__PURE__*/React.createElement("div", {className: "flex-1 min-w-0"}, /*#__PURE__*/React.createElement("label", {
+      className: "mb-1 block text-[13px] font-medium text-slate-500"
+    }, "Giao hàng"), /*#__PURE__*/React.createElement("select", {
+      value: fDelivery,
+      onChange: e => setFDelivery(e.target.value),
+      className: field + " w-full"
+    }, ["Tất cả", "Đã giao hàng", "Chưa giao hàng"].map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
+    /*#__PURE__*/React.createElement("div", {className: "flex-1 min-w-0"}, /*#__PURE__*/React.createElement("label", {
+      className: "mb-1 block text-[13px] font-medium text-slate-500"
+    }, "Thanh toán"), /*#__PURE__*/React.createElement("select", {
+      value: fPayment,
+      onChange: e => setFPayment(e.target.value),
+      className: field + " w-full"
+    }, ["Tất cả", "Đã thanh toán", "Đã đặt cọc", "Chờ thanh toán"].map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
+    /*#__PURE__*/React.createElement("div", {className: "flex-1 min-w-0"}, /*#__PURE__*/React.createElement("label", {
+      className: "mb-1 block text-[13px] font-medium text-slate-500"
+    }, "Trạng thái"), /*#__PURE__*/React.createElement("select", {
+      value: fStatus,
+      onChange: e => setFStatus(e.target.value),
+      className: field + " w-full"
+    }, ORDER_TABS.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s)))),
+    /*#__PURE__*/React.createElement("div", {className: "flex-1 min-w-0"}, /*#__PURE__*/React.createElement("label", {
+      className: "mb-1 block text-[13px] font-medium text-slate-500"
+    }, "Nhân viên"), /*#__PURE__*/React.createElement("select", {
+      value: fStaff,
+      onChange: e => setFStaff(e.target.value),
+      className: field + " w-full"
+    }, staffList.map(s => /*#__PURE__*/React.createElement("option", {key: s}, s))))), /*#__PURE__*/React.createElement("div", {
     className: "relative min-w-[220px] flex-1"
   }, /*#__PURE__*/React.createElement("label", {
     className: "mb-1 block text-[13px] font-medium text-slate-500"
