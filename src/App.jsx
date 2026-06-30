@@ -7810,7 +7810,7 @@ function Finance({setActive, onOpenOrder}) {
             !patOnly&&/*#__PURE__*/React.createElement("td",{className:"px-3 py-2.5 text-center"},
               t.cancelled
                 ?/*#__PURE__*/React.createElement("button",{onClick:()=>restoreTxn(t.id),className:"rounded px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-500 hover:bg-emerald-100 hover:text-emerald-700"},"Khôi phục")
-                :(!t.orderId?/*#__PURE__*/React.createElement("button",{onClick:()=>setEditTxn(t),className:"rounded px-2 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-100"},"Sửa"):null))))))),
+                :(!t.orderId?/*#__PURE__*/React.createElement("button",{onClick:()=>setEditTxn(t),title:"Sửa giao dịch",className:"rounded p-1 text-slate-400 hover:text-amber-700 hover:bg-amber-50"},/*#__PURE__*/React.createElement(Pencil,{className:"h-3.5 w-3.5"})):null))))))),
     totalTxnPages > 1 && /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between gap-3 pt-3 px-1 flex-wrap"},
       /*#__PURE__*/React.createElement("span", {className: "text-xs text-slate-500"},
         `${(txnPage-1)*TXN_PER_PAGE+1}–${Math.min(txnPage*TXN_PER_PAGE, visibleTxns.length)} / ${visibleTxns.length} giao dịch`),
