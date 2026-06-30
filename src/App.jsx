@@ -9704,9 +9704,9 @@ function MobileApp({ profile, logout }) {
   const visibleQuotes = sortByDate(orders).filter(o => o.draft);
 
   const tabs = [
+    { key:"create",   icon: React.createElement(Plus,      {className:"h-6 w-6"}), label:"Tạo đơn", fab: true },
     { key:"orders",   icon: React.createElement(BookText,  {className:"h-5 w-5"}), label:"Đơn hàng" },
     { key:"quotes",   icon: React.createElement(FileText,  {className:"h-5 w-5"}), label:"Báo giá" },
-    { key:"create",   icon: React.createElement(Plus,      {className:"h-6 w-6"}), label:"Tạo đơn", fab: true },
     { key:"products", icon: React.createElement(Package,   {className:"h-5 w-5"}), label:"Sản phẩm" },
   ];
 
