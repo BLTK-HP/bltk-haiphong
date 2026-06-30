@@ -1875,6 +1875,8 @@ function PaymentModal({
   initial,
   remaining
 }) {
+  const { profile: _pmProfile } = useAuth();
+  const _staffName = _pmProfile?.name || "Quản lý";
   const [kind, setKind] = useState(initial?.kind || "Đặt cọc");
   const [amount, setAmount] = useState(initial?.amount || 0);
   const handleKind = s => {
