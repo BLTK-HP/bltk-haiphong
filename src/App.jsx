@@ -3597,6 +3597,7 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
   const [ccostType, setCcostType] = useState("Hoàn tiền hàng");
   const [ccostAmt, setCcostAmt] = useState(0);
   const [ccostAcc, setCcostAcc] = useState("");
+  const [ccostDate, setCcostDate] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; });
   const [payments, setPayments] = useState(() => {
     const arr = editOrder?.payments;
     if (arr?.length > 0) return arr;
@@ -3679,10 +3680,11 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
     }));
   };
   const CHI_KIND_MAP = {"Hoàn tiền hàng":"Hoàn tiền KH","Chi phí Ship hàng":"CP Ship ĐH","Chi phí hoa hồng":"Chi hoa hồng","Chi phí lắp đặt":"CP Lắp Đặt"};
-  const autoAddChi = (type, amount, acc) => {
+  const autoAddChi = (type, amount, acc, date) => {
     const nextId = _txns.length ? Math.max(..._txns.map(t=>Number(t.id)||0))+1 : 1;
     const d = new Date(), pad = n => String(n).padStart(2,"0");
-    const dateStr = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const timePart = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const dateStr = date ? `${date} ${timePart}` : `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${timePart}`;
     const accKey = bankAccounts.find(a => a.bank === acc)?.key || acc || "";
     const accObj = bankAccounts.find(a => a.key === accKey);
     const activeTxns = _txns.filter(t => t.acc === accKey && !t.cancelled);
@@ -4319,7 +4321,8 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
             autoUpdateChi(old.txnId||null,old.amount,ccostType,ccostAmt,ccostAcc);
             setCompCosts(xs=>xs.map((x,j)=>j===editCcostIdx?{...x,type:ccostType,amount:ccostAmt,txnId:old.txnId}:x));
           } else {
-            const txnId=autoAddChi(ccostType,ccostAmt,ccostAcc);
+            const [cy,cm,cd]=ccostDate.split("-"); const dateViVN=`${cd}/${cm}/${cy}`;
+            const txnId=autoAddChi(ccostType,ccostAmt,ccostAcc,dateViVN);
             setCompCosts(xs=>[...xs,{type:ccostType,amount:ccostAmt,txnId}]);
           }
         }
@@ -4340,7 +4343,10 @@ const [delivery, setDelivery] = useState(editOrder?.delivery || "Chưa giao hàn
         bankAccounts.filter(a=>a.status==="Hoạt động").map(a=>/*#__PURE__*/React.createElement("option", {key:a.key, value:a.bank}, a.bank)))),
     /*#__PURE__*/React.createElement("div", null,
       /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Số tiền"),
-      /*#__PURE__*/React.createElement(NumInput, {value:ccostAmt, onChange:setCcostAmt, className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#92400e]"}))))
+      /*#__PURE__*/React.createElement(NumInput, {value:ccostAmt, onChange:setCcostAmt, className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:border-[#92400e]"})),
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {className:"mb-1 block text-[13px] font-medium text-slate-500"}, "Ngày"),
+      /*#__PURE__*/React.createElement("input", {type:"date", value:ccostDate, max:new Date().toISOString().slice(0,10), onChange:e=>setCcostDate(e.target.value), className:"w-full rounded-md border border-slate-200 px-2.5 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"}))))
   ,
   isEdit && !editOrder?.draft && showKhoModal && /*#__PURE__*/React.createElement(KhoModal, {
     order: {...editOrder, imported, exported, deliveryConfirmed, items: lines.filter(l => l.name).map(l => ({name: l.name, qty: l.qty, price: l.price, cost: l.cost || 0, kho: l.kho || "HH", supplier: l.supplier || ""}))},
