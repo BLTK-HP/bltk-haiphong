@@ -547,13 +547,19 @@ function NumInput({
   align = "right",
   disabled = false
 }) {
+  const [focused, setFocused] = React.useState(false);
   const fmt = v => v === "" || v === null || v === undefined || isNaN(v) || v === 0 ? v === 0 ? "0" : "" : num(v);
+  const displayValue = focused
+    ? (value === 0 ? "" : String(value))
+    : (value === 0 ? "" : fmt(value));
   return /*#__PURE__*/React.createElement("input", {
     inputMode: "numeric",
     disabled: disabled,
     className: `${className} text-${align} tabular-nums ${disabled ? "bg-slate-100 text-slate-400" : ""}`,
-    value: value === 0 ? "" : fmt(value),
+    value: displayValue,
     placeholder: placeholder,
+    onFocus: e => { setFocused(true); e.target.select(); },
+    onBlur: () => setFocused(false),
     onChange: e => {
       const d = e.target.value.replace(/[^\d]/g, "");
       onChange(d === "" ? 0 : parseInt(d, 10));
@@ -1874,6 +1880,7 @@ function PaymentModal({
   const handleKind = s => {
     setKind(s);
     if (s === "Thanh toán" && remaining > 0) setAmount(remaining);
+    else if (kind === "Thanh toán") setAmount(0);
   };
   const [account, setAccount] = useState(initial?.account || accounts[0]);
   const [note, setNote] = useState(initial?.note || "");
