@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Save, Search, ArrowLeft, AlertTriangle } from 'lucide-react';
-import { useCollection, saveDoc, deleteDocument } from '../useFirestore.js';
+import { useCollection, saveDoc, deleteDocument, batchSave } from '../useFirestore.js';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../firebase.js';
 import { useAuth } from '../useAuth.js';

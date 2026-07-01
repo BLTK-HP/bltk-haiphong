@@ -7,6 +7,7 @@ import {
   Sparkles, Trash2, TrendingUp, Truck, Users, Wallet,
 } from 'lucide-react';
 import { useCollection, saveDoc } from '../useFirestore.js';
+import { writeBatch, where } from 'firebase/firestore';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { db } from '../firebase.js';
 import { useAuth } from '../useAuth.js';

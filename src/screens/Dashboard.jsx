@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useInventory, useBankAccounts, useTxns } from '../contexts.jsx';
 import { vnd, num, calc, localToday } from '../constants.js';
-import { Card } from '../components/ui.jsx';
+import { Card, DateRangeFilter } from '../components/ui.jsx';
 
 export function Dashboard({ orders = [], purchaseList = [], onOpenOrder }) {
   const { txns = [] }         = useTxns()         || {};
