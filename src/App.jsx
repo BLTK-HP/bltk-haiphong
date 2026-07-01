@@ -220,18 +220,7 @@ function CartLogo({
   /*#__PURE__*/React.createElement("circle", { cx: "24", cy: "93", r: "7", fill: "#EE3D24" }),
   /*#__PURE__*/React.createElement("circle", { cx: "68", cy: "93", r: "7", fill: "#EE3D24" }));
 }
-export async function deleteOrderCascade(orderId) {
-  await deleteDocument("orders", orderId);
-  const whInSnap = await getDocs(query(collection(db, "wh_in"), where("order", "==", orderId)));
-  const batch = writeBatch(db);
-  whInSnap.forEach(d => batch.delete(d.ref));
-  const txnSnap = await getDocs(query(collection(db, "txns"), where("orderId", "==", orderId)));
-  txnSnap.forEach(d => {
-    const k = d.data().kind;
-    if (k === "PhieuThu" || k === "PhieuChi") batch.delete(d.ref);
-  });
-  await batch.commit();
-}
+export { deleteOrderCascade } from './orderUtils.js';
 
 function App({ profile, logout }) {
   const allowed = ALLOWED[profile?.role] || ALLOWED.sales;

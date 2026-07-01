@@ -12,7 +12,7 @@ import {
   TIERS, PAY_NCC, APPROVE, C_THU, C_CHI, mkOrder, INIT_ORDERS, CUSTOMERS,
   CHANNELS, STAFF_RANK, LABELS, RETURNS, lookupImportCost,
 } from '../constants.js';
-import { deleteOrderCascade } from '../App.jsx';
+import { deleteOrderCascade } from '../orderUtils.js';
 import {
   Th, TableShell, TabBar, Card, DateRangeFilter, PrintBtn, ExportBtn, exportCSV,
   NumInput, ProductPicker, Modal, DocModal, DocLink, Phone, Sku, Pill, StatCard, IconBtn, Empty,

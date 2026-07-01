@@ -16,7 +16,7 @@ import PRODUCTS from '../products.js';
 import { vnd, calc, field, inputF, blueBtn, ghostBtn, addBtn, parseViDate, localToday, localMonthStart } from '../constants.js';
 import { Modal, NumInput, Phone, Sku, Pill, StatCard, Card, Th, TableShell } from '../components/ui.jsx';
 import { openPrint } from './Sales.jsx';
-import { deleteOrderCascade } from '../App.jsx';
+import { deleteOrderCascade } from '../orderUtils.js';
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
