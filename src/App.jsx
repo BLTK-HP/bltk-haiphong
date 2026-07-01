@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import PRODUCTS from './products.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
-import { collection, getDocs, deleteDoc, doc as fsDoc, where, writeBatch } from 'firebase/firestore'
+import { collection, getDocs, deleteDoc, doc as fsDoc, where, writeBatch, query } from 'firebase/firestore'
 import { db, storage, app as fbApp } from './firebase.js'
 import { AuthProvider, useAuth, ROLES, ALLOWED, createUserProfile } from './useAuth.js'
 import { auth } from './firebase.js'
@@ -11,7 +11,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 
-import { LayoutDashboard, Home, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, ChevronLeft, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, CheckCircle, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings, ArrowUpFromLine, Building2, PackageSearch, Layers, CornerUpLeft, RefreshCw, ReceiptText, Link2 } from 'lucide-react'
+import { LayoutDashboard, Home, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, ChevronLeft, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, CheckCircle, Save, Eye, EyeOff, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings, ArrowUpFromLine, Building2, PackageSearch, Layers, CornerUpLeft, RefreshCw, ReceiptText, Link2, Bell } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 
@@ -991,10 +991,12 @@ const DocLink = ({
 }, code);
 
 /* ───────── Dashboard ───────── */
-function Dashboard({ orders = [], purchaseList = [] }) {
+function Dashboard({ orders = [], purchaseList = [], onOpenOrder }) {
   const { txns = [] }         = useTxns()         || {};
   const { bankAccounts = [] } = useBankAccounts() || {};
   const { whInItems = [] }    = useInventory()    || {};
+
+  const [showRetList, setShowRetList] = useState(false);
 
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
@@ -1370,7 +1372,16 @@ function Dashboard({ orders = [], purchaseList = [] }) {
           /*#__PURE__*/React.createElement("div", {className:"mb-3 grid grid-cols-2 gap-3 border-b border-slate-100 pb-3"},
             /*#__PURE__*/React.createElement("div", null,
               /*#__PURE__*/React.createElement("p", {className:"text-[11px] text-slate-400 mb-0.5"}, "Số đơn hoàn"),
-              /*#__PURE__*/React.createElement("p", {className:"text-2xl font-bold text-slate-800"}, returnedOrders.length, /*#__PURE__*/React.createElement("span", {className:"text-sm font-normal text-slate-500 ml-1"}, "đơn"))
+              returnedOrders.length > 0
+                ? /*#__PURE__*/React.createElement("button", {
+                    onClick: () => setShowRetList(v => !v),
+                    className: "flex items-center gap-1 text-left"
+                  },
+                    /*#__PURE__*/React.createElement("span", {className:"text-2xl font-bold text-slate-800"}, returnedOrders.length),
+                    /*#__PURE__*/React.createElement("span", {className:"text-sm font-normal text-slate-500 ml-1"}, "đơn"),
+                    /*#__PURE__*/React.createElement(showRetList ? ChevronDown : ChevronRight, {className:"h-4 w-4 text-slate-400 ml-0.5"})
+                  )
+                : /*#__PURE__*/React.createElement("p", {className:"text-2xl font-bold text-slate-800"}, "0", /*#__PURE__*/React.createElement("span", {className:"text-sm font-normal text-slate-500 ml-1"}, "đơn"))
             ),
             /*#__PURE__*/React.createElement("div", {className:"text-right"},
               /*#__PURE__*/React.createElement("p", {className:"text-[11px] text-slate-400 mb-0.5"}, "Giá trị hoàn"),
@@ -1398,6 +1409,27 @@ function Dashboard({ orders = [], purchaseList = [] }) {
                 ? /*#__PURE__*/React.createElement("span", {className:"tabular-nums font-medium text-[#92400e]"}, vnd(importedToStock))
                 : /*#__PURE__*/React.createElement("span", {className:"text-slate-300"}, "—")
             )
+          ),
+          showRetList && returnedOrders.length > 0 && /*#__PURE__*/React.createElement("div", {
+            className: "mt-3 border-t border-slate-100 pt-3 space-y-0.5"
+          },
+            returnedOrders.map(o => {
+              const retVal = (o.returns||[]).filter(r => !r.cancelled).reduce((s,r) => s+(r.amount||0), 0);
+              return /*#__PURE__*/React.createElement("button", {
+                key: o.id,
+                onClick: () => onOpenOrder && onOpenOrder(o.id),
+                className: "w-full flex items-center justify-between text-sm hover:bg-[#fff7ed] rounded-lg px-2 py-1.5 group transition-colors"
+              },
+                /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-2"},
+                  /*#__PURE__*/React.createElement("span", {className:"rounded-full bg-[#fcebd8] px-2 py-0.5 text-[11px] font-semibold text-[#92400e]"}, o.id),
+                  /*#__PURE__*/React.createElement("span", {className:"text-slate-600 truncate max-w-[120px]"}, o.name||"—")
+                ),
+                /*#__PURE__*/React.createElement("div", {className:"flex items-center gap-1.5 shrink-0"},
+                  retVal > 0 && /*#__PURE__*/React.createElement("span", {className:"tabular-nums text-rose-600 font-medium text-xs"}, vnd(retVal)),
+                  /*#__PURE__*/React.createElement(ChevronRight, {className:"h-3.5 w-3.5 text-slate-300 group-hover:text-[#92400e]"})
+                )
+              );
+            })
           )
         ),
 
@@ -1766,7 +1798,7 @@ function SalesModule({
     onEdit: o => setView({
       edit: o.id
     }),
-    onDelete: id => deleteDocument("orders", id).catch(console.error),
+    onDelete: id => deleteOrderCascade(id).catch(console.error),
     onKho: o => setModal({
       mode: "kho",
       id: o.id
@@ -2886,22 +2918,7 @@ function DraftTable({
     className: "px-4 py-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-center"
-  }, /*#__PURE__*/React.createElement(IconBtn, {
-    icon: Pencil,
-    title: "Sửa báo giá",
-    onClick: () => onEdit(o)
-  }), /*#__PURE__*/React.createElement(IconBtn, {
-    icon: Printer,
-    title: "In báo giá",
-    onClick: () => setDoc({
-      code: o.id,
-      fields: {
-        "Khách hàng": o.name,
-        "Diễn giải": o.desc || ""
-      },
-      items: o.items
-    })
-  }), onClone && /*#__PURE__*/React.createElement(IconBtn, {
+  }, onClone && /*#__PURE__*/React.createElement(IconBtn, {
     icon: Copy,
     title: "Nhân bản báo giá",
     onClick: () => onClone(o)
@@ -4853,6 +4870,7 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const [doc, setDoc] = useState(null);
   const [orderModal, setOrderModal] = useState(null);
   const [slipModal, setSlipModal] = useState(null);
+  const [editSlip, setEditSlip] = useState(null);
   const [nccReturnModal, setNccReturnModal] = useState(null);
   const [payModal, setPayModal] = useState(null);
   const [fSup, setFSup] = useState("");
@@ -5086,15 +5104,74 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
     onClose: () => setNccReturnModal(null),
     onSave: ret => doReturnNcc(nccReturnModal, ret)
   }),
+  editSlip && /*#__PURE__*/React.createElement(Modal, {
+    title: `Sửa phiếu nhập — ${impCode(editSlip.lot)}`,
+    maxW: "max-w-lg",
+    onClose: () => setEditSlip(null),
+    footer: /*#__PURE__*/React.createElement(React.Fragment, null,
+      /*#__PURE__*/React.createElement("button", {
+        onClick: () => {
+          const docId = editSlip._id || (editSlip.lot + "~~" + editSlip.prod);
+          const updated = {...editSlip, unitCost: (editSlip.qtyIn||0) > 0 ? Math.round(((editSlip.costNcc||0) * (editSlip.qtyIn||0) + (editSlip.fee||0)) / (editSlip.qtyIn||1)) : (editSlip.costNcc||0)};
+          setItems(xs => xs.map(x => (x.lot === editSlip.lot && x.prod === editSlip.prod) ? updated : x));
+          saveDoc("wh_in", docId, updated);
+          setEditSlip(null);
+          notify("Đã lưu phiếu nhập");
+        },
+        className: "inline-flex items-center gap-1.5 rounded-lg bg-[#92400e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#7c2d12]"
+      }, /*#__PURE__*/React.createElement(Save, {className: "h-4 w-4"}), "Lưu"),
+      /*#__PURE__*/React.createElement("button", {onClick: () => setEditSlip(null), className: ghostBtn}, "Huỷ"))
+  }, /*#__PURE__*/React.createElement("div", {className: "space-y-3 text-sm"},
+    /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-3"},
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "Ngày nhập"),
+        /*#__PURE__*/React.createElement("input", {type: "text", value: editSlip.date || "", onChange: e => setEditSlip(v => ({...v, date: e.target.value})), className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})
+      ),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "Kho"),
+        /*#__PURE__*/React.createElement("input", {type: "text", value: editSlip.kho || editSlip.store || "", onChange: e => setEditSlip(v => ({...v, kho: e.target.value, store: e.target.value})), className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})
+      )
+    ),
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "Nhà cung cấp"),
+      /*#__PURE__*/React.createElement("select", {value: editSlip.supplier || "", onChange: e => setEditSlip(v => ({...v, supplier: e.target.value})), className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none bg-white"},
+        /*#__PURE__*/React.createElement("option", {value: ""}, "— chọn NCC —"),
+        nccNames.map(n => /*#__PURE__*/React.createElement("option", {key: n, value: n}, n))
+      )
+    ),
+    /*#__PURE__*/React.createElement("div", null,
+      /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "Sản phẩm"),
+      /*#__PURE__*/React.createElement("div", {className: "rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600"}, editSlip.prod)
+    ),
+    /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-3 gap-3"},
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "SL nhập"),
+        /*#__PURE__*/React.createElement(NumInput, {value: editSlip.qtyIn || 0, onChange: v => setEditSlip(x => ({...x, qtyIn: v})), className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-right focus:border-[#92400e] focus:outline-none"})
+      ),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "Đơn giá"),
+        /*#__PURE__*/React.createElement(NumInput, {value: editSlip.costNcc || 0, onChange: v => setEditSlip(x => ({...x, costNcc: v})), className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-right focus:border-[#92400e] focus:outline-none"})
+      ),
+      /*#__PURE__*/React.createElement("div", null,
+        /*#__PURE__*/React.createElement("label", {className: "mb-1 block text-[11px] font-medium text-slate-500"}, "CPMH"),
+        /*#__PURE__*/React.createElement(NumInput, {value: editSlip.fee || 0, onChange: v => setEditSlip(x => ({...x, fee: v})), className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-right focus:border-[#92400e] focus:outline-none"})
+      )
+    ),
+    /*#__PURE__*/React.createElement("div", {className: "flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold"},
+      /*#__PURE__*/React.createElement("span", {className: "text-slate-600"}, "Tổng thành tiền"),
+      /*#__PURE__*/React.createElement("span", {className: "text-slate-900"}, vnd(((editSlip.costNcc||0) + (editSlip.fee||0)) * (editSlip.qtyIn||0)))
+    )
+  )),
   slipModal && /*#__PURE__*/React.createElement(Modal, {
     title: `Phiếu nhập kho — ${impCode(slipModal.lot)}`,
     maxW: "max-w-lg",
     onClose: () => setSlipModal(null),
     footer: /*#__PURE__*/React.createElement(React.Fragment, null,
+      /*#__PURE__*/React.createElement("button", {onClick: () => { setNccReturnModal(slipModal); setSlipModal(null); }, className: "inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-[#92400e] hover:bg-amber-100"}, /*#__PURE__*/React.createElement(RotateCcw, {className: "h-4 w-4"}), "Hoàn"),
+      lotRemaining(slipModal) > 0 && /*#__PURE__*/React.createElement("button", {onClick: () => { setPayModal(slipModal); setSlipModal(null); }, className: "inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-semibold text-[#047857] hover:bg-green-100 whitespace-nowrap"}, /*#__PURE__*/React.createElement(Wallet, {className: "h-4 w-4"}), "Thanh toán"),
+      /*#__PURE__*/React.createElement("button", {onClick: () => { setEditSlip({...slipModal}); setSlipModal(null); }, className: "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"}, /*#__PURE__*/React.createElement(Pencil, {className: "h-4 w-4"}), "Sửa"),
       /*#__PURE__*/React.createElement(PrintBtn, null),
-      lotRemaining(slipModal) > 0 && /*#__PURE__*/React.createElement("button", {onClick: () => { setPayModal(slipModal); setSlipModal(null); }, className: "inline-flex items-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm font-semibold text-[#047857] hover:bg-green-100"}, /*#__PURE__*/React.createElement(Wallet, {className: "h-4 w-4"}), "Thanh toán"),
-      /*#__PURE__*/React.createElement("button", {onClick: () => { setNccReturnModal(slipModal); setSlipModal(null); }, className: "inline-flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-[#92400e] hover:bg-amber-100"}, /*#__PURE__*/React.createElement(RotateCcw, {className: "h-4 w-4"}), "Trả NCC"),
-      /*#__PURE__*/React.createElement("button", {onClick: () => setSlipModal(null), className: ghostBtn}, "Đóng"))
+      _whProfile?.role === "admin" && /*#__PURE__*/React.createElement("button", {onClick: () => { if (!window.confirm("Xoá phiếu nhập này?")) return; const docId = slipModal._id || (slipModal.lot + "~~" + slipModal.prod); deleteDocument("wh_in", docId); setItems(xs => xs.filter(x => !(x.lot === slipModal.lot && x.prod === slipModal.prod))); setSlipModal(null); notify("Đã xoá phiếu nhập"); }, className: "inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"}, /*#__PURE__*/React.createElement(Trash2, {className: "h-4 w-4"}), "Xoá"))
   }, /*#__PURE__*/React.createElement("div", {className: "space-y-4 text-sm"},
     /*#__PURE__*/React.createElement("div", {className: "grid grid-cols-2 gap-y-2 text-xs"},
       /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {className: "text-slate-500"}, "Số phiếu: "), /*#__PURE__*/React.createElement("span", {className: "font-semibold text-[#92400e]"}, impCode(slipModal.lot))),
@@ -8092,7 +8169,7 @@ function ReportPreorder({ orders = [] }) {
   const toggle = key => setExpanded(s => { const n = new Set(s); n.has(key) ? n.delete(key) : n.add(key); return n; });
   const onExport = () => exportCSV("bao-cao-san-pham-dat-hang", ["STT", "Tên sản phẩm", "ĐVT", "Đang đặt", "Tồn kho", "Cần mua"], rows.map((r, i) => [i + 1, r.prod, r.unit, r.ordered, r.stock, Math.max(0, r.ordered - r.stock)]));
   const statusBadge = s => {
-    const m = {"Đang xử lý":"bg-blue-50 text-blue-700","Đã xác nhận":"bg-amber-50 text-amber-700","Đã giao":"bg-emerald-50 text-emerald-700","Hoàn thành":"bg-emerald-50 text-emerald-700"};
+    const m = {"Đang xử lý":"bg-[#fef9f0] text-[#92400e]","Chờ xử lý":"bg-[#fef9f0] text-[#92400e]","Đã xác nhận":"bg-amber-50 text-amber-700","Đã giao":"bg-emerald-50 text-emerald-700","Hoàn thành":"bg-emerald-50 text-emerald-700"};
     return /*#__PURE__*/React.createElement("span", {className: "rounded-full px-2 py-0.5 text-[11px] font-medium " + (m[s] || "bg-slate-100 text-slate-500")}, s || "—");
   };
   const tblRows = [];
@@ -8590,7 +8667,7 @@ function Screen({
     case "debt_ncc":
       return /*#__PURE__*/React.createElement(DebtNcc, {purchaseList, setPurchaseList, setWhInItems, whInItems});
     case "dashboard":
-      return /*#__PURE__*/React.createElement(Dashboard, {orders, purchaseList});
+      return /*#__PURE__*/React.createElement(Dashboard, {orders, purchaseList, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "rp_sales":
       return /*#__PURE__*/React.createElement(ReportSales, {orders, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
     case "rp_preorder":
@@ -8614,7 +8691,7 @@ function Screen({
     case "users":
       return /*#__PURE__*/React.createElement(UsersTab, null);
     default:
-      return /*#__PURE__*/React.createElement(Dashboard, {orders, purchaseList});
+      return /*#__PURE__*/React.createElement(Dashboard, {orders, purchaseList, onOpenOrder: id => { setOpenOrderId(id); setActive("sales_orders"); }});
   }
 }
 
@@ -8643,6 +8720,19 @@ function CartLogo({
   /*#__PURE__*/React.createElement("circle", { cx: "24", cy: "93", r: "7", fill: "#EE3D24" }),
   /*#__PURE__*/React.createElement("circle", { cx: "68", cy: "93", r: "7", fill: "#EE3D24" }));
 }
+async function deleteOrderCascade(orderId) {
+  await deleteDocument("orders", orderId);
+  const whInSnap = await getDocs(query(collection(db, "wh_in"), where("order", "==", orderId)));
+  const batch = writeBatch(db);
+  whInSnap.forEach(d => batch.delete(d.ref));
+  const txnSnap = await getDocs(query(collection(db, "txns"), where("orderId", "==", orderId)));
+  txnSnap.forEach(d => {
+    const k = d.data().kind;
+    if (k === "PhieuThu" || k === "PhieuChi") batch.delete(d.ref);
+  });
+  await batch.commit();
+}
+
 function App({ profile, logout }) {
   const allowed = ALLOWED[profile?.role] || ALLOWED.sales;
   const defaultScreen = allowed.includes("sales_orders") ? "sales_orders" : allowed[0] || "dashboard";
@@ -9488,6 +9578,7 @@ function LoginScreen() {
   const [remember, setRemember] = useState(() => !!localStorage.getItem("bltk_saved_email"));
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const submit = async e => {
     e.preventDefault();
     setErr(""); setLoading(true);
@@ -9552,10 +9643,15 @@ function LoginScreen() {
           ),
           React.createElement("div", null,
             React.createElement("label", { className: "block text-sm font-medium text-white/90 mb-1.5" }, "Mật khẩu"),
-            React.createElement("input", { type: "password", value: pass, onChange: e => setPass(e.target.value), required: true,
-              placeholder: "••••••••",
-              className: "w-full border border-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-transparent text-white placeholder-white/40",
-              style: { background: "rgba(255,255,255,0.15)" } })
+            React.createElement("div", { className: "relative" },
+              React.createElement("input", { type: showPass ? "text" : "password", value: pass, onChange: e => setPass(e.target.value), required: true,
+                placeholder: "••••••••",
+                className: "w-full border border-white/30 rounded-xl px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-white/60 focus:border-transparent text-white placeholder-white/40",
+                style: { background: "rgba(255,255,255,0.15)" } }),
+              React.createElement("button", { type: "button", onClick: () => setShowPass(v => !v),
+                className: "absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 active:text-white" },
+                React.createElement(showPass ? EyeOff : Eye, { className: "h-4.5 w-4.5" }))
+            )
           ),
           React.createElement("label", { className: "flex items-center gap-2 cursor-pointer select-none" },
             React.createElement("input", { type: "checkbox", checked: remember, onChange: e => setRemember(e.target.checked), className: "w-4 h-4 rounded accent-amber-700" }),
@@ -9741,8 +9837,11 @@ function MobileApp({ profile, logout }) {
   const [whInPn, setWhInPn] = useState("");
   const [whInDate, setWhInDate] = useState("");
   const [whInKho, setWhInKho] = useState("HH");
+  const [nccSugIdx, setNccSugIdx] = useState(null);
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [converting, setConverting] = useState(false);
+  const [notifs, setNotifs] = useState([]);
+  const [showNotifs, setShowNotifs] = useState(false);
   const notify = useToast();
 
   /* ── FCM: đăng ký token push + lắng nghe foreground ── */
@@ -9775,6 +9874,10 @@ function MobileApp({ profile, logout }) {
     })();
   }, [profile?.uid]);
 
+  const pushNotif = (msg, type) => {
+    setNotifs(prev => [{id: Date.now(), msg, type: type||"order", ts: new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}, ...prev].slice(0, 50));
+  };
+
   React.useEffect(() => {
     if (!orders || !orders.length) return;
     const ids = new Set(orders.map(o => o.id));
@@ -9783,12 +9886,14 @@ function MobileApp({ profile, logout }) {
     knownOrderIds.current = ids;
     if (!newOnes.length) return;
     newOnes.forEach(o => {
-      notify("Don hang moi: " + (o.name||"KH") + " — " + o.id);
+      const msg = "Đơn mới: " + (o.name||"KH") + " — " + o.id;
+      notify(msg);
+      pushNotif(msg, "order");
     });
     if (Notification.permission === "granted" && tab !== "orders") {
       const o = newOnes[0];
-      new Notification("Don hang moi — BLTK", {
-        body: (o.name||"Khach hang") + " (" + o.id + ")",
+      new Notification("Đơn hàng mới — BLTK", {
+        body: (o.name||"Khách hàng") + " (" + o.id + ")",
         icon: "/logo.png", tag: "order-" + o.id
       });
     }
@@ -9803,14 +9908,16 @@ function MobileApp({ profile, logout }) {
     knownTxnIds.current = ids;
     if (!newOnes.length) return;
     newOnes.forEach(t => {
-      const label = t.kind === "PhieuThu" ? "Phieu thu" : "Phieu chi";
-      notify(label + ": " + (t.from||t.to||"") + " — " + num(t.amount) + "d");
+      const label = t.kind === "PhieuThu" ? "Phiếu thu" : "Phiếu chi";
+      const msg = label + ": " + (t.entity||t.from||t.to||"") + " — " + num(Math.abs(t.amount)) + "đ";
+      notify(msg);
+      pushNotif(msg, "txn");
     });
     if (Notification.permission === "granted") {
       const t = newOnes[0];
-      const label = t.kind === "PhieuThu" ? "Phieu thu" : "Phieu chi";
-      new Notification(label + " moi — BLTK", {
-        body: (t.from||t.to||"") + " " + num(Math.abs(t.amount)) + "d",
+      const label = t.kind === "PhieuThu" ? "Phiếu thu" : "Phiếu chi";
+      new Notification(label + " mới — BLTK", {
+        body: (t.entity||t.from||t.to||"") + " " + num(Math.abs(t.amount)) + "đ",
         icon: "/logo.png", tag: "txn-" + (t._id || t.id)
       });
     }
@@ -10399,7 +10506,7 @@ function MobileApp({ profile, logout }) {
                         React.createElement("div", {className:`text-[11px] ${c.remaining>0?"text-red-500":"text-green-600"}`},
                           c.remaining>0 ? "Còn: "+num(c.remaining)+"đ" : "Đã thu đủ")),
                       profile?.role === "admin" && React.createElement("button", {
-                        onClick: e => { e.stopPropagation(); if (window.confirm("Xóa đơn "+o.id+"?")) deleteDocument("orders", o.id); },
+                        onClick: e => { e.stopPropagation(); if (window.confirm("Xóa đơn "+o.id+"?")) deleteOrderCascade(o.id).catch(console.error); },
                         className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-red-50 active:text-red-600"},
                         React.createElement(Trash2, {className:"h-4 w-4"})))),
                   React.createElement("div", {className:"text-sm font-medium text-slate-800 flex items-baseline gap-1.5 flex-wrap"},
@@ -10494,7 +10601,7 @@ function MobileApp({ profile, logout }) {
                         title:"Nhân bản"},
                         React.createElement(Copy, {className:"h-4 w-4"})),
                       profile?.role === "admin" && React.createElement("button", {
-                        onClick: e => { e.stopPropagation(); if (window.confirm("Xóa báo giá "+o.id+"?")) deleteDocument("orders", o.id); },
+                        onClick: e => { e.stopPropagation(); if (window.confirm("Xóa báo giá "+o.id+"?")) deleteOrderCascade(o.id).catch(console.error); },
                         className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-red-50 active:text-red-600",
                         title:"Xóa"},
                         React.createElement(Trash2, {className:"h-4 w-4"})))),
@@ -10628,6 +10735,11 @@ function MobileApp({ profile, logout }) {
               p.sale > 0 && React.createElement("div", {className:"text-sm font-semibold text-[#92400e] shrink-0"}, num(p.sale)+"đ")))))));
   };
 
+  const allNccNames = [...new Set([
+    ...SUPPLIERS.map(s=>s.name),
+    ...(whInFS||[]).map(r=>r.supplier).filter(Boolean)
+  ])].sort();
+
   return React.createElement("div", {className:"relative flex flex-col h-screen bg-slate-50 overflow-hidden"},
     /* Header */
     React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 safe-area-top"},
@@ -10635,6 +10747,22 @@ function MobileApp({ profile, logout }) {
         React.createElement("img", {src:"/banner.jpg", alt:"BLTK", className:"w-8 h-8 rounded-lg object-cover"}),
         React.createElement("span", {className:"font-bold text-[#92400e] text-base"}, "BLTK Hải Phòng")),
       React.createElement("div", {className:"flex items-center gap-2"},
+        React.createElement("div", {className:"relative"},
+          React.createElement("button", {onClick:()=>setShowNotifs(v=>!v),
+            className:`p-1.5 rounded-lg transition-colors ${showNotifs?"bg-[#ffedd5] text-[#92400e]":"text-slate-400 active:bg-slate-100"}`,
+            title:"Thông báo"},
+            React.createElement(Bell, {className:"h-5 w-5"})),
+          notifs.length > 0 && React.createElement("span", {className:"absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center leading-none"}, notifs.length > 9 ? "9+" : notifs.length),
+          showNotifs && React.createElement("div", {className:"absolute right-0 top-full mt-1 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-[200] overflow-hidden"},
+            React.createElement("div", {className:"flex items-center justify-between px-3 py-2 border-b border-slate-100"},
+              React.createElement("span", {className:"text-xs font-semibold text-slate-600"}, "Thông báo"),
+              notifs.length > 0 && React.createElement("button", {onClick:()=>setNotifs([]), className:"text-[10px] text-slate-400 hover:text-red-500"}, "Xoá tất cả")),
+            notifs.length === 0
+              ? React.createElement("div", {className:"px-3 py-6 text-center text-xs text-slate-400"}, "Chưa có thông báo")
+              : React.createElement("div", {className:"max-h-72 overflow-y-auto divide-y divide-slate-50"},
+                  notifs.map(n => React.createElement("div", {key:n.id, className:"px-3 py-2.5"},
+                    React.createElement("div", {className:"text-xs text-slate-700 leading-snug"}, n.msg),
+                    React.createElement("div", {className:"text-[10px] text-slate-400 mt-0.5"}, n.ts)))))),
         React.createElement("button", {onClick:()=>setTab("home"),
           className:`p-1.5 rounded-lg transition-colors ${tab==="home"?"bg-[#ffedd5] text-[#92400e]":"text-slate-400 active:bg-slate-100"}`,
           title:"Tổng quan"},
@@ -10915,30 +11043,51 @@ function MobileApp({ profile, logout }) {
               React.createElement("option", {value:"HH"}, "HH"),
               React.createElement("option", {value:"TB"}, "TB"),
               React.createElement("option", {value:"HG"}, "HG")))),
-        React.createElement("datalist", {id:"mob-ncc"},
-          SUPPLIERS.map(s=>React.createElement("option", {key:s.code, value:s.name}))),
         React.createElement("div", {className:"space-y-3"},
-          whInRows.map((r,i)=>React.createElement("div", {key:i, className:"bg-[#fffbf5] border border-[#fed7aa] rounded-xl p-3 space-y-2"},
-            React.createElement("div", {className:"text-sm font-semibold text-[#7c2d12]"}, r.name,
-              React.createElement("span", {className:"ml-2 text-xs font-normal text-slate-400"}, "SL: "+r.slDat)),
-            React.createElement("div", {className:"grid grid-cols-2 gap-2"},
-              React.createElement("div", null,
-                React.createElement("label", {className:"text-xs text-slate-500"}, "SL nhập"),
-                React.createElement("input", {type:"number", inputMode:"numeric", value:r.slNhap,
-                  onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,slNhap:parseInt(e.target.value)||0}:x)),
-                  style:{fontSize:'16px'}, className:"mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"})),
-              React.createElement("div", null,
-                React.createElement("label", {className:"text-xs text-slate-500"}, "Giá nhập (*)"),
-                React.createElement("input", {type:"text", inputMode:"numeric",
-                  value:num(r.giaNhap)||"",
-                  onFocus:e=>e.target.select(),
-                  onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,giaNhap:parseInt(e.target.value.replace(/\D/g,""))||0}:x)),
-                  style:{fontSize:'16px'}, className:"mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none text-right"}))),
-            React.createElement("div", null,
-              React.createElement("label", {className:"text-xs text-slate-500"}, "Nhà cung cấp (*)"),
-              React.createElement("input", {list:"mob-ncc", value:r.nccIn, placeholder:"Nhập tên NCC",
-                onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,nccIn:e.target.value}:x)),
-                style:{fontSize:'16px'}, className:`mt-0.5 w-full rounded-lg border px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none ${r.slNhap>0&&!r.nccIn.trim()?"border-amber-300 bg-amber-50":"border-slate-200"}`})))))),
+          whInRows.map((r,i)=>{
+            const kw = (r.nccIn||"").trim().toLowerCase();
+            const sugs = kw.length>=1 ? allNccNames.filter(n=>n.toLowerCase().includes(kw)) : [];
+            const hilite = name => {
+              const idx = name.toLowerCase().indexOf(kw);
+              if (idx<0) return name;
+              return React.createElement(React.Fragment, null,
+                name.slice(0,idx),
+                React.createElement("span", {className:"font-semibold text-[#92400e]"}, name.slice(idx,idx+kw.length)),
+                name.slice(idx+kw.length));
+            };
+            return React.createElement("div", {key:i, className:"bg-[#fffbf5] border border-[#fed7aa] rounded-xl p-3 space-y-2"},
+              React.createElement("div", {className:"text-sm font-semibold text-[#7c2d12]"}, r.name,
+                React.createElement("span", {className:"ml-2 text-xs font-normal text-slate-400"}, "SL: "+r.slDat)),
+              React.createElement("div", {className:"grid grid-cols-2 gap-2"},
+                React.createElement("div", null,
+                  React.createElement("label", {className:"text-xs text-slate-500"}, "SL nhập"),
+                  React.createElement("input", {type:"number", inputMode:"numeric", value:r.slNhap,
+                    onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,slNhap:parseInt(e.target.value)||0}:x)),
+                    style:{fontSize:'16px'}, className:"mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+                React.createElement("div", null,
+                  React.createElement("label", {className:"text-xs text-slate-500"}, "Giá nhập (*)"),
+                  React.createElement("input", {type:"text", inputMode:"numeric",
+                    value:num(r.giaNhap)||"",
+                    onFocus:e=>e.target.select(),
+                    onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,giaNhap:parseInt(e.target.value.replace(/\D/g,""))||0}:x)),
+                    style:{fontSize:'16px'}, className:"mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none text-right"}))),
+              React.createElement("div", {className:"relative"},
+                React.createElement("label", {className:"text-xs text-slate-500"}, "Nhà cung cấp (*)"),
+                React.createElement("input", {value:r.nccIn, placeholder:"Gõ để tìm NCC...",
+                  onFocus:()=>setNccSugIdx(i),
+                  onBlur:()=>setTimeout(()=>setNccSugIdx(v=>v===i?null:v), 150),
+                  onChange:e=>{
+                    setNccSugIdx(i);
+                    setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,nccIn:e.target.value}:x));
+                  },
+                  style:{fontSize:'16px'}, className:`mt-0.5 w-full rounded-lg border px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none ${r.slNhap>0&&!r.nccIn.trim()?"border-amber-300 bg-amber-50":"border-slate-200"}`}),
+                nccSugIdx===i && sugs.length>0 && React.createElement("ul", {className:"absolute z-50 left-0 right-0 top-full mt-0.5 bg-white border border-[#fed7aa] rounded-xl shadow-lg max-h-52 overflow-y-auto"},
+                  sugs.map(name=>React.createElement("li", {key:name,
+                    onMouseDown:e=>e.preventDefault(),
+                    onClick:()=>{ setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,nccIn:name}:x)); setNccSugIdx(null); },
+                    className:"px-3 py-2.5 text-sm text-slate-700 active:bg-[#fff7ed] border-b border-slate-100 last:border-0 cursor-pointer"},
+                    hilite(name))))));
+          }))),
       React.createElement("div", {className:"shrink-0 p-4 border-t border-[#fed7aa] bg-[#fffbf5] safe-area-bottom"},
         React.createElement("button", {onClick:()=>doSaveWhIn(selectedOrder),
           className:"w-full py-3 bg-[#92400e] text-white rounded-xl font-semibold text-sm active:opacity-80"},
