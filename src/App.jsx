@@ -3,9 +3,10 @@ import * as XLSX from 'xlsx'
 import PRODUCTS from './products.js'
 import { useCollection, saveDoc, deleteDocument, batchSave } from './useFirestore.js'
 import { collection, getDocs, deleteDoc, doc as fsDoc, where, writeBatch } from 'firebase/firestore'
-import { db, storage } from './firebase.js'
+import { db, storage, app as fbApp } from './firebase.js'
 import { AuthProvider, useAuth, ROLES, ALLOWED, createUserProfile } from './useAuth.js'
 import { auth } from './firebase.js'
+import { getMessaging, getToken, onMessage } from 'firebase/messaging'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
@@ -9712,6 +9713,7 @@ function MobileApp({ profile, logout }) {
   const [settingsFS] = useCollection("settings");
   const [txnsFS] = useCollection("txns");
   const [whInFS] = useCollection("wh_in");
+  const [purchaseList] = useCollection("purchases");
   const [homeYear, setHomeYear] = useState(new Date().getFullYear());
   const [homeMonth, setHomeMonth] = useState(new Date().getMonth()+1);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -9742,6 +9744,78 @@ function MobileApp({ profile, logout }) {
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [converting, setConverting] = useState(false);
   const notify = useToast();
+
+  /* ── FCM: đăng ký token push + lắng nghe foreground ── */
+  // VAPID key: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates → Generate key pair
+  const FCM_VAPID_KEY = "BF5HggSTNBun3AFv4u9rcsK4kJ9IzvQtDGP4ONMcdffIJWGKuyI5XXr_Mt6-GiGEaQ3_F9c-3DEmThXjYHxUNmw";
+  const knownOrderIds = React.useRef(null);
+  const knownTxnIds = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!profile?.uid) return;
+    if (!("Notification" in window) || !("serviceWorker" in navigator)) return;
+    (async () => {
+      try {
+        const perm = Notification.permission === "default"
+          ? await Notification.requestPermission()
+          : Notification.permission;
+        if (perm !== "granted") return;
+        const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        if (FCM_VAPID_KEY === "REPLACE_WITH_YOUR_VAPID_KEY") return;
+        const msg = (() => { try { return getMessaging(fbApp); } catch(e) { return null; } })();
+        if (!msg) return;
+        const token = await getToken(msg, { vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+        if (token) saveDoc("users", profile.uid, { fcmToken: token });
+        onMessage(msg, payload => {
+          const title = payload.notification?.title || "BLTK Hai Phong";
+          const body = payload.notification?.body || "";
+          notify(body ? title + " — " + body : title);
+        });
+      } catch(e) { /* messaging not supported on this device */ }
+    })();
+  }, [profile?.uid]);
+
+  React.useEffect(() => {
+    if (!orders || !orders.length) return;
+    const ids = new Set(orders.map(o => o.id));
+    if (knownOrderIds.current === null) { knownOrderIds.current = ids; return; }
+    const newOnes = orders.filter(o => !knownOrderIds.current.has(o.id));
+    knownOrderIds.current = ids;
+    if (!newOnes.length) return;
+    newOnes.forEach(o => {
+      notify("Don hang moi: " + (o.name||"KH") + " — " + o.id);
+    });
+    if (Notification.permission === "granted" && tab !== "orders") {
+      const o = newOnes[0];
+      new Notification("Don hang moi — BLTK", {
+        body: (o.name||"Khach hang") + " (" + o.id + ")",
+        icon: "/logo.png", tag: "order-" + o.id
+      });
+    }
+  }, [orders]);
+
+  React.useEffect(() => {
+    if (!txnsFS || !txnsFS.length) return;
+    const manual = txnsFS.filter(t => ["PhieuThu","PhieuChi"].includes(t.kind));
+    const ids = new Set(manual.map(t => t._id || String(t.id)));
+    if (knownTxnIds.current === null) { knownTxnIds.current = ids; return; }
+    const newOnes = manual.filter(t => !knownTxnIds.current.has(t._id || String(t.id)));
+    knownTxnIds.current = ids;
+    if (!newOnes.length) return;
+    newOnes.forEach(t => {
+      const label = t.kind === "PhieuThu" ? "Phieu thu" : "Phieu chi";
+      notify(label + ": " + (t.from||t.to||"") + " — " + num(t.amount) + "d");
+    });
+    if (Notification.permission === "granted") {
+      const t = newOnes[0];
+      const label = t.kind === "PhieuThu" ? "Phieu thu" : "Phieu chi";
+      new Notification(label + " moi — BLTK", {
+        body: (t.from||t.to||"") + " " + num(Math.abs(t.amount)) + "d",
+        icon: "/logo.png", tag: "txn-" + (t._id || t.id)
+      });
+    }
+  }, [txnsFS]);
+
   const toFsId = sku => String(sku||"").replace(/\//g, "__");
   const handleSaveProduct = async () => {
     const f = productForm;
@@ -9888,6 +9962,21 @@ function MobileApp({ profile, logout }) {
     const updatedItems = (o.items||[]).map((it,i) => ({...it, cost:whInRows[i]?.giaNhap||it.cost||0, supplier:whInRows[i]?.nccIn||it.supplier||""}));
     const updatedOrder = {...o, imported:true, pn:whInPn, dateIn:whInDate, importedAt:now, items:updatedItems};
     saveDoc("orders", o.id, updatedOrder);
+    const pn = whInPn || ("PN" + new Date().toISOString().slice(0,10).replace(/-/g,"") + "_" + String(Date.now()).slice(-4));
+    const dateStr = whInDate ? new Date(whInDate).toLocaleDateString("vi-VN") : new Date().toLocaleDateString("vi-VN");
+    const storeMap = {HH:"Kho HH", TB:"Kho TB", HG:"Kho HG"};
+    const storeName = storeMap[whInKho] || "Kho HH";
+    (o.items||[]).forEach((it, i) => {
+      const row = whInRows[i];
+      if (!row || !(row.slNhap > 0)) return;
+      const lot = pn + ((o.items||[]).length > 1 ? "_" + i : "");
+      saveDoc("wh_in", lot + "~~" + it.name, {
+        lot, date: dateStr, prod: it.name, store: storeName, kho: whInKho,
+        qtyIn: row.slNhap, qtyNow: row.slNhap, qtyRemaining: row.slNhap,
+        costNcc: row.giaNhap, unitCost: row.giaNhap, fee: 0,
+        supplier: row.nccIn, order: o.id, staff: "", pay: "Chưa thanh toán"
+      });
+    });
     setSelectedOrder(updatedOrder);
     setShowWhIn(false);
   };
@@ -9895,8 +9984,23 @@ function MobileApp({ profile, logout }) {
   const doConfirmDelivery = (o) => {
     if (!window.confirm(`Xác nhận đã giao hàng đơn ${o.id}?`)) return;
     const now = new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","");
-    const updated = {...o, deliveryConfirmed:true, deliveredAt:now, orderStatus:"Hoàn thành"};
+    const d = new Date();
+    const dt = d.toLocaleDateString("vi-VN") + " " + d.toLocaleTimeString("vi-VN",{hour12:false,hour:"2-digit",minute:"2-digit"});
+    const updated = {...o, deliveryConfirmed:true, deliveredAt:now, orderStatus:"Hoàn thành", exported:true};
     saveDoc("orders", o.id, updated);
+    const storeMap = {HH:"Kho HH", TB:"Kho TB", HG:"Kho HG"};
+    (o.items||[]).forEach((it, i) => {
+      if (!(it.qty > 0)) return;
+      const slip = "PX-" + o.id + ((o.items||[]).length > 1 ? "_" + i : "");
+      saveDoc("wh_out", slip, {
+        slip, dt, order: o.id,
+        sku: it.sku || "", prod: it.name, supplier: it.supplier || "",
+        store: storeMap[it.kho] || "Kho HH", lot: "",
+        qty: it.qty, sale: it.price, unitCost: it.cost || 0,
+        cust: o.name, phone: o.phone || "", addr: o.addr || "",
+        orderStatus: "Hoàn thành", delivery: "Đã giao hàng", staff: ""
+      });
+    });
     setSelectedOrder(updated);
   };
 
@@ -9972,67 +10076,281 @@ function MobileApp({ profile, logout }) {
 
   /* ── Màn hình Tổng quan ── */
   const ScreenHome = () => {
-    const prevM = () => { if (homeMonth===1){setHomeMonth(12);setHomeYear(y=>y-1);}else setHomeMonth(m=>m-1); };
-    const nextM = () => { if (homeMonth===12){setHomeMonth(1);setHomeYear(y=>y+1);}else setHomeMonth(m=>m+1); };
+    const prevM = () => { if(homeMonth===1){setHomeMonth(12);setHomeYear(y=>y-1);}else setHomeMonth(m=>m-1); };
+    const nextM = () => { if(homeMonth===12){setHomeMonth(1);setHomeYear(y=>y+1);}else setHomeMonth(m=>m+1); };
     const parseD = s => { if(!s)return new Date(0); const p=String(s).split(' ')[0].split('/'); return p.length===3?new Date(+p[2],+p[1]-1,+p[0]):new Date(0); };
     const endOfMonth = new Date(homeYear,homeMonth,0,23,59,59);
     const inM = s => { const d=parseD(s); return d.getFullYear()===homeYear&&d.getMonth()+1===homeMonth; };
+    const fmt = n => n>0 ? num(n)+"đ" : "—";
     const TRANSFER_KINDS = new Set(["Chuyển đi","Chuyển về"]);
     const NCC_KINDS = new Set(["CP Thanh Toán NCC","CP Đặt Cọc NCC","CPVC Nhập Hàng"]);
+
+    // ── TÀI CHÍNH
     const allTxns = txnsFS||[];
     const bankSettings = (settingsFS||[]).find(s=>s._id==="bankAccounts");
     const accs = (bankSettings?.accounts||[]).filter(a=>a.status==="Hoạt động");
-    const bankBal = accs.reduce((tot,a)=>{
-      const net=allTxns.filter(t=>!t.cancelled&&t.acc===a.key&&parseD(t.date)<=endOfMonth).reduce((s,t)=>s+(t.amount||0),0);
-      return tot+(a.openBal||0)+net;
-    },0);
+    const accBals = accs.map(a=>{
+      const net=allTxns.filter(t=>!t.cancelled&&t.acc===a.key&&parseD(t.date)<=endOfMonth).reduce((s,t)=>s+t.amount,0);
+      return {...a,bal:(a.openBal||0)+net};
+    });
+    const totalBal = accBals.reduce((s,a)=>s+a.bal,0);
     const pTxns = allTxns.filter(t=>!t.cancelled&&inM(t.date)&&!TRANSFER_KINDS.has(t.kind));
-    const thuHang = pTxns.filter(t=>t.amount>0&&(t.kind==="Thanh toán"||t.kind==="Đặt cọc")).reduce((s,t)=>s+t.amount,0);
-    const thuKhac = pTxns.filter(t=>t.amount>0&&t.kind!=="Thanh toán"&&t.kind!=="Đặt cọc").reduce((s,t)=>s+t.amount,0);
-    const chiNCC = pTxns.filter(t=>t.amount<0&&NCC_KINDS.has(t.kind)).reduce((s,t)=>s+Math.abs(t.amount),0);
-    const chiKhac = pTxns.filter(t=>t.amount<0&&!NCC_KINDS.has(t.kind)).reduce((s,t)=>s+Math.abs(t.amount),0);
-    const stockVal = (whInFS||[]).reduce((s,r)=>s+(r.qtyRemaining??r.qtyNow??0)*(r.unitCost??r.costNcc??0),0);
+    const thuAll = pTxns.filter(t=>t.amount>0);
+    const chiAll = pTxns.filter(t=>t.amount<0);
+    const totalThu = thuAll.reduce((s,t)=>s+t.amount,0);
+    const totalChi = chiAll.reduce((s,t)=>s+Math.abs(t.amount),0);
+    const thuOrder = thuAll.filter(t=>t.kind==="Thanh toán").reduce((s,t)=>s+t.amount,0);
+    const thuCoc = thuAll.filter(t=>t.kind==="Đặt cọc").reduce((s,t)=>s+t.amount,0);
+    const thuKhac = totalThu-thuOrder-thuCoc;
+    const chiNCC = chiAll.filter(t=>NCC_KINDS.has(t.kind)).reduce((s,t)=>s+Math.abs(t.amount),0);
+    const chiCP = chiAll.filter(t=>!NCC_KINDS.has(t.kind)).reduce((s,t)=>s+Math.abs(t.amount),0);
+
+    // ── GIAO DỊCH HÀNG HOÁ
     const activeOrders = (orders||[]).filter(o=>!o.draft&&o.orderStatus!=="Huỷ"&&o.orderStatus!=="Hủy");
-    const totalRec = activeOrders.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
-    const delivRec = activeOrders.filter(o=>o.deliveryConfirmed||o.exported).reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
-    const partRec = activeOrders.filter(o=>(o.partialDeliveries||[]).length>0&&!o.deliveryConfirmed&&!o.exported).reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
-    const thuDon = activeOrders.flatMap(o=>(o.payments||[]).filter(p=>inM(p.date||p.dt))).reduce((s,p)=>s+(p.amount||0),0);
-    const pOrders = activeOrders.filter(o=>inM(o.dt));
-    const pTotal = pOrders.reduce((s,o)=>s+calc(o).total,0);
-    const R = (label,val,color,bold) => React.createElement("div",{className:"flex justify-between items-center py-2 border-b border-slate-100 last:border-0"},
+    const fOrders = activeOrders.filter(o=>inM(o.dt));
+    const delivOrders = fOrders.filter(o=>o.deliveryConfirmed||o.exported);
+    const depositOrders = fOrders.filter(o=>!o.deliveryConfirmed&&!o.exported&&(o.paid||0)>0);
+    const plMap = {};
+    (purchaseList||[]).forEach(r=>{plMap[r.lot+"__"+r.prod]=r;});
+    const whIn = whInFS||[];
+    const fWhIn = whIn.filter(r=>r.supplier&&inM(r.date));
+    const nccTotal = fWhIn.reduce((s,r)=>s+(r.qtyIn||0)*(r.costNcc||0)+(r.fee||0),0);
+    const nccPaid = fWhIn.reduce((s,r)=>{const pl=plMap[r.lot+"__"+r.prod];const tot=(r.qtyIn||0)*(r.costNcc||0)+(r.fee||0);return s+(pl?(pl.paid||0):(r.pay==="Đã thanh toán"?tot:0));},0);
+    const nccLots = new Set(fWhIn.map(r=>r.lot)).size;
+    const stockVal = whIn.reduce((s,r)=>s+(r.qtyRemaining??r.qtyNow??0)*(r.unitCost??r.costNcc??0),0);
+    const delivVal = delivOrders.reduce((s,o)=>s+calc(o).total,0);
+    const delivPaid = delivOrders.reduce((s,o)=>s+(o.paid||0),0);
+    const delivRem = delivOrders.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+    const depVal = depositOrders.reduce((s,o)=>s+calc(o).total,0);
+    const depPaid = depositOrders.reduce((s,o)=>s+(o.paid||0),0);
+    const depRem = depositOrders.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+
+    // ── CÔNG NỢ (all-time)
+    const custDebt = {};
+    activeOrders.forEach(o=>{const rem=Math.max(0,calc(o).remaining);if(rem>0&&o.name)custDebt[o.name]=(custDebt[o.name]||0)+rem;});
+    const custDebtList = Object.entries(custDebt).map(([n,d])=>({name:n,debt:d})).sort((a,b)=>b.debt-a.debt).slice(0,5);
+    const totalCustDebt = Object.values(custDebt).reduce((s,v)=>s+v,0);
+    const nccDebt = {};
+    whIn.filter(r=>r.supplier).forEach(r=>{
+      const pl=plMap[r.lot+"__"+r.prod];
+      const tot=(r.qtyIn||0)*(r.costNcc||0)+(r.fee||0);
+      const rets=(pl?.returns||[]).reduce((s,x)=>s+(x.amount||0),0);
+      const paid=pl?(pl.paid||0):(r.pay==="Đã thanh toán"?tot:0);
+      const rem=Math.max(0,tot-rets-paid);
+      if(rem>0&&r.supplier)nccDebt[r.supplier]=(nccDebt[r.supplier]||0)+rem;
+    });
+    const nccDebtList = Object.entries(nccDebt).map(([n,d])=>({name:n,debt:d})).sort((a,b)=>b.debt-a.debt).slice(0,5);
+    const totalNccDebt = Object.values(nccDebt).reduce((s,v)=>s+v,0);
+
+    // ── HOÀN HÀNG
+    const returnedOrders = activeOrders.filter(o=>(o.returns||[]).some(r=>!r.cancelled));
+    const allRetItems = returnedOrders.flatMap(o=>(o.returns||[]).filter(r=>!r.cancelled));
+    const totalReturnVal = allRetItems.reduce((s,r)=>s+(r.amount||0),0);
+    const alreadyRefunded = returnedOrders.reduce((s,o)=>s+(o.compCosts||[]).filter(c=>c.type==="Hoàn tiền hàng").reduce((cs,c)=>cs+(c.amount||0),0),0);
+    const pendingRefund = Math.max(0,totalReturnVal-alreadyRefunded);
+    const nccRetItems = fWhIn.filter(r=>(plMap[r.lot+"__"+r.prod]?.returns||[]).length>0);
+    const nccRetLots = new Set(nccRetItems.map(r=>r.lot)).size;
+    const nccRetVal = nccRetItems.reduce((s,r)=>{const pl=plMap[r.lot+"__"+r.prod];return s+(pl?.returns||[]).reduce((rs,x)=>rs+(x.amount||0),0);},0);
+
+    // ── LỢI NHUẬN (Accrual)
+    const expOrders = fOrders.filter(o=>o.deliveryConfirmed||o.exported);
+    const pendOrders = fOrders.filter(o=>!o.deliveryConfirmed&&!o.exported);
+    const accRev = expOrders.reduce((s,o)=>s+calc(o).total,0);
+    const accCOGS = expOrders.reduce((s,o)=>s+calc(o).totalCost,0);
+    const accShip = expOrders.reduce((s,o)=>s+(o.importExpense||0),0);
+    const accExp = expOrders.reduce((s,o)=>s+(o.expense||0),0);
+    const accCmpS = expOrders.reduce((s,o)=>s+(o.compCosts||[]).filter(c=>c.type==="Chi phí Ship hàng").reduce((cs,c)=>cs+(c.amount||0),0),0);
+    const accCmpC = expOrders.reduce((s,o)=>s+(o.compCosts||[]).filter(c=>c.type==="Chi phí hoa hồng").reduce((cs,c)=>cs+(c.amount||0),0),0);
+    const accCmpI = expOrders.reduce((s,o)=>s+(o.compCosts||[]).filter(c=>c.type==="Chi phí lắp đặt").reduce((cs,c)=>cs+(c.amount||0),0),0);
+    const accCPBH = accShip+accExp+accCmpS+accCmpC+accCmpI;
+    const accGross = accRev-accCOGS;
+    const accProfit = accRev-accCOGS-accCPBH;
+    const accMargin = accRev>0?Math.round(accProfit*1000/accRev)/10:0;
+    const penRev = pendOrders.reduce((s,o)=>s+calc(o).total,0);
+    const penCOGS = pendOrders.reduce((s,o)=>s+calc(o).totalCost,0);
+    const penGross = penRev-penCOGS;
+    const penMargin = penRev>0?Math.round(penGross*1000/penRev)/10:0;
+
+    // ── Helpers UI
+    const R = (label,val,cls) => React.createElement("div",{className:"flex justify-between items-center py-1.5 border-b border-slate-100 last:border-0"},
       React.createElement("span",{className:"text-sm text-slate-500"},label),
-      React.createElement("span",{className:`text-sm ${bold?"font-bold":"font-medium"} ${color||"text-slate-700"}`},val));
-    const Card = (ico,title,rows) => React.createElement("div",{className:"bg-white rounded-2xl border border-slate-200 p-4 shadow-sm"},
-      React.createElement("div",{className:"flex items-center gap-2 mb-2.5 pb-2.5 border-b border-slate-100"},
-        React.createElement("div",{className:"w-7 h-7 rounded-lg bg-[#ffedd5] flex items-center justify-center shrink-0"},ico),
-        React.createElement("span",{className:"font-bold text-slate-700 text-sm"},title)),
-      ...rows);
+      React.createElement("span",{className:"text-sm font-medium "+(cls||"text-slate-700")},val));
+    const SHd = (ico,title,sub) => React.createElement("div",{className:"flex items-center gap-2 mb-2"},
+      React.createElement("div",{className:"w-6 h-6 rounded-md bg-[#ffedd5] flex items-center justify-center shrink-0"},ico),
+      React.createElement("span",{className:"font-bold text-sm text-[#7c2d12]"},title),
+      sub&&React.createElement("span",{className:"text-xs text-slate-400"},"· "+sub));
+    const Card = children => React.createElement("div",{className:"bg-white rounded-2xl border border-[#fed7aa] p-4 shadow-sm"},children);
+    const SubLabel = (ico,label,cls) => React.createElement("div",{className:"text-[11px] font-semibold uppercase tracking-wide mb-1.5 flex items-center gap-1 "+(cls||"text-[#92400e]")},ico,label);
+    const BigNum = (val,cls) => React.createElement("div",{className:"text-xl font-bold tabular-nums mb-2 "+(cls||"text-slate-800")},val);
+
     return React.createElement("div",{className:"flex-1 overflow-y-auto"},
-      React.createElement("div",{className:"px-3 pt-3 pb-4 space-y-3"},
+      React.createElement("div",{className:"px-3 pt-3 pb-6 space-y-4"},
+
+        // ── Month picker
         React.createElement("div",{className:"flex items-center justify-between bg-white rounded-2xl border border-slate-200 px-3 py-2"},
           React.createElement("button",{onClick:prevM,className:"p-1.5 rounded-lg text-slate-400 active:bg-slate-100"},React.createElement(ChevronLeft,{className:"h-5 w-5"})),
           React.createElement("span",{className:"font-semibold text-sm text-slate-700"},`Tháng ${homeMonth}/${homeYear}`),
           React.createElement("button",{onClick:nextM,className:"p-1.5 rounded-lg text-slate-400 active:bg-slate-100"},React.createElement(ChevronRight,{className:"h-5 w-5"}))),
-        Card(React.createElement(Wallet,{className:"h-4 w-4 text-[#92400e]"}),`Dòng tiền — Tháng ${homeMonth}/${homeYear}`,[
-          R("Tài sản",num(bankBal)+"đ","text-blue-600",true),
-          R("Thu tiền hàng","+"+num(thuHang)+"đ","text-green-600"),
-          R("Thu khác","+"+num(thuKhac)+"đ","text-green-600"),
-          R("Chi Nhà cung cấp","-"+num(chiNCC)+"đ","text-red-500"),
-          R("Chi khác","-"+num(chiKhac)+"đ","text-red-500"),
-          R("Tồn kho (giá vốn)",num(stockVal)+"đ","text-slate-700",true),
-        ]),
-        Card(React.createElement(ReceiptText,{className:"h-4 w-4 text-[#92400e]"}),"Công nợ phải thu",[
-          R("Tổng phải thu",num(totalRec)+"đ","text-red-500",true),
-          R("Đã giao, chưa trả",num(delivRec)+"đ","text-red-500"),
-          R("Giao 1 phần",num(partRec)+"đ","text-red-500"),
-          R("Đã thu (đơn hàng)","+"+num(thuDon)+"đ","text-green-600"),
-        ]),
-        Card(React.createElement(BookText,{className:"h-4 w-4 text-[#92400e]"}),`Đơn hàng — Tháng ${homeMonth}/${homeYear}`,[
-          R("Số đơn mới",String(pOrders.length),"text-slate-700"),
-          R("Tổng tiền hàng",num(pTotal)+"đ","text-slate-700",true),
-          R("Hoàn thành",String(pOrders.filter(o=>o.orderStatus==="Hoàn thành").length),"text-green-600"),
-          R("Đang xử lý",String(pOrders.filter(o=>o.orderStatus!=="Hoàn thành").length),"text-amber-600"),
-        ])
+
+        // ── 1. TÀI CHÍNH
+        React.createElement("div",null,
+          SHd(React.createElement(Wallet,{className:"h-3.5 w-3.5 text-[#92400e]"}),"Tài chính","Cash"),
+          Card(React.createElement("div",null,
+            // Tiền vào
+            SubLabel(React.createElement(ArrowDownToLine,{className:"h-3 w-3"}),"Tiền vào"),
+            BigNum(totalThu>0?"+"+num(totalThu)+"đ":"—","text-emerald-600"),
+            R("Thu từ đơn hàng",thuOrder>0?"+"+num(thuOrder)+"đ":"—","text-green-600"),
+            R("Nhận cọc KH",thuCoc>0?"+"+num(thuCoc)+"đ":"—","text-green-600"),
+            thuKhac>0?R("Khác","+"+num(thuKhac)+"đ","text-green-600"):null,
+            // Tiền ra
+            React.createElement("div",{className:"pt-3 mt-1"},
+              SubLabel(React.createElement(ArrowUpFromLine,{className:"h-3 w-3"}),"Tiền ra"),
+              BigNum(totalChi>0?"−"+num(totalChi)+"đ":"—","text-red-600"),
+              R("Trả công nợ NCC",chiNCC>0?"−"+num(chiNCC)+"đ":"—","text-red-500"),
+              R("Chi phí bán hàng",chiCP>0?"−"+num(chiCP)+"đ":"—","text-red-500")),
+            // Số dư
+            React.createElement("div",{className:"pt-3 mt-1"},
+              SubLabel(React.createElement(CreditCard,{className:"h-3 w-3"}),"Số dư tài khoản"),
+              BigNum(fmt(totalBal),"text-[#92400e]"),
+              React.createElement("div",{className:"text-[11px] italic text-slate-400 mb-2"},"Lũy kế đến cuối tháng"),
+              React.createElement("div",{className:"space-y-1.5"},
+                accBals.map(a=>React.createElement("div",{key:a.key,className:"flex justify-between items-center"},
+                  React.createElement("span",{className:"text-xs bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded"},a.key||a.bank),
+                  React.createElement("span",{className:"text-sm font-semibold tabular-nums "+(a.bal>=0?"text-slate-800":"text-red-600")},
+                    (a.bal<0?"−":"")+num(Math.abs(a.bal))+"đ")))))))),
+
+        // ── 2. GIAO DỊCH HÀNG HOÁ
+        React.createElement("div",null,
+          SHd(React.createElement(ArrowLeftRight,{className:"h-3.5 w-3.5 text-[#92400e]"}),"Giao dịch hàng hoá"),
+          React.createElement("div",{className:"space-y-2"},
+            // Đơn đã giao
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(Truck,{className:"h-3 w-3"}),"Đơn đã giao"),
+              React.createElement("div",{className:"flex justify-between items-end mb-2"},
+                React.createElement("span",{className:"text-2xl font-bold text-slate-800"},delivOrders.length,React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn")),
+                React.createElement("span",{className:"text-sm font-bold text-[#92400e] tabular-nums"},fmt(delivVal))),
+              R("Đã thu tiền",fmt(delivPaid),"text-green-600"),
+              R("Còn phải thu",fmt(delivRem),"text-red-500"))),
+            // Đơn nhận cọc
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(Package,{className:"h-3 w-3"}),"Đơn nhận cọc"),
+              React.createElement("div",{className:"flex justify-between items-end mb-2"},
+                React.createElement("span",{className:"text-2xl font-bold text-slate-800"},depositOrders.length,React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn")),
+                React.createElement("span",{className:"text-sm font-bold text-[#92400e] tabular-nums"},fmt(depVal))),
+              R("Đã nhận cọc",fmt(depPaid),"text-green-600"),
+              R("Sẽ thu khi giao",fmt(depRem),"text-slate-700"))),
+            // Mua hàng NCC
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(PackageSearch,{className:"h-3 w-3"}),"Mua hàng NCC"),
+              React.createElement("div",{className:"flex justify-between items-end mb-2"},
+                React.createElement("span",{className:"text-2xl font-bold text-slate-800"},nccLots,React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn nhập")),
+                React.createElement("span",{className:"text-sm font-bold text-[#92400e] tabular-nums"},fmt(nccTotal))),
+              R("Đã thanh toán",fmt(nccPaid),"text-green-600"),
+              R("Còn phải trả",fmt(Math.max(0,nccTotal-nccPaid)),"text-red-500"))),
+            // Tồn kho
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(Layers,{className:"h-3 w-3"}),"Tồn kho hiện tại"),
+              BigNum(fmt(stockVal),"text-[#92400e]"),
+              React.createElement("div",{className:"text-xs text-slate-400 -mt-1 mb-1"},"Giá trị hàng tồn"),
+              R("Mặt hàng còn hàng",String(whIn.filter(r=>(r.qtyRemaining??r.qtyNow??0)>0).length),"text-slate-700"))))),
+
+        // ── 3. CÔNG NỢ
+        React.createElement("div",null,
+          SHd(React.createElement(FileText,{className:"h-3.5 w-3.5 text-[#92400e]"}),"Công nợ","Toàn thời gian"),
+          React.createElement("div",{className:"space-y-2"},
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(Users,{className:"h-3 w-3"}),"Khách hàng cần thu tiền","text-rose-600"),
+              custDebtList.length===0
+                ?React.createElement("div",{className:"text-sm text-slate-400 py-1"},"Không có công nợ")
+                :React.createElement("div",{className:"space-y-1.5"},
+                    custDebtList.map(c=>React.createElement("div",{key:c.name,className:"flex justify-between text-sm"},
+                      React.createElement("span",{className:"font-medium text-slate-800 truncate max-w-[60%]"},c.name),
+                      React.createElement("span",{className:"tabular-nums text-slate-600"},num(c.debt)+"đ")))),
+              React.createElement("div",{className:"mt-2 pt-2 border-t border-slate-100 flex justify-between text-sm"},
+                React.createElement("span",{className:"text-slate-600"},"Tổng cần thu"),
+                totalCustDebt>0
+                  ?React.createElement("span",{className:"font-bold tabular-nums text-red-600"},num(totalCustDebt)+"đ")
+                  :React.createElement("span",{className:"text-slate-300"},"—")))),
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(Building2,{className:"h-3 w-3"}),"NCC cần thanh toán"),
+              nccDebtList.length===0
+                ?React.createElement("div",{className:"text-sm text-slate-400 py-1"},"Không có công nợ")
+                :React.createElement("div",{className:"space-y-1.5"},
+                    nccDebtList.map(c=>React.createElement("div",{key:c.name,className:"flex justify-between text-sm"},
+                      React.createElement("span",{className:"font-medium text-slate-800 truncate max-w-[60%]"},c.name),
+                      React.createElement("span",{className:"tabular-nums text-slate-600"},num(c.debt)+"đ")))),
+              React.createElement("div",{className:"mt-2 pt-2 border-t border-slate-100 flex justify-between text-sm"},
+                React.createElement("span",{className:"text-slate-600"},"Tổng phải trả"),
+                totalNccDebt>0
+                  ?React.createElement("span",{className:"font-bold tabular-nums text-[#92400e]"},num(totalNccDebt)+"đ")
+                  :React.createElement("span",{className:"text-slate-300"},"—")))))),
+
+        // ── 4. HOÀN HÀNG
+        React.createElement("div",null,
+          SHd(React.createElement(CornerUpLeft,{className:"h-3.5 w-3.5 text-[#92400e]"}),"Hoàn hàng"),
+          React.createElement("div",{className:"space-y-2"},
+            Card(React.createElement("div",null,
+              SubLabel(React.createElement(RotateCcw,{className:"h-3 w-3"}),"Khách hàng trả hàng","text-rose-600"),
+              React.createElement("div",{className:"flex justify-between items-end mb-2 pb-2 border-b border-slate-100"},
+                React.createElement("span",{className:"text-2xl font-bold text-slate-800"},returnedOrders.length,React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn hoàn")),
+                totalReturnVal>0?React.createElement("span",{className:"text-lg font-bold tabular-nums text-rose-600"},num(totalReturnVal)+"đ"):React.createElement("span",{className:"text-slate-300 text-lg"},"—")),
+              R("Đã hoàn tiền KH",alreadyRefunded>0?num(alreadyRefunded)+"đ":"—","text-rose-600"),
+              R("Chờ xử lý",pendingRefund>0?num(pendingRefund)+"đ":"—","text-[#92400e]"))),
+            nccRetLots>0&&Card(React.createElement("div",null,
+              SubLabel(React.createElement(RefreshCw,{className:"h-3 w-3"}),"Trả hàng NCC"),
+              React.createElement("div",{className:"flex items-baseline gap-2 mb-1"},
+                React.createElement("span",{className:"text-2xl font-bold text-slate-800"},nccRetLots),
+                React.createElement("span",{className:"text-sm text-slate-500"},"đơn trong tháng")),
+              R("Ghi giảm công nợ NCC",fmt(nccRetVal),"text-[#92400e]"))))),
+
+        // ── 5. LỢI NHUẬN
+        React.createElement("div",null,
+          SHd(React.createElement(TrendingUp,{className:"h-3.5 w-3.5 text-[#92400e]"}),"Lợi nhuận","Accrual"),
+          React.createElement("div",{className:"text-xs italic text-slate-400 mb-2"},"Đơn trong tháng · DT/GV/LN theo accrual. Cột chưa giao chưa trừ CPBH."),
+          Card(React.createElement("div",null,
+            // Header
+            React.createElement("div",{className:"grid grid-cols-3 -mx-4 -mt-4 mb-3 px-4 py-2.5 bg-[#ffedd5] rounded-t-2xl border-b border-[#fed7aa]"},
+              React.createElement("div",null),
+              React.createElement("div",{className:"text-center"},
+                React.createElement("div",{className:"text-[11px] font-semibold uppercase tracking-wide text-[#92400e]"},"Đã giao"),
+                React.createElement("div",{className:"text-[11px] text-slate-500"},expOrders.length+" đơn")),
+              React.createElement("div",{className:"text-center"},
+                React.createElement("div",{className:"text-[11px] font-semibold uppercase tracking-wide text-slate-500"},"Chưa giao"),
+                React.createElement("div",{className:"text-[11px] text-slate-400"},pendOrders.length+" đơn"))),
+            // Doanh thu
+            React.createElement("div",{className:"grid grid-cols-3 py-2 border-b border-slate-100"},
+              React.createElement("div",{className:"text-sm text-[#92400e] flex items-center gap-1"},React.createElement(ShoppingCart,{className:"h-3 w-3"}),"DT"),
+              React.createElement("div",{className:"text-right text-sm font-bold tabular-nums "+(accRev>0?"text-[#92400e]":"text-slate-300")},fmt(accRev)),
+              React.createElement("div",{className:"text-right text-sm font-semibold tabular-nums "+(penRev>0?"text-[#92400e]":"text-slate-300")},fmt(penRev))),
+            // Giá vốn
+            React.createElement("div",{className:"grid grid-cols-3 py-2 border-b border-slate-100"},
+              React.createElement("div",{className:"text-sm text-[#92400e] flex items-center gap-1"},React.createElement(Package,{className:"h-3 w-3"}),"GV"),
+              React.createElement("div",{className:"text-right text-sm font-bold tabular-nums "+(accCOGS>0?"text-red-600":"text-slate-300")},accCOGS>0?"−"+num(accCOGS)+"đ":"—"),
+              React.createElement("div",{className:"text-right text-sm font-semibold tabular-nums "+(penCOGS>0?"text-red-600":"text-slate-300")},penCOGS>0?"−"+num(penCOGS)+"đ":"—")),
+            // Biên gộp
+            React.createElement("div",{className:"grid grid-cols-3 py-2 border-b border-slate-100 bg-orange-50 -mx-4 px-4"},
+              React.createElement("div",{className:"text-[11px] italic text-[#92400e]"},"Biên gộp"),
+              React.createElement("div",{className:"text-right text-[11px] tabular-nums font-semibold "+(accRev===0?"text-slate-300":accGross>0?"text-emerald-700":"text-red-600")},
+                accRev>0?(accGross<0?"−":"")+num(Math.abs(accGross))+"đ":"—"),
+              React.createElement("div",{className:"text-right text-[11px] tabular-nums font-semibold "+(penRev===0?"text-slate-300":penGross>0?"text-emerald-600":"text-red-600")},
+                penRev>0?(penGross<0?"−":"")+num(Math.abs(penGross))+"đ":"—")),
+            // CPBH
+            React.createElement("div",{className:"grid grid-cols-3 py-2 border-b border-slate-100"},
+              React.createElement("div",{className:"text-sm text-[#92400e] flex items-center gap-1"},React.createElement(ReceiptText,{className:"h-3 w-3"}),"CPBH"),
+              React.createElement("div",{className:"text-right text-sm font-bold tabular-nums "+(accCPBH>0?"text-red-600":"text-slate-300")},accCPBH>0?"−"+num(accCPBH)+"đ":"—"),
+              React.createElement("div",{className:"text-right text-[11px] italic text-slate-400"},"chưa ps")),
+            // Lợi nhuận
+            React.createElement("div",{className:"grid grid-cols-3 -mx-4 -mb-4 px-4 py-3 rounded-b-2xl "+(accRev===0?"bg-[#ffedd5]":accProfit>0?"bg-emerald-50":accProfit<0?"bg-rose-50":"bg-[#ffedd5]")},
+              React.createElement("div",{className:"flex items-center gap-1 text-sm font-semibold "+(accProfit>0?"text-emerald-700":accProfit<0?"text-rose-700":"text-[#92400e]")},React.createElement(Sparkles,{className:"h-3.5 w-3.5"}),"LN"),
+              React.createElement("div",null,
+                React.createElement("div",{className:"text-right text-base font-bold tabular-nums "+(accRev===0?"text-slate-300":accProfit>0?"text-emerald-600":accProfit<0?"text-red-600":"text-slate-300")},
+                  accRev>0&&accProfit!==0?(accProfit<0?"−":"")+num(Math.abs(accProfit))+"đ":"—"),
+                accRev>0&&React.createElement("div",{className:"text-right text-[11px] text-[#92400e]"},"Biên "+accMargin+"%")),
+              React.createElement("div",null,
+                React.createElement("div",{className:"text-right text-sm font-semibold tabular-nums "+(penRev===0?"text-slate-300":penGross>0?"text-emerald-600":penGross<0?"text-red-600":"text-slate-300")},
+                  penRev>0&&penGross!==0?(penGross<0?"−":"")+num(Math.abs(penGross))+"đ":"—"),
+                penRev>0&&React.createElement("div",{className:"text-right text-[11px] text-slate-400"},"Biên "+penMargin+"%"))))))
+
       )
     );
   };
