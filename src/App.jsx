@@ -9841,6 +9841,7 @@ function MobileApp({ profile, logout }) {
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [converting, setConverting] = useState(false);
   const [notifs, setNotifs] = useState([]);
+  const [showRetListMob, setShowRetListMob] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
   const notify = useToast();
 
@@ -10399,10 +10400,26 @@ function MobileApp({ profile, logout }) {
             Card(React.createElement("div",null,
               SubLabel(React.createElement(RotateCcw,{className:"h-3 w-3"}),"Khách hàng trả hàng","text-rose-600"),
               React.createElement("div",{className:"flex justify-between items-end mb-2 pb-2 border-b border-slate-100"},
-                React.createElement("span",{className:"text-2xl font-bold text-slate-800"},returnedOrders.length,React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn hoàn")),
+                returnedOrders.length > 0
+                  ? React.createElement("button",{onClick:()=>setShowRetListMob(v=>!v), className:"flex items-center gap-1"},
+                      React.createElement("span",{className:"text-2xl font-bold text-slate-800"},returnedOrders.length),
+                      React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn hoàn"),
+                      React.createElement(showRetListMob ? ChevronDown : ChevronRight,{className:"h-4 w-4 text-slate-400 ml-0.5"}))
+                  : React.createElement("span",{className:"text-2xl font-bold text-slate-800"},"0",React.createElement("span",{className:"text-sm font-normal text-slate-500 ml-1"},"đơn hoàn")),
                 totalReturnVal>0?React.createElement("span",{className:"text-lg font-bold tabular-nums text-rose-600"},num(totalReturnVal)+"đ"):React.createElement("span",{className:"text-slate-300 text-lg"},"—")),
               R("Đã hoàn tiền KH",alreadyRefunded>0?num(alreadyRefunded)+"đ":"—","text-rose-600"),
-              R("Chờ xử lý",pendingRefund>0?num(pendingRefund)+"đ":"—","text-[#92400e]"))),
+              R("Chờ xử lý",pendingRefund>0?num(pendingRefund)+"đ":"—","text-[#92400e]"),
+              showRetListMob && returnedOrders.length > 0 && React.createElement("div",{className:"mt-3 border-t border-slate-100 pt-3 space-y-0.5"},
+                returnedOrders.map(o=>{
+                  const retVal=(o.returns||[]).filter(r=>!r.cancelled).reduce((s,r)=>s+(r.amount||0),0);
+                  return React.createElement("button",{key:o.id, onClick:()=>{ setSelectedOrder(o); setTab("orders"); }, className:"w-full flex items-center justify-between text-sm active:bg-[#fff7ed] rounded-lg px-2 py-1.5 group"},
+                    React.createElement("div",{className:"flex items-center gap-2"},
+                      React.createElement("span",{className:"rounded-full bg-[#fcebd8] px-2 py-0.5 text-[11px] font-semibold text-[#92400e]"},o.id),
+                      React.createElement("span",{className:"text-slate-600 truncate max-w-[120px]"},o.name||"—")),
+                    React.createElement("div",{className:"flex items-center gap-1.5 shrink-0"},
+                      retVal>0&&React.createElement("span",{className:"tabular-nums text-rose-600 font-medium text-xs"},num(retVal)+"đ"),
+                      React.createElement(ChevronRight,{className:"h-3.5 w-3.5 text-slate-300"})));
+                })))),
             nccRetLots>0&&Card(React.createElement("div",null,
               SubLabel(React.createElement(RefreshCw,{className:"h-3 w-3"}),"Trả hàng NCC"),
               React.createElement("div",{className:"flex items-baseline gap-2 mb-1"},
