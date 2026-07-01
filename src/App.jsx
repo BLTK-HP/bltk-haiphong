@@ -9899,6 +9899,7 @@ function MobileApp({ profile, logout }) {
   const [rSpQ,      setRSpQ]      = useState("");
   const [rNvFilter, setRNvFilter] = useState("Tất cả");
   const [rExpanded, setRExpanded] = useState(new Set());
+  const [rSalePage, setRSalePage] = useState(1);
   const notify = useToast();
 
   /* ── FCM: đăng ký token push + lắng nghe foreground ── */
@@ -10301,6 +10302,7 @@ function MobileApp({ profile, logout }) {
 
     /* ── Bán hàng ── */
     const SaleTab = () => {
+      const PAGE = 20;
       const rows = activeOrders.map(o => {
         const c = calc(o); const cpbh = cpbhOf(o); const lai = c.total - c.totalCost - cpbh;
         return {...o, _c:c, _cpbh:cpbh, _lai:lai, _pct:c.total?(lai/c.total*100).toFixed(1):"0.0", _dt:String(o.dt||"").split(" ").find(p=>p.includes("/"))||""};
@@ -10309,6 +10311,16 @@ function MobileApp({ profile, logout }) {
       const totLai     = rows.reduce((s,o)=>s+o._lai,0);
       const totPaid    = rows.reduce((s,o)=>s+(o.paid||0),0);
       const totRem     = rows.reduce((s,o)=>s+Math.max(0,o._c.remaining),0);
+      const totalPages = Math.max(1, Math.ceil(rows.length / PAGE));
+      const page = Math.min(rSalePage, totalPages);
+      const pageRows = rows.slice((page-1)*PAGE, page*PAGE);
+      const Pager = () => totalPages <= 1 ? null : React.createElement("div",{className:"flex items-center justify-center gap-1 mt-3 flex-wrap"},
+        React.createElement("button",{onClick:()=>setRSalePage(p=>Math.max(1,p-1)),disabled:page===1,
+          className:"px-2.5 py-1 rounded-lg text-sm border border-slate-200 disabled:opacity-30 active:bg-slate-100"},"←"),
+        [...Array(totalPages)].map((_,i)=>React.createElement("button",{key:i,onClick:()=>setRSalePage(i+1),
+          className:`px-2.5 py-1 rounded-lg text-sm font-medium ${page===i+1?"bg-[#92400e] text-white border border-[#92400e]":"border border-slate-200 text-slate-600 active:bg-slate-100"}`},i+1)),
+        React.createElement("button",{onClick:()=>setRSalePage(p=>Math.min(totalPages,p+1)),disabled:page===totalPages,
+          className:"px-2.5 py-1 rounded-lg text-sm border border-slate-200 disabled:opacity-30 active:bg-slate-100"},"→"));
       return React.createElement(React.Fragment, null,
         React.createElement("div", {className:"grid grid-cols-2 gap-2 mb-3"},
           kpiCard("Doanh thu", num(totRevenue)+"đ", "text-[#047857]"),
@@ -10317,17 +10329,21 @@ function MobileApp({ profile, logout }) {
           kpiCard("Còn lại", totRem>0?num(totRem)+"đ":"—", totRem>0?"text-[#B91C1C]":"text-slate-300")),
         rows.length === 0
           ? React.createElement("div", {className:"text-center py-10 text-slate-400 text-sm"}, "Không có đơn hàng trong kỳ")
-          : React.createElement("div", {className:"space-y-2"},
-              rows.map(o => React.createElement("div", {key:o.id, className:"bg-white rounded-xl border border-slate-200 p-3"},
-                React.createElement("div", {className:"flex items-center justify-between mb-1"},
-                  React.createElement("span", {className:"text-xs font-semibold text-[#92400e] bg-[#ffedd5] px-2 py-0.5 rounded-full"}, o.id),
-                  React.createElement("span", {className:"text-xs text-slate-400"}, o._dt.replace(",",""))),
-                React.createElement("div", {className:"text-sm font-medium text-slate-800 mb-2"}, o.name),
-                React.createElement("div", {className:"grid grid-cols-2 gap-x-4 gap-y-1 text-xs"},
-                  React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Doanh thu"), React.createElement("span",{className:"tabular-nums font-medium"},num(o._c.total)+"đ")),
-                  React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Lợi nhuận"), React.createElement("span",{className:`tabular-nums font-medium ${o._lai>=0?"text-[#047857]":"text-[#B91C1C]"}`},num(o._lai)+"đ ("+o._pct+"%)")),
-                  React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Đã thu"), React.createElement("span",{className:"tabular-nums text-[#92400e]"},num(o.paid||0)+"đ")),
-                  o._c.remaining>0 && React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Còn lại"), React.createElement("span",{className:"tabular-nums text-[#B91C1C] font-medium"},num(o._c.remaining)+"đ")))))));
+          : React.createElement(React.Fragment, null,
+              React.createElement("div",{className:"text-xs text-slate-400 mb-2 text-right"},
+                rows.length+" đơn"+(totalPages>1?" · Trang "+page+"/"+totalPages:"")),
+              React.createElement("div", {className:"space-y-2"},
+                pageRows.map(o => React.createElement("div", {key:o.id, className:"bg-white rounded-xl border border-slate-200 p-3"},
+                  React.createElement("div", {className:"flex items-center justify-between mb-1"},
+                    React.createElement("span", {className:"text-xs font-semibold text-[#92400e] bg-[#ffedd5] px-2 py-0.5 rounded-full"}, o.id),
+                    React.createElement("span", {className:"text-xs text-slate-400"}, o._dt.replace(",",""))),
+                  React.createElement("div", {className:"text-sm font-medium text-slate-800 mb-2"}, o.name),
+                  React.createElement("div", {className:"grid grid-cols-2 gap-x-4 gap-y-1 text-xs"},
+                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Doanh thu"), React.createElement("span",{className:"tabular-nums font-medium"},num(o._c.total)+"đ")),
+                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Lợi nhuận"), React.createElement("span",{className:`tabular-nums font-medium ${o._lai>=0?"text-[#047857]":"text-[#B91C1C]"}`},num(o._lai)+"đ ("+o._pct+"%)")),
+                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Đã thu"), React.createElement("span",{className:"tabular-nums text-[#92400e]"},num(o.paid||0)+"đ")),
+                    o._c.remaining>0 && React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Còn lại"), React.createElement("span",{className:"tabular-nums text-[#B91C1C] font-medium"},num(o._c.remaining)+"đ")))))),
+              Pager()));
     };
 
     /* ── Sản phẩm đặt hàng ── */
@@ -10410,11 +10426,11 @@ function MobileApp({ profile, logout }) {
     return React.createElement("div",{className:"flex-1 overflow-y-auto"},
       React.createElement("div",{className:"p-4 space-y-3"},
         React.createElement("div",{className:"flex items-center gap-2"},
-          dtInput(rFrom, setRFrom),
+          dtInput(rFrom, v=>{setRFrom(v); setRSalePage(1);}),
           React.createElement("span",{className:"text-slate-400 text-sm shrink-0"},"→"),
-          dtInput(rTo, setRTo)),
+          dtInput(rTo, v=>{setRTo(v); setRSalePage(1);})),
         React.createElement("div",{className:"flex rounded-xl overflow-hidden border border-[#fed7aa] bg-[#ffedd5]"},
-          subTabs.map(t=>React.createElement("button",{key:t.key, onClick:()=>setRTab(t.key),
+          subTabs.map(t=>React.createElement("button",{key:t.key, onClick:()=>{setRTab(t.key); setRSalePage(1);},
             className:`flex-1 py-2 text-xs font-semibold transition-colors ${rTab===t.key?"bg-[#92400e] text-white":"text-[#92400e]"}`},
             t.label))),
         rTab==="sales"    ? SaleTab()
