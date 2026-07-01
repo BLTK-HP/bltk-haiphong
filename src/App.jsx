@@ -9837,6 +9837,7 @@ function MobileApp({ profile, logout }) {
   const [whInPn, setWhInPn] = useState("");
   const [whInDate, setWhInDate] = useState("");
   const [whInKho, setWhInKho] = useState("HH");
+  const [justImported, setJustImported] = useState(false);
   const [nccSugIdx, setNccSugIdx] = useState(null);
   const [showPrintMenu, setShowPrintMenu] = useState(false);
   const [converting, setConverting] = useState(false);
@@ -9850,6 +9851,7 @@ function MobileApp({ profile, logout }) {
   const FCM_VAPID_KEY = "BF5HggSTNBun3AFv4u9rcsK4kJ9IzvQtDGP4ONMcdffIJWGKuyI5XXr_Mt6-GiGEaQ3_F9c-3DEmThXjYHxUNmw";
   const knownOrderIds = React.useRef(null);
   const knownTxnIds = React.useRef(null);
+  const homeLastTap = React.useRef(0);
 
   React.useEffect(() => {
     if (!profile?.uid) return;
@@ -10087,6 +10089,8 @@ function MobileApp({ profile, logout }) {
     });
     setSelectedOrder(updatedOrder);
     setShowWhIn(false);
+    setJustImported(true);
+    setTimeout(() => setJustImported(false), 5000);
   };
 
   const doConfirmDelivery = (o) => {
@@ -10293,6 +10297,11 @@ function MobileApp({ profile, logout }) {
 
     return React.createElement("div",{className:"flex-1 overflow-y-auto"},
       React.createElement("div",{className:"px-3 pt-3 pb-6 space-y-4"},
+
+        // ── Back button
+        React.createElement("button",{onClick:()=>setTab("orders"),className:"flex items-center gap-1.5 text-sm text-slate-500 active:text-slate-800 -mb-1"},
+          React.createElement(ArrowLeft,{className:"h-4 w-4"}),
+          "Đơn hàng"),
 
         // ── Month picker
         React.createElement("div",{className:"flex items-center justify-between bg-white rounded-2xl border border-slate-200 px-3 py-2"},
@@ -10866,9 +10875,12 @@ function MobileApp({ profile, logout }) {
               btnSm(doPrint, ic(Printer), "In", pill));
           }
           if (o.imported) {
+            const deliveryPill = justImported
+              ? pill + " ring-2 ring-[#92400e] ring-offset-1 animate-pulse"
+              : pill;
             return React.createElement("div", {className:"space-y-2"},
               React.createElement("div", {className:"flex gap-2"},
-                btn(()=>doConfirmDelivery(o), ic(Truck), "Xác nhận giao", pill),
+                btn(()=>{ setJustImported(false); doConfirmDelivery(o); }, ic(Truck), "Xác nhận giao", deliveryPill),
                 btn(()=>doPartialDelivery(o), ic(Layers), "Giao từng phần", pill)),
               React.createElement("div", {className:"flex gap-2"},
                 btn(doAddPayment, ic(CreditCard), "Thanh toán", pill),
