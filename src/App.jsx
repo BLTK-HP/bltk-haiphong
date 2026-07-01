@@ -3203,6 +3203,7 @@ function openPrint(order, type, cfg, products) {
   if (!w) { alert("Vui lòng cho phép mở cửa sổ mới (popup) trong trình duyệt"); return; }
   w.document.write(buildPrintHTML(order, type, cfg, products));
   w.document.close();
+  w.document.title = order.id || "";
   w.focus();
 }
 
@@ -9820,6 +9821,13 @@ function MobileApp({ profile, logout }) {
   const [productForm, setProductForm] = useState(null);
   const [savingProd, setSavingProd] = useState(false);
   const [createForm, setCreateForm] = useState({name:"",phone:"",addr:"",note:"",items:[]});
+  const [showMobPhoneSug, setShowMobPhoneSug] = useState(false);
+  const mobPhoneSuggestions = React.useMemo(() => {
+    const q = createForm.phone.trim();
+    if (q.length < 4) return [];
+    const seen = new Set();
+    return orders.filter(o => o.phone && o.phone.includes(q) && !seen.has(o.phone) && seen.add(o.phone)).slice(0, 5).map(o => ({phone: o.phone, name: o.name, addr: o.addr||""}));
+  }, [createForm.phone, orders]);
   const [showPicker, setShowPicker] = useState(false);
   const [pickerQ, setPickerQ] = useState("");
   const [orderSearch, setOrderSearch] = useState("");
@@ -10227,11 +10235,161 @@ function MobileApp({ profile, logout }) {
   const visibleOrders = sortByDate(orders).filter(o => !o.draft && matchSearch(o, orderSearch));
   const visibleQuotes = sortByDate(orders).filter(o => o.draft && matchSearch(o, quoteSearch));
 
+  /* ── Màn hình Báo cáo (admin) ── */
+  const ScreenReport = () => {
+    const [rTab, setRTab] = React.useState("sales");
+    const [rFrom, setRFrom] = React.useState(localMonthStart());
+    const [rTo,   setRTo]   = React.useState(localToday());
+    const [spQ,   setSpQ]   = React.useState("");
+    const [nvFilter, setNvFilter] = React.useState("Tất cả");
+    const [expanded, setExpanded] = React.useState(new Set());
+    const { whInItems = [] } = useInventory() || {};
+
+    const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
+    const inR = dt => { const d = parseViDate(dt); return (!rFrom || d >= _pISO(rFrom)) && (!rTo || d <= new Date(_pISO(rTo).setHours(23,59,59))); };
+    const cpbhOf = o => (o.compCosts||[]).filter(x=>["Chi phí Ship hàng","Chi phí hoa hồng","Chi phí lắp đặt"].includes(x.type)).reduce((s,x)=>s+(x.amount||0),0) + (o.importExpense||0) + (o.expense||0);
+    const activeOrders = orders.filter(o => !o.draft && o.orderStatus !== "Huỷ" && o.orderStatus !== "Hủy" && inR(o.dt));
+
+    const dtInput = (val, onChange) => React.createElement("input", {type:"date", value:val, onChange:e=>onChange(e.target.value),
+      style:{fontSize:'16px'}, className:"flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"});
+
+    const kpiCard = (label, value, color) => React.createElement("div", {className:"bg-white rounded-xl border border-slate-200 p-3 flex flex-col gap-1"},
+      React.createElement("div", {className:"text-[10px] font-semibold uppercase tracking-wide text-slate-400"}, label),
+      React.createElement("div", {className:`text-base font-bold tabular-nums ${color||"text-slate-800"}`}, value));
+
+    /* ── Bán hàng ── */
+    const SaleTab = () => {
+      const rows = activeOrders;
+      const totRevenue = rows.reduce((s,o)=>s+calc(o).total,0);
+      const totCost    = rows.reduce((s,o)=>s+calc(o).totalCost,0);
+      const totCpbh    = rows.reduce((s,o)=>s+cpbhOf(o),0);
+      const totLai     = totRevenue - totCost - totCpbh;
+      const totPaid    = rows.reduce((s,o)=>s+(o.paid||0),0);
+      const totRem     = rows.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+      return React.createElement(React.Fragment, null,
+        React.createElement("div", {className:"grid grid-cols-2 gap-2 mb-3"},
+          kpiCard("Doanh thu", num(totRevenue)+"đ", "text-[#047857]"),
+          kpiCard("Lợi nhuận", num(totLai)+"đ", totLai>=0?"text-[#047857]":"text-[#B91C1C]"),
+          kpiCard("Đã thu", num(totPaid)+"đ", "text-[#92400e]"),
+          kpiCard("Còn lại", totRem>0?num(totRem)+"đ":"—", totRem>0?"text-[#B91C1C]":"text-slate-300")),
+        rows.length === 0
+          ? React.createElement("div", {className:"text-center py-10 text-slate-400 text-sm"}, "Không có đơn hàng trong kỳ")
+          : React.createElement("div", {className:"space-y-2"},
+              rows.map(o => {
+                const c = calc(o); const cpbh = cpbhOf(o); const lai = c.total - c.totalCost - cpbh;
+                const pct = c.total ? (lai/c.total*100).toFixed(1) : "0.0";
+                const dtPart = String(o.dt||"").split(" ").find(p=>p.includes("/"))||"";
+                return React.createElement("div", {key:o.id, className:"bg-white rounded-xl border border-slate-200 p-3"},
+                  React.createElement("div", {className:"flex items-center justify-between mb-1"},
+                    React.createElement("span", {className:"text-xs font-semibold text-[#92400e] bg-[#ffedd5] px-2 py-0.5 rounded-full"}, o.id),
+                    React.createElement("span", {className:"text-xs text-slate-400"}, dtPart.replace(",",""))),
+                  React.createElement("div", {className:"text-sm font-medium text-slate-800 mb-2"}, o.name),
+                  React.createElement("div", {className:"grid grid-cols-2 gap-x-4 gap-y-1 text-xs"},
+                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Doanh thu"), React.createElement("span",{className:"tabular-nums font-medium"},num(c.total)+"đ")),
+                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Lợi nhuận"), React.createElement("span",{className:`tabular-nums font-medium ${lai>=0?"text-[#047857]":"text-[#B91C1C]"}`},num(lai)+"đ ("+pct+"%)")),
+                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Đã thu"), React.createElement("span",{className:"tabular-nums text-[#92400e]"},num(o.paid||0)+"đ")),
+                    c.remaining>0 && React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Còn lại"), React.createElement("span",{className:"tabular-nums text-[#B91C1C] font-medium"},num(c.remaining)+"đ"))));
+              })));
+    };
+
+    /* ── Sản phẩm đặt hàng ── */
+    const SpTab = () => {
+      const map = {};
+      activeOrders.forEach(o => { (o.items||[]).forEach(it => {
+        if (!it.name) return;
+        if (!map[it.name]) map[it.name] = {prod:it.name, unit:it.unit||"", ordered:0, refs:[]};
+        map[it.name].ordered += it.qty||0;
+        map[it.name].refs.push({id:o.id, cust:o.name||"", qty:it.qty||0, dt:o.dt, status:o.orderStatus||""});
+      }); });
+      const allRows = Object.values(map).map(r=>({...r, stock:stockOfLive(r.prod, whInItems)})).sort((a,b)=>b.ordered-a.ordered);
+      const rows = allRows.filter(r=>!spQ||r.prod.toLowerCase().includes(spQ.toLowerCase()));
+      const toggle = k => setExpanded(s=>{const n=new Set(s); n.has(k)?n.delete(k):n.add(k); return n;});
+      return React.createElement(React.Fragment, null,
+        React.createElement("input", {value:spQ, onChange:e=>setSpQ(e.target.value), placeholder:"Tìm tên sản phẩm…",
+          style:{fontSize:'16px'}, className:"w-full mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"}),
+        rows.length===0
+          ? React.createElement("div",{className:"text-center py-10 text-slate-400 text-sm"},"Không có dữ liệu")
+          : React.createElement("div",{className:"space-y-2"},
+              rows.map(r=>{
+                const need=Math.max(0,r.ordered-r.stock); const isOpen=expanded.has(r.prod);
+                return React.createElement("div",{key:r.prod, className:"bg-white rounded-xl border border-slate-200 overflow-hidden"},
+                  React.createElement("div",{className:"p-3"},
+                    React.createElement("div",{className:"flex items-start justify-between gap-2 mb-2"},
+                      React.createElement("span",{className:"text-sm font-medium text-slate-800 leading-snug"},r.prod),
+                      r.unit && React.createElement("span",{className:"text-xs text-slate-400 shrink-0"},r.unit)),
+                    React.createElement("div",{className:"grid grid-cols-3 gap-2 text-xs mb-2"},
+                      React.createElement("div",{className:"text-center"},React.createElement("div",{className:"font-bold text-slate-700 text-base tabular-nums"},r.ordered),React.createElement("div",{className:"text-slate-400"},"Đang đặt")),
+                      React.createElement("div",{className:"text-center"},React.createElement("div",{className:`font-bold text-base tabular-nums ${r.stock>0?"text-[#047857]":"text-slate-300"}`},r.stock),React.createElement("div",{className:"text-slate-400"},"Tồn kho")),
+                      React.createElement("div",{className:"text-center"},React.createElement("div",{className:`font-bold text-base tabular-nums ${need>0?"text-[#B91C1C]":"text-slate-300"}`},need>0?need:"—"),React.createElement("div",{className:"text-slate-400"},"Cần mua"))),
+                    React.createElement("button",{onClick:()=>toggle(r.prod), className:"flex items-center gap-1 text-xs text-slate-500"},
+                      React.createElement("span",{className:"font-medium"},r.refs.length+" đơn hàng"),
+                      React.createElement(isOpen?ChevronDown:ChevronRight,{className:"h-3.5 w-3.5"}))),
+                  isOpen && React.createElement("div",{className:"border-t border-orange-100 bg-orange-50/30 px-3 py-2 space-y-1.5"},
+                    r.refs.map((ref,ri)=>React.createElement("div",{key:ri, className:"flex items-center justify-between text-xs"},
+                      React.createElement("span",{className:"font-medium text-[#92400e]"},ref.id),
+                      React.createElement("span",{className:"text-slate-600 flex-1 mx-2 truncate"},ref.cust),
+                      React.createElement("span",{className:"text-slate-400"},"×"+ref.qty)))));
+              })));
+    };
+
+    /* ── Nhân viên ── */
+    const NvTab = () => {
+      const staffNames = [...new Set(activeOrders.map(o=>o.staff).filter(Boolean))].sort();
+      const filtered = nvFilter==="Tất cả" ? activeOrders : activeOrders.filter(o=>o.staff===nvFilter);
+      const map = {};
+      filtered.forEach(o=>{
+        const s = o.staff||"Chưa phân công";
+        if (!map[s]) map[s]={name:s, orders:0, custs:new Set(), rev:0, returned:0, paid:0};
+        const c=calc(o); map[s].orders+=1; map[s].custs.add(o.name||""); map[s].rev+=c.total;
+        map[s].returned+=(o.returns||[]).reduce((x,r)=>x+(r.amount||0),0); map[s].paid+=o.paid||0;
+      });
+      const data = Object.values(map).map(s=>({...s, custs:s.custs.size, remain:s.rev-s.paid})).sort((a,b)=>b.rev-a.rev);
+      const totals = data.reduce((acc,s)=>({orders:acc.orders+s.orders, rev:acc.rev+s.rev, paid:acc.paid+s.paid, remain:acc.remain+s.remain}),{orders:0,rev:0,paid:0,remain:0});
+      return React.createElement(React.Fragment, null,
+        React.createElement("select",{value:nvFilter, onChange:e=>setNvFilter(e.target.value),
+          style:{fontSize:'16px'}, className:"w-full mb-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"},
+          React.createElement("option",null,"Tất cả"),
+          staffNames.map(s=>React.createElement("option",{key:s},s))),
+        data.length>0 && React.createElement("div",{className:"grid grid-cols-3 gap-2 mb-3"},
+          kpiCard("Số đơn", totals.orders, "text-slate-700"),
+          kpiCard("Doanh thu", num(totals.rev)+"đ", "text-[#047857]"),
+          kpiCard("Còn lại", totals.remain>0?num(totals.remain)+"đ":"—", totals.remain>0?"text-[#B91C1C]":"text-slate-300")),
+        data.length===0
+          ? React.createElement("div",{className:"text-center py-10 text-slate-400 text-sm"},"Không có dữ liệu")
+          : React.createElement("div",{className:"space-y-2"},
+              data.map(s=>React.createElement("div",{key:s.name, className:"bg-white rounded-xl border border-slate-200 p-3"},
+                React.createElement("div",{className:"flex items-center justify-between mb-2"},
+                  React.createElement("span",{className:"font-semibold text-slate-800"},s.name),
+                  React.createElement("span",{className:"text-xs text-slate-400"},s.orders+" đơn · "+s.custs+" khách")),
+                React.createElement("div",{className:"grid grid-cols-2 gap-x-4 gap-y-1 text-xs"},
+                  React.createElement("div",{className:"flex justify-between"},React.createElement("span",{className:"text-slate-400"},"Doanh thu"),React.createElement("span",{className:"tabular-nums font-medium text-[#047857]"},num(s.rev)+"đ")),
+                  React.createElement("div",{className:"flex justify-between"},React.createElement("span",{className:"text-slate-400"},"Đã thu"),React.createElement("span",{className:"tabular-nums text-[#92400e]"},num(s.paid)+"đ")),
+                  s.returned>0 && React.createElement("div",{className:"flex justify-between"},React.createElement("span",{className:"text-slate-400"},"Hoàn hàng"),React.createElement("span",{className:"tabular-nums text-amber-600"},num(s.returned)+"đ")),
+                  s.remain>0 && React.createElement("div",{className:"flex justify-between"},React.createElement("span",{className:"text-slate-400"},"Còn lại"),React.createElement("span",{className:"tabular-nums text-[#B91C1C] font-medium"},num(s.remain)+"đ")))))));
+    };
+
+    const subTabs = [{key:"sales",label:"Bán hàng"},{key:"products",label:"Sản phẩm"},{key:"staff",label:"Nhân viên"}];
+    return React.createElement("div",{className:"flex-1 overflow-y-auto"},
+      React.createElement("div",{className:"p-4 space-y-3"},
+        React.createElement("div",{className:"flex items-center gap-2"},
+          dtInput(rFrom, setRFrom),
+          React.createElement("span",{className:"text-slate-400 text-sm shrink-0"},"→"),
+          dtInput(rTo, setRTo)),
+        React.createElement("div",{className:"flex rounded-xl overflow-hidden border border-[#fed7aa] bg-[#ffedd5]"},
+          subTabs.map(t=>React.createElement("button",{key:t.key, onClick:()=>setRTab(t.key),
+            className:`flex-1 py-2 text-xs font-semibold transition-colors ${rTab===t.key?"bg-[#92400e] text-white":"text-[#92400e]"}`},
+            t.label))),
+        rTab==="sales"    ? React.createElement(SaleTab,null)
+          : rTab==="products" ? React.createElement(SpTab,null)
+          : React.createElement(NvTab,null)));
+  };
+
   const tabs = [
     { key:"create",   icon: React.createElement(Plus,      {className:"h-6 w-6"}), label:"Tạo đơn", fab: true },
     { key:"orders",   icon: React.createElement(BookText,  {className:"h-5 w-5"}), label:"Đơn hàng" },
     { key:"quotes",   icon: React.createElement(FileText,  {className:"h-5 w-5"}), label:"Báo giá" },
     { key:"products", icon: React.createElement(Package,   {className:"h-5 w-5"}), label:"Sản phẩm" },
+    ...(isAdmin ? [{ key:"report", icon: React.createElement(BarChart3, {className:"h-5 w-5"}), label:"Báo cáo" }] : []),
   ];
 
   const statusColor = s => ({
@@ -10734,10 +10892,20 @@ function MobileApp({ profile, logout }) {
                 placeholder:"Tên khách hàng *",
                 style:{fontSize:'16px'},
                 className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#fed7aa] focus:outline-none"}),
-              React.createElement("input", {value:createForm.phone, onChange:e=>setCreateForm(f=>({...f,phone:e.target.value})),
-                placeholder:"Số điện thoại", type:"tel",
-                style:{fontSize:'16px'},
-                className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#fed7aa] focus:outline-none"}),
+              React.createElement("div", {className:"relative"},
+                React.createElement("input", {value:createForm.phone, onChange:e=>{ setCreateForm(f=>({...f,phone:e.target.value})); setShowMobPhoneSug(true); },
+                  onFocus:()=>setShowMobPhoneSug(true),
+                  onBlur:()=>setTimeout(()=>setShowMobPhoneSug(false),150),
+                  placeholder:"Số điện thoại", type:"tel",
+                  style:{fontSize:'16px'},
+                  className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#fed7aa] focus:outline-none"}),
+                showMobPhoneSug && mobPhoneSuggestions.length > 0 && React.createElement("ul", {className:"absolute z-30 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg text-sm overflow-hidden"},
+                  mobPhoneSuggestions.map((s,i) => React.createElement("li", {key:i},
+                    React.createElement("button", {
+                      onMouseDown:()=>{ setCreateForm(f=>({...f,phone:s.phone,name:s.name,addr:s.addr})); setShowMobPhoneSug(false); },
+                      className:"flex w-full flex-col px-3 py-2.5 text-left active:bg-[#fef9f0] border-b border-slate-100 last:border-0"},
+                      React.createElement("span", {className:"font-medium text-slate-800"}, s.phone, React.createElement("span", {className:"ml-2 text-[#92400e]"}, s.name)),
+                      s.addr && React.createElement("span", {className:"text-xs text-slate-400 truncate block"}, s.addr)))))),
               React.createElement("input", {value:createForm.addr, onChange:e=>setCreateForm(f=>({...f,addr:e.target.value})),
                 placeholder:"Địa chỉ giao hàng",
                 style:{fontSize:'16px'},
@@ -10866,7 +11034,7 @@ function MobileApp({ profile, logout }) {
         /* Tên nhân viên */
         React.createElement("span", {className:"text-xs text-slate-500 font-medium"}, profile?.name||""))),
     /* Screen — gọi thẳng function để tránh unmount khi re-render */
-    tab==="home" ? (isAdmin ? ScreenHome() : ScreenOrders()) : tab==="orders" ? ScreenOrders() : tab==="quotes" ? ScreenQuotes() : tab==="create" ? ScreenCreate() : ScreenProducts(),
+    tab==="home" ? (isAdmin ? ScreenHome() : ScreenOrders()) : tab==="orders" ? ScreenOrders() : tab==="quotes" ? ScreenQuotes() : tab==="create" ? ScreenCreate() : tab==="report" ? ScreenReport() : ScreenProducts(),
     /* Bottom nav */
     React.createElement("div", {className:"shrink-0 border-t border-slate-200 bg-white safe-area-bottom"},
       React.createElement("div", {className:"flex"},
