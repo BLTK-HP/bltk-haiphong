@@ -43,6 +43,9 @@ const vndShort = n => {
 };
 const localToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 const localMonthStart = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-01`; };
+// Parse ISO date string "YYYY-MM-DD" → Date (dùng chung, tránh định nghĩa _pISO nhiều chỗ)
+const parseISO = s => { const [y,m,d] = String(s).split("-"); return new Date(+y,+m-1,+d); };
+const parseISOEnd = s => new Date(parseISO(s).getTime() + 86399999); // cuối ngày
 const parseViDate = s => {
   if (!s) return 0;
   const parts = String(s).split(" ");
@@ -2829,8 +2832,8 @@ function DraftTable({
   const [toDate, setToDate] = useState(localToday());
   const [draftPage, setDraftPage] = useState(1);
   React.useEffect(() => setDraftPage(1), [q, fromDate, toDate]);
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= _pISO(f)) && (!t || d <= new Date(_pISO(t).setHours(23,59,59))); };
+  
+  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= parseISO(f)) && (!t || d <= parseISOEnd(t)); };
   const rows = drafts.filter(o => _inR(o.dt, fromDate, toDate) && (!q || `${o.id} ${o.name} ${o.phone} ${o.desc || ""}`.toLowerCase().includes(q.toLowerCase()))).sort((a,b) => parseViDate(b.dt) - parseViDate(a.dt));
   const DRAFT_PER_PAGE = 30;
   const totalDraftPages = Math.ceil(rows.length / DRAFT_PER_PAGE);
@@ -4767,8 +4770,8 @@ function PurchaseList({
   const supNames = ["Tất cả", ...new Set(list.map(r => r.supplier))];
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= _pISO(f)) && (!t || d <= new Date(_pISO(t).setHours(23,59,59))); };
+  
+  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= parseISO(f)) && (!t || d <= parseISOEnd(t)); };
   const rows = list.filter(r => _inR(r.date, fromDate, toDate) && (fSup === "Tất cả" || r.supplier === fSup) && (!q || `${purCode(r.lot)} ${r.supplier} ${r.prod}`.toLowerCase().includes(q.toLowerCase()))).sort((a,b) => parseViDate(b.date) - parseViDate(a.date));
   const setKho = (lot, kho) => setList(xs => xs.map(r => r.lot === lot ? {...r, kho} : r));
   const del = lot => {
@@ -4866,8 +4869,8 @@ function WhIn({whInItems: items, setWhInItems: setItems, setWhOutItems, orders =
   const notify = useToast();
   const { profile: _whProfile } = useAuth();
   const _staffName = _whProfile?.name || "Quản lý";
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= _pISO(f)) && (!t || d <= new Date(_pISO(t).setHours(23,59,59))); };
+  
+  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= parseISO(f)) && (!t || d <= parseISOEnd(t)); };
   const [q, setQ] = useState(initSearch);
   React.useEffect(() => { if (initSearch) setQ(initSearch); if (onMounted) onMounted(); }, []);
   const [doc, setDoc] = useState(null);
@@ -5260,8 +5263,8 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
   const toggleSlip = slip => setSelectedSlips(prev => { const s = new Set(prev); s.has(slip) ? s.delete(slip) : s.add(slip); return s; });
   React.useEffect(() => setWhOutPage(1), [q, fProd, fromDate, toDate]);
   const prodList = ["Tất cả", ...new Set(items.map(r => r.prod))];
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= _pISO(f)) && (!t || d <= new Date(_pISO(t).setHours(23,59,59))); };
+  
+  const _inR = (dt, f, t) => { const d = parseViDate(dt); return (!f || d >= parseISO(f)) && (!t || d <= parseISOEnd(t)); };
   const rows = items.filter(r => {
     if (!_inR(r.dt, fromDate, toDate)) return false;
     if (fProd !== "Tất cả" && r.prod !== fProd) return false;
@@ -6600,9 +6603,9 @@ function DebtCust({ orders = [] }) {
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const custDebt = React.useMemo(() => {
-    const _pISO = s => { const [y,m,d] = s.split('-'); return new Date(+y,+m-1,+d); };
-    const fD = fromDate ? _pISO(fromDate) : null;
-    const tD = toDate   ? new Date(_pISO(toDate).setHours(23,59,59,999)) : null;
+    
+    const fD = fromDate ? parseISO(fromDate) : null;
+    const tD = toDate   ? new Date(parseISOEnd(toDate)) : null;
     const inR = s => { const ms = parseViDate(s); if (!ms) return true; const d = new Date(ms); return (!fD || d >= fD) && (!tD || d <= tD); };
     const active = orders.filter(o => !o.draft && o.orderStatus !== 'Huỷ' && o.orderStatus !== 'Hủy' && inR(o.dt));
     const map = {};
@@ -6867,9 +6870,9 @@ function DebtNcc({ purchaseList = [], setPurchaseList, setWhInItems, whInItems =
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const nccDebt = React.useMemo(() => {
-    const _pISO = s => { const [y,m,d] = s.split('-'); return new Date(+y,+m-1,+d); };
-    const fD = fromDate ? _pISO(fromDate) : null;
-    const tD = toDate   ? new Date(_pISO(toDate).setHours(23,59,59,999)) : null;
+    
+    const fD = fromDate ? parseISO(fromDate) : null;
+    const tD = toDate   ? new Date(parseISOEnd(toDate)) : null;
     const inR = s => { const ms = parseViDate(s); if (!ms) return true; const d = new Date(ms); return (!fD || d >= fD) && (!tD || d <= tD); };
     const map = {};
     // Dùng whInItems làm nguồn duy nhất; join purchaseList để lấy paid/returns
@@ -7945,9 +7948,9 @@ function ReportSales({orders = [], onOpenOrder}) {
   const [toDate, setToDate] = useState(localToday());
   const [rPage, setRPage] = useState(1);
   React.useEffect(() => setRPage(1), [fromDate, toDate]);
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const fromD = fromDate ? _pISO(fromDate) : null;
-  const toD   = toDate   ? _pISO(toDate)   : null;
+  
+  const fromD = fromDate ? parseISO(fromDate) : null;
+  const toD   = toDate   ? parseISO(toDate)   : null;
 
   const filtered = orders.filter(o => {
     if (o.draft) return false;
@@ -8155,8 +8158,8 @@ function ReportPreorder({ orders = [] }) {
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState(new Set());
   const { whInItems = [] } = useInventory() || {};
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const inR = dt => { const d = parseViDate(dt); return (!fromDate || d >= _pISO(fromDate)) && (!toDate || d <= new Date(_pISO(toDate).setHours(23,59,59))); };
+  
+  const inR = dt => { const d = parseViDate(dt); return (!fromDate || d >= parseISO(fromDate)) && (!toDate || d <= parseISOEnd(toDate)); };
   const activeOrders = orders.filter(o => !o.draft && o.orderStatus !== "Huỷ" && o.orderStatus !== "Hủy" && inR(o.dt));
   const map = {};
   activeOrders.forEach(o => {
@@ -8234,8 +8237,8 @@ function ReportStaff({ orders = [] }) {
   const [fromDate, setFromDate] = useState(localMonthStart());
   const [toDate, setToDate] = useState(localToday());
   const [staffFilter, setStaffFilter] = useState("Tất cả");
-  const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-  const inR = dt => { const d = parseViDate(dt); return (!fromDate || d >= _pISO(fromDate)) && (!toDate || d <= new Date(_pISO(toDate).setHours(23,59,59))); };
+  
+  const inR = dt => { const d = parseViDate(dt); return (!fromDate || d >= parseISO(fromDate)) && (!toDate || d <= parseISOEnd(toDate)); };
   const activeOrders = orders.filter(o => !o.draft && o.orderStatus !== "Huỷ" && o.orderStatus !== "Hủy" && inR(o.dt));
   const staffNames = [...new Set(activeOrders.map(o => o.staff).filter(Boolean))].sort();
   const filtered = staffFilter === "Tất cả" ? activeOrders : activeOrders.filter(o => o.staff === staffFilter);
@@ -8784,10 +8787,18 @@ function App({ profile, logout }) {
     const next = typeof updater === 'function' ? updater(current) : updater;
     const prevMap = Object.fromEntries(current.map(o => [getId(o), o]));
     const nextMap = Object.fromEntries(next.map(o => [getId(o), o]));
-    Object.entries(nextMap).forEach(([id, o]) => {
-      if (JSON.stringify(prevMap[id]) !== JSON.stringify(o)) saveDoc(colName, id, o).catch(err => { console.error(`[syncFS] ${colName}/${id}`, err); });
-    });
-    Object.keys(prevMap).forEach(id => { if (!nextMap[id]) deleteDocument(colName, id).catch(err => { console.error(`[syncFS] delete ${colName}/${id}`, err); }); });
+    const toWrite  = Object.entries(nextMap).filter(([id,o]) => JSON.stringify(prevMap[id]) !== JSON.stringify(o));
+    const toDelete = Object.keys(prevMap).filter(id => !nextMap[id]);
+    if (!toWrite.length && !toDelete.length) return;
+    const ops = [...toWrite.map(([id,o])=>({t:'s',id,o})), ...toDelete.map(id=>({t:'d',id}))];
+    for (let i = 0; i < ops.length; i += 500) {
+      const b = writeBatch(db);
+      ops.slice(i, i+500).forEach(op => {
+        if (op.t === 's') b.set(fsDoc(db, colName, String(op.id)), JSON.parse(JSON.stringify(op.o)));
+        else b.delete(fsDoc(db, colName, String(op.id)));
+      });
+      b.commit().catch(err => console.error(`[syncFS] ${colName}`, err));
+    }
   };
   const setOrders      = u => syncFS("orders",    o => o.id)                           (ordersRef.current,   u);
   const setPurchaseList = u => syncFS("purchases", r => r.lot)                          (purchaseRef.current,  u);
@@ -9811,7 +9822,7 @@ function MobileApp({ profile, logout }) {
   const [orders] = useCollection("orders");
   const [prodsFS] = useCollection("products");
   const [settingsFS] = useCollection("settings");
-  const [txnsFS] = useCollection("txns");
+  const [txnsFS] = useCollection("txns", [], [where("year","==",2026)]);
   const [whInFS] = useCollection("wh_in");
   const [purchaseList] = useCollection("purchases");
   const [homeFrom, setHomeFrom] = useState(localMonthStart);
@@ -10047,9 +10058,13 @@ function MobileApp({ profile, logout }) {
       const draftDocId = draft.id || draft._id;
       if (!draftDocId) throw new Error("Không tìm thấy ID báo giá");
       const { _id: _rid, draftStatus: _ds, linkedOrderId: _li, ...rest } = draft;
-      await saveDoc("orders", dhId, { ...rest, id: dhId, draft: false });
       const { _id: _rid2, ...draftClean } = draft;
-      await saveDoc("orders", draftDocId, { ...draftClean, draftStatus:"Đã tạo đơn hàng", linkedOrderId: dhId });
+      const batch = writeBatch(db);
+      const clean1 = JSON.parse(JSON.stringify({ ...rest, id: dhId, draft: false }));
+      const clean2 = JSON.parse(JSON.stringify({ ...draftClean, draftStatus:"Đã tạo đơn hàng", linkedOrderId: dhId }));
+      batch.set(fsDoc(db, "orders", String(dhId)), clean1);
+      batch.set(fsDoc(db, "orders", String(draftDocId)), clean2);
+      await batch.commit();
       notify("Đã tạo đơn " + dhId);
       setSelectedOrder(null);
       setTab("orders");
@@ -10232,8 +10247,9 @@ function MobileApp({ profile, logout }) {
     return parse(b.dt) - parse(a.dt);
   });
   const matchSearch = (o, q) => !q || [o.id, o.name, o.phone].some(f => String(f||"").toLowerCase().includes(q.toLowerCase()));
-  const visibleOrders = sortByDate(orders).filter(o => !o.draft && matchSearch(o, orderSearch));
-  const visibleQuotes = sortByDate(orders).filter(o => o.draft && matchSearch(o, quoteSearch));
+  const sortedOrders = React.useMemo(() => sortByDate(orders), [orders]);
+  const visibleOrders = React.useMemo(() => sortedOrders.filter(o => !o.draft && matchSearch(o, orderSearch)), [sortedOrders, orderSearch]);
+  const visibleQuotes = React.useMemo(() => sortedOrders.filter(o => o.draft && matchSearch(o, quoteSearch)), [sortedOrders, quoteSearch]);
 
   /* ── Màn hình Báo cáo (admin) ── */
   const ScreenReport = () => {
@@ -10245,8 +10261,7 @@ function MobileApp({ profile, logout }) {
     const [expanded, setExpanded] = React.useState(new Set());
     const { whInItems = [] } = useInventory() || {};
 
-    const _pISO = s => { const [y,m,d] = s.split("-"); return new Date(+y,+m-1,+d); };
-    const inR = dt => { const d = parseViDate(dt); return (!rFrom || d >= _pISO(rFrom)) && (!rTo || d <= new Date(_pISO(rTo).setHours(23,59,59))); };
+    const inR = dt => { const d = parseViDate(dt); return (!rFrom || d >= parseISO(rFrom)) && (!rTo || d <= parseISOEnd(rTo)); };
     const cpbhOf = o => (o.compCosts||[]).filter(x=>["Chi phí Ship hàng","Chi phí hoa hồng","Chi phí lắp đặt"].includes(x.type)).reduce((s,x)=>s+(x.amount||0),0) + (o.importExpense||0) + (o.expense||0);
     const activeOrders = orders.filter(o => !o.draft && o.orderStatus !== "Huỷ" && o.orderStatus !== "Hủy" && inR(o.dt));
 
@@ -10259,13 +10274,14 @@ function MobileApp({ profile, logout }) {
 
     /* ── Bán hàng ── */
     const SaleTab = () => {
-      const rows = activeOrders;
-      const totRevenue = rows.reduce((s,o)=>s+calc(o).total,0);
-      const totCost    = rows.reduce((s,o)=>s+calc(o).totalCost,0);
-      const totCpbh    = rows.reduce((s,o)=>s+cpbhOf(o),0);
-      const totLai     = totRevenue - totCost - totCpbh;
+      const rows = React.useMemo(() => activeOrders.map(o => {
+        const c = calc(o); const cpbh = cpbhOf(o); const lai = c.total - c.totalCost - cpbh;
+        return {...o, _c:c, _cpbh:cpbh, _lai:lai, _pct:c.total?(lai/c.total*100).toFixed(1):"0.0", _dt:String(o.dt||"").split(" ").find(p=>p.includes("/"))||""};
+      }), [activeOrders]);
+      const totRevenue = rows.reduce((s,o)=>s+o._c.total,0);
+      const totLai     = rows.reduce((s,o)=>s+o._lai,0);
       const totPaid    = rows.reduce((s,o)=>s+(o.paid||0),0);
-      const totRem     = rows.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+      const totRem     = rows.reduce((s,o)=>s+Math.max(0,o._c.remaining),0);
       return React.createElement(React.Fragment, null,
         React.createElement("div", {className:"grid grid-cols-2 gap-2 mb-3"},
           kpiCard("Doanh thu", num(totRevenue)+"đ", "text-[#047857]"),
@@ -10275,21 +10291,16 @@ function MobileApp({ profile, logout }) {
         rows.length === 0
           ? React.createElement("div", {className:"text-center py-10 text-slate-400 text-sm"}, "Không có đơn hàng trong kỳ")
           : React.createElement("div", {className:"space-y-2"},
-              rows.map(o => {
-                const c = calc(o); const cpbh = cpbhOf(o); const lai = c.total - c.totalCost - cpbh;
-                const pct = c.total ? (lai/c.total*100).toFixed(1) : "0.0";
-                const dtPart = String(o.dt||"").split(" ").find(p=>p.includes("/"))||"";
-                return React.createElement("div", {key:o.id, className:"bg-white rounded-xl border border-slate-200 p-3"},
-                  React.createElement("div", {className:"flex items-center justify-between mb-1"},
-                    React.createElement("span", {className:"text-xs font-semibold text-[#92400e] bg-[#ffedd5] px-2 py-0.5 rounded-full"}, o.id),
-                    React.createElement("span", {className:"text-xs text-slate-400"}, dtPart.replace(",",""))),
-                  React.createElement("div", {className:"text-sm font-medium text-slate-800 mb-2"}, o.name),
-                  React.createElement("div", {className:"grid grid-cols-2 gap-x-4 gap-y-1 text-xs"},
-                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Doanh thu"), React.createElement("span",{className:"tabular-nums font-medium"},num(c.total)+"đ")),
-                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Lợi nhuận"), React.createElement("span",{className:`tabular-nums font-medium ${lai>=0?"text-[#047857]":"text-[#B91C1C]"}`},num(lai)+"đ ("+pct+"%)")),
-                    React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Đã thu"), React.createElement("span",{className:"tabular-nums text-[#92400e]"},num(o.paid||0)+"đ")),
-                    c.remaining>0 && React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Còn lại"), React.createElement("span",{className:"tabular-nums text-[#B91C1C] font-medium"},num(c.remaining)+"đ"))));
-              })));
+              rows.map(o => React.createElement("div", {key:o.id, className:"bg-white rounded-xl border border-slate-200 p-3"},
+                React.createElement("div", {className:"flex items-center justify-between mb-1"},
+                  React.createElement("span", {className:"text-xs font-semibold text-[#92400e] bg-[#ffedd5] px-2 py-0.5 rounded-full"}, o.id),
+                  React.createElement("span", {className:"text-xs text-slate-400"}, o._dt.replace(",",""))),
+                React.createElement("div", {className:"text-sm font-medium text-slate-800 mb-2"}, o.name),
+                React.createElement("div", {className:"grid grid-cols-2 gap-x-4 gap-y-1 text-xs"},
+                  React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Doanh thu"), React.createElement("span",{className:"tabular-nums font-medium"},num(o._c.total)+"đ")),
+                  React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Lợi nhuận"), React.createElement("span",{className:`tabular-nums font-medium ${o._lai>=0?"text-[#047857]":"text-[#B91C1C]"}`},num(o._lai)+"đ ("+o._pct+"%)")),
+                  React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Đã thu"), React.createElement("span",{className:"tabular-nums text-[#92400e]"},num(o.paid||0)+"đ")),
+                  o._c.remaining>0 && React.createElement("div", {className:"flex justify-between"}, React.createElement("span",{className:"text-slate-400"},"Còn lại"), React.createElement("span",{className:"tabular-nums text-[#B91C1C] font-medium"},num(o._c.remaining)+"đ")))))));
     };
 
     /* ── Sản phẩm đặt hàng ── */
@@ -10334,8 +10345,8 @@ function MobileApp({ profile, logout }) {
 
     /* ── Nhân viên ── */
     const NvTab = () => {
-      const staffNames = [...new Set(activeOrders.map(o=>o.staff).filter(Boolean))].sort();
-      const filtered = nvFilter==="Tất cả" ? activeOrders : activeOrders.filter(o=>o.staff===nvFilter);
+      const staffNames = React.useMemo(()=>[...new Set(activeOrders.map(o=>o.staff).filter(Boolean))].sort(),[activeOrders]);
+      const filtered = React.useMemo(()=>nvFilter==="Tất cả"?activeOrders:activeOrders.filter(o=>o.staff===nvFilter),[activeOrders,nvFilter]);
       const map = {};
       filtered.forEach(o=>{
         const s = o.staff||"Chưa phân công";
@@ -10402,9 +10413,8 @@ function MobileApp({ profile, logout }) {
   /* ── Màn hình Tổng quan ── */
   const ScreenHome = () => {
     const parseD = s => { if(!s)return new Date(0); const p=String(s).split(' ')[0].split('/'); return p.length===3?new Date(+p[2],+p[1]-1,+p[0]):new Date(s); };
-    const parseISO = s => { const [y,m,d]=s.split('-'); return new Date(+y,+m-1,+d); };
     const fromD = homeFrom ? parseISO(homeFrom) : null;
-    const toD   = homeTo   ? new Date(parseISO(homeTo).getTime()+86399999) : null;
+    const toD   = homeTo   ? parseISOEnd(homeTo) : null;
     const inM = s => { const d=parseD(s); return (!fromD||d>=fromD)&&(!toD||d<=toD); };
     const endOfMonth = toD || new Date();
     const fmt = n => n>0 ? num(n)+"đ" : "—";
