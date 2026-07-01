@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: '20'
       - run: npm ci
+      - run: cd functions && npm install && cd ..
       - run: npm run build
 
       - name: Deploy Firestore Rules
