@@ -48,6 +48,7 @@ body {
   color: #1E293B;
   font-size: 13px;
   line-height: 1.5;
+  overflow-x: hidden;
   /* Tắt calt/liga để tránh Be Vietnam Pro render hyphen thành en-dash */
   font-feature-settings: "calt" 0, "liga" 0;
 }
