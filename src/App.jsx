@@ -220,8 +220,6 @@ function CartLogo({
   /*#__PURE__*/React.createElement("circle", { cx: "24", cy: "93", r: "7", fill: "#EE3D24" }),
   /*#__PURE__*/React.createElement("circle", { cx: "68", cy: "93", r: "7", fill: "#EE3D24" }));
 }
-export { deleteOrderCascade } from './orderUtils.js';
-
 function App({ profile, logout }) {
   const allowed = ALLOWED[profile?.role] || ALLOWED.sales;
   const defaultScreen = allowed.includes("sales_orders") ? "sales_orders" : allowed[0] || "dashboard";
