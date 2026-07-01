@@ -1655,6 +1655,12 @@ function SalesModule({
       setView("list");
     }
   };
+  const cloneOrder = (o) => {
+    const newId = nextId("BG");
+    const { _id, draftStatus, linkedOrderId, ...rest } = o;
+    setOrders(p => [mkOrder({ ...rest, id: newId, draft: true, draftStatus: "Chưa tạo đơn hàng",
+      dt: new Date().toLocaleString("vi-VN", {hour12:false}).replace(",","") }), ...p]);
+  };
   const saveEdit = (id, o, dt) => {
     setOrders(os => os.map(x => x.id === id ? {
       ...x,
@@ -1751,6 +1757,7 @@ function SalesModule({
       edit: o.id
     }),
     onDelete: id => setOrders(os => os.filter(o => o.id !== id)),
+    onClone: cloneOrder,
     onOpenOrder: id => setView({edit: id})
   }) : /*#__PURE__*/React.createElement(OrderTable, {
     orders: orders.filter(o => !o.draft),
@@ -2385,6 +2392,7 @@ function OrderTable({
   initTo
 }) {
   const notify = useToast();
+  const { profile: _otProfile } = useAuth();
   const [q, setQ] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [doc, setDoc] = useState(null);
@@ -2733,7 +2741,7 @@ function OrderTable({
       icon: Pencil,
       title: "Sửa đơn",
       onClick: () => onEdit(o)
-    }), /*#__PURE__*/React.createElement(IconBtn, {
+    }), _otProfile?.role === "admin" && /*#__PURE__*/React.createElement(IconBtn, {
       icon: Trash2,
       tone: "danger",
       title: "Xoá đơn",
@@ -2770,11 +2778,13 @@ function OrderTable({
 function DraftTable({
   drafts,
   onDelete,
+  onClone,
   onNew,
   onEdit,
   onOpenOrder
 }) {
   const notify = useToast();
+  const { profile: _dtProfile } = useAuth();
   const [q, setQ] = useState("");
   const [doc, setDoc] = useState(null);
   const DSTATUS = {
@@ -2890,7 +2900,11 @@ function DraftTable({
       },
       items: o.items
     })
-  }), /*#__PURE__*/React.createElement(IconBtn, {
+  }), onClone && /*#__PURE__*/React.createElement(IconBtn, {
+    icon: Copy,
+    title: "Nhân bản báo giá",
+    onClick: () => onClone(o)
+  }), _dtProfile?.role === "admin" && /*#__PURE__*/React.createElement(IconBtn, {
     tone: "danger",
     icon: Trash2,
     title: "Xoá báo giá",
@@ -10066,7 +10080,7 @@ function MobileApp({ profile, logout }) {
                         React.createElement("div", {className:"text-sm font-bold text-slate-700"}, num(c.total)+"đ"),
                         React.createElement("div", {className:`text-[11px] ${c.remaining>0?"text-red-500":"text-green-600"}`},
                           c.remaining>0 ? "Còn: "+num(c.remaining)+"đ" : "Đã thu đủ")),
-                      React.createElement("button", {
+                      profile?.role === "admin" && React.createElement("button", {
                         onClick: e => { e.stopPropagation(); if (window.confirm("Xóa đơn "+o.id+"?")) deleteDocument("orders", o.id); },
                         className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-red-50 active:text-red-600"},
                         React.createElement(Trash2, {className:"h-4 w-4"})))),
@@ -10161,7 +10175,7 @@ function MobileApp({ profile, logout }) {
                         className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-[#ffedd5] active:text-[#92400e]",
                         title:"Nhân bản"},
                         React.createElement(Copy, {className:"h-4 w-4"})),
-                      React.createElement("button", {
+                      profile?.role === "admin" && React.createElement("button", {
                         onClick: e => { e.stopPropagation(); if (window.confirm("Xóa báo giá "+o.id+"?")) deleteDocument("orders", o.id); },
                         className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-red-50 active:text-red-600",
                         title:"Xóa"},
