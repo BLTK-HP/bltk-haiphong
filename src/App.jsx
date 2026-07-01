@@ -10417,9 +10417,9 @@ function MobileApp({ profile, logout }) {
           subTabs.map(t=>React.createElement("button",{key:t.key, onClick:()=>setRTab(t.key),
             className:`flex-1 py-2 text-xs font-semibold transition-colors ${rTab===t.key?"bg-[#92400e] text-white":"text-[#92400e]"}`},
             t.label))),
-        rTab==="sales"    ? React.createElement(SaleTab,null)
-          : rTab==="products" ? React.createElement(SpTab,null)
-          : React.createElement(NvTab,null)));
+        rTab==="sales"    ? SaleTab()
+          : rTab==="products" ? SpTab()
+          : NvTab()));
   };
 
   const tabs = [
