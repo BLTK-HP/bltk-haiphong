@@ -8794,8 +8794,18 @@ function App({ profile, logout }) {
     for (let i = 0; i < ops.length; i += 500) {
       const b = writeBatch(db);
       ops.slice(i, i+500).forEach(op => {
-        if (op.t === 's') b.set(fsDoc(db, colName, String(op.id)), JSON.parse(JSON.stringify(op.o)));
-        else b.delete(fsDoc(db, colName, String(op.id)));
+        if (op.t === 's') {
+          const clean = JSON.parse(JSON.stringify(op.o));
+          // Giữ nguyên logic saveDoc: tự thêm year nếu có date nhưng chưa có year
+          if (clean.date && !clean.year) {
+            const m = String(clean.date).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (m) clean.year = parseInt(m[3], 10);
+            else { const m2 = String(clean.date).match(/^(\d{4})-/); if (m2) clean.year = parseInt(m2[1], 10); }
+          }
+          b.set(fsDoc(db, colName, String(op.id)), clean);
+        } else {
+          b.delete(fsDoc(db, colName, String(op.id)));
+        }
       });
       b.commit().catch(err => console.error(`[syncFS] ${colName}`, err));
     }
