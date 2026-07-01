@@ -9841,7 +9841,20 @@ function MobileApp({ profile, logout }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productForm, setProductForm] = useState(null);
   const [savingProd, setSavingProd] = useState(false);
-  const [createForm, setCreateForm] = useState({name:"",phone:"",addr:"",note:"",items:[]});
+  const BLANK_FORM = {name:"",phone:"",addr:"",note:"",items:[]};
+  const cfReducer = (s, a) => {
+    switch(a.t) {
+      case "F":    return {...s, [a.k]: a.v};
+      case "FILL": return {name:a.name||"", phone:a.phone||"", addr:a.addr||"", note:a.note||"", items:a.items||[]};
+      case "CUST": return {...s, phone:a.phone, name:a.name, addr:a.addr};
+      case "ADD":  return {...s, items:[...s.items, a.item]};
+      case "UPD":  return {...s, items:s.items.map((it,i)=>i===a.idx?{...it,[a.k]:a.v}:it)};
+      case "DEL":  return {...s, items:s.items.filter((_,i)=>i!==a.idx)};
+      case "RESET":return BLANK_FORM;
+      default: return s;
+    }
+  };
+  const [createForm, cfDispatch] = React.useReducer(cfReducer, BLANK_FORM);
   const [showMobPhoneSug, setShowMobPhoneSug] = useState(false);
   const mobPhoneSuggestions = React.useMemo(() => {
     const q = createForm.phone.trim();
@@ -9995,7 +10008,7 @@ function MobileApp({ profile, logout }) {
       const updated = {...orig, name:createForm.name.trim(), phone:createForm.phone.trim(), addr:createForm.addr.trim(), items:createForm.items, note:createForm.note.trim()};
       saveDoc("orders", editingOrderId, updated);
       setEditingOrderId(null); setEditingOrderRef(null);
-      setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+      cfDispatch({t:"RESET"});
       setSelectedOrder(updated);
       setTab(orig.draft ? "quotes" : "orders");
       return;
@@ -10014,7 +10027,7 @@ function MobileApp({ profile, logout }) {
       dt: new Date().toLocaleString("vi-VN",{hour12:false}).replace(",",""),
     };
     saveDoc("orders", id, order);
-    setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+    cfDispatch({t:"RESET"});
     setTab(asDraft ? "quotes" : "orders");
   };
   const saveMobileOrderWithPayment = () => {
@@ -10032,7 +10045,7 @@ function MobileApp({ profile, logout }) {
       const orig = (orders||[]).find(o=>o.id===editingOrderId) || {};
       const existingPmts = orig.payments || [];
       saveDoc("orders", editingOrderId, {...orig, name:createForm.name.trim(), phone:createForm.phone.trim(), addr:createForm.addr.trim(), items:createForm.items, note:createForm.note.trim(), expense, custExpenses:validExp, payments:[...existingPmts,...payments]});
-      setEditingOrderId(null); setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+      setEditingOrderId(null); cfDispatch({t:"RESET"});
       setPayExpenses([]); setPayDeposit(0); setPayPayment(0); setShowPayModal(false); setTab("orders"); return;
     }
     const id = nextMobileId("DH");
@@ -10046,7 +10059,7 @@ function MobileApp({ profile, logout }) {
       staff: profile?.name || "",
       dt:now,
     });
-    setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+    cfDispatch({t:"RESET"});
     setPayExpenses([]); setPayDeposit(0); setPayPayment(0);
     setShowPayModal(false);
     setTab("orders");
@@ -10088,7 +10101,7 @@ function MobileApp({ profile, logout }) {
   const doEdit = (o) => {
     setEditingOrderId(o.id);
     setEditingOrderRef(o);
-    setCreateForm({name:o.name||"",phone:o.phone||"",addr:o.addr||"",note:o.note||"",items:o.items||[]});
+    cfDispatch({t:"FILL",name:o.name,phone:o.phone,addr:o.addr,note:o.note,items:o.items});
     setSelectedOrder(null);
     setTab("create");
   };
@@ -10412,11 +10425,6 @@ function MobileApp({ profile, logout }) {
     { key:"products", icon: React.createElement(Package,   {className:"h-5 w-5"}), label:"Sản phẩm" },
     ...(isAdmin ? [{ key:"report", icon: React.createElement(BarChart3, {className:"h-5 w-5"}), label:"Báo cáo" }] : []),
   ];
-
-  const statusColor = s => ({
-    "Hoàn thành":"bg-green-100 text-green-700","Đang xử lý":"bg-blue-100 text-blue-700",
-    "Chờ xử lý":"bg-amber-100 text-amber-700","Huỷ":"bg-red-100 text-red-400",
-  }[s] || "bg-slate-100 text-slate-500");
 
   const deliveryColor = s => s==="Đã giao hàng"?"bg-green-100 text-green-700":"bg-orange-100 text-orange-700";
 
@@ -10791,7 +10799,8 @@ function MobileApp({ profile, logout }) {
     const q = prodQ; const setQ = (v) => { setProdQ(typeof v==="function"?v(prodQ):v); };
     const limit = prodLimit; const setLimit = (v) => { setProdLimit(typeof v==="function"?v(prodLimit):v); };
     const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p.sku||p._id, p.img]));
-    const enriched = PRODUCTS.map(p => ({ ...p, img: skuImg[p.sku] || null }));
+    const baseProd = prodsFS.length ? prodsFS : PRODUCTS;
+    const enriched = baseProd.map(p => ({ ...p, img: skuImg[p.sku||p._id] || null }));
     const filtered = enriched.filter(p => !q || (p.name+p.sku+(p.brand||"")).toLowerCase().includes(q.toLowerCase()));
     const visible = q ? filtered : filtered.slice(0, limit);
     const hasMore = !q && filtered.length > limit;
@@ -10885,22 +10894,21 @@ function MobileApp({ profile, logout }) {
 
   /* ── Màn hình Tạo đơn ── */
   const ScreenCreate = () => {
-    const pickerProds = PRODUCTS.filter(p => !pickerQ ||
+    const pickerBase = prodsFS.length ? prodsFS : PRODUCTS;
+    const pickerProds = pickerBase.filter(p => !pickerQ ||
       (p.name+p.sku).toLowerCase().includes(pickerQ.toLowerCase())).slice(0, 30);
     const addItem = (p) => {
-      setCreateForm(f => ({...f, items:[...f.items, {sku:p.sku, name:p.name, qty:1, price:p.sale||0}]}));
+      cfDispatch({t:"ADD", item:{sku:p.sku, name:p.name, qty:1, price:p.sale||0}});
       setShowPicker(false); setPickerQ("");
     };
-    const updItem = (idx, key, val) =>
-      setCreateForm(f => ({...f, items:f.items.map((it,i)=>i===idx?{...it,[key]:parseInt(val)||0}:it)}));
-    const delItem = (idx) =>
-      setCreateForm(f => ({...f, items:f.items.filter((_,i)=>i!==idx)}));
+    const updItem = (idx, key, val) => cfDispatch({t:"UPD", idx, k:key, v:parseInt(val)||0});
+    const delItem = (idx) => cfDispatch({t:"DEL", idx});
     const subtotal = createForm.items.reduce((s,it)=>s+(Number(it.price)||0)*(Number(it.qty)||0),0);
     return React.createElement("div", {className:"flex-1 flex flex-col overflow-hidden"},
       React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-2.5 bg-white border-b border-slate-200"},
         React.createElement("span", {className:"font-semibold text-slate-700 text-sm"}, editingOrderId ? "Sửa đơn "+editingOrderId : "Tạo đơn mới"),
         React.createElement("button", {
-          onClick:()=>{ setCreateForm({name:"",phone:"",addr:"",note:"",items:[]}); if (editingOrderRef) { setSelectedOrder(editingOrderRef); setTab(editingOrderRef.draft ? "quotes" : "orders"); } else { setTab("orders"); } setEditingOrderId(null); setEditingOrderRef(null); },
+          onClick:()=>{ cfDispatch({t:"RESET"}); if (editingOrderRef) { setSelectedOrder(editingOrderRef); setTab(editingOrderRef.draft ? "quotes" : "orders"); } else { setTab("orders"); } setEditingOrderId(null); setEditingOrderRef(null); },
           className:"text-slate-400 active:text-slate-600"},
           React.createElement(X, {className:"h-5 w-5"}))),
       React.createElement("div", {className:"flex-1 overflow-y-auto"},
@@ -10908,12 +10916,12 @@ function MobileApp({ profile, logout }) {
           React.createElement("div", null,
             React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2"}, "Khách hàng"),
             React.createElement("div", {className:"space-y-2"},
-              React.createElement("input", {value:createForm.name, onChange:e=>setCreateForm(f=>({...f,name:e.target.value})),
+              React.createElement("input", {value:createForm.name, onChange:e=>cfDispatch({t:"F",k:"name",v:e.target.value}),
                 placeholder:"Tên khách hàng *",
                 style:{fontSize:'16px'},
                 className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#fed7aa] focus:outline-none"}),
               React.createElement("div", {className:"relative"},
-                React.createElement("input", {value:createForm.phone, onChange:e=>{ setCreateForm(f=>({...f,phone:e.target.value})); setShowMobPhoneSug(true); },
+                React.createElement("input", {value:createForm.phone, onChange:e=>{ cfDispatch({t:"F",k:"phone",v:e.target.value}); setShowMobPhoneSug(true); },
                   onFocus:()=>setShowMobPhoneSug(true),
                   onBlur:()=>setTimeout(()=>setShowMobPhoneSug(false),150),
                   placeholder:"Số điện thoại", type:"tel",
@@ -10922,11 +10930,11 @@ function MobileApp({ profile, logout }) {
                 showMobPhoneSug && mobPhoneSuggestions.length > 0 && React.createElement("ul", {className:"absolute z-30 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg text-sm overflow-hidden"},
                   mobPhoneSuggestions.map((s,i) => React.createElement("li", {key:i},
                     React.createElement("button", {
-                      onMouseDown:()=>{ setCreateForm(f=>({...f,phone:s.phone,name:s.name,addr:s.addr})); setShowMobPhoneSug(false); },
+                      onMouseDown:()=>{ cfDispatch({t:"CUST",phone:s.phone,name:s.name,addr:s.addr}); setShowMobPhoneSug(false); },
                       className:"flex w-full flex-col px-3 py-2.5 text-left active:bg-[#fef9f0] border-b border-slate-100 last:border-0"},
                       React.createElement("span", {className:"font-medium text-slate-800"}, s.phone, React.createElement("span", {className:"ml-2 text-[#92400e]"}, s.name)),
                       s.addr && React.createElement("span", {className:"text-xs text-slate-400 truncate block"}, s.addr)))))),
-              React.createElement("input", {value:createForm.addr, onChange:e=>setCreateForm(f=>({...f,addr:e.target.value})),
+              React.createElement("input", {value:createForm.addr, onChange:e=>cfDispatch({t:"F",k:"addr",v:e.target.value}),
                 placeholder:"Địa chỉ giao hàng",
                 style:{fontSize:'16px'},
                 className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#fed7aa] focus:outline-none"}))),
@@ -10965,7 +10973,7 @@ function MobileApp({ profile, logout }) {
                     React.createElement("span", {className:"text-base font-bold text-[#92400e]"}, num(subtotal)+"đ")))),
           React.createElement("div", null,
             React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2"}, "Ghi chú"),
-            React.createElement("textarea", {value:createForm.note, onChange:e=>setCreateForm(f=>({...f,note:e.target.value})),
+            React.createElement("textarea", {value:createForm.note, onChange:e=>cfDispatch({t:"F",k:"note",v:e.target.value}),
               rows:3, placeholder:"Ghi chú cho đơn...",
               style:{fontSize:'16px'},
               className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#fed7aa] focus:outline-none resize-none"})))),
