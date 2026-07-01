@@ -10,7 +10,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 
 
-import { LayoutDashboard, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, ChevronLeft, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings, ArrowUpFromLine, Building2, PackageSearch, Layers, CornerUpLeft, RefreshCw, ReceiptText, Link2 } from 'lucide-react'
+import { LayoutDashboard, Home, ShoppingCart, Package, Truck, RotateCcw, BookText, Wallet, BarChart3, Smartphone, Plus, Minus, Search, Trash2, ArrowLeft, ArrowLeftRight, TrendingUp, ChevronRight, ChevronLeft, FileText, Globe, Sparkles, Store, Percent, CreditCard, UserCog, Printer, Pencil, ArrowDownToLine, Check, CheckCircle, Save, Eye, Warehouse, Upload, ChevronDown, X, Users, Image as ImageIcon, AlertTriangle, Copy, Settings, ArrowUpFromLine, Building2, PackageSearch, Layers, CornerUpLeft, RefreshCw, ReceiptText, Link2 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 
@@ -9695,10 +9695,39 @@ function MobileApp({ profile, logout }) {
   const [tab, setTab] = useState("orders");
   const [orders] = useCollection("orders");
   const [prodsFS] = useCollection("products");
+  const [settingsFS] = useCollection("settings");
+  const [txnsFS] = useCollection("txns");
+  const [whInFS] = useCollection("wh_in");
+  const [homeYear, setHomeYear] = useState(new Date().getFullYear());
+  const [homeMonth, setHomeMonth] = useState(new Date().getMonth()+1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productForm, setProductForm] = useState(null);
   const [savingProd, setSavingProd] = useState(false);
+  const [createForm, setCreateForm] = useState({name:"",phone:"",addr:"",note:"",items:[]});
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerQ, setPickerQ] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
+  const [quoteSearch, setQuoteSearch] = useState("");
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payExpenses, setPayExpenses] = useState([]);
+  const [payDeposit, setPayDeposit] = useState(0);
+  const [payPayment, setPayPayment] = useState(0);
+  const [prodQ, setProdQ] = useState("");
+  const [prodLimit, setProdLimit] = useState(50);
+  const [showDetailPay, setShowDetailPay] = useState(false);
+  const [detailPayAmt, setDetailPayAmt] = useState(0);
+  const [detailPayKind, setDetailPayKind] = useState("Thanh toán");
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [editingOrderRef, setEditingOrderRef] = useState(null);
+  const [showWhIn, setShowWhIn] = useState(false);
+  const [whInRows, setWhInRows] = useState([]);
+  const [whInPn, setWhInPn] = useState("");
+  const [whInDate, setWhInDate] = useState("");
+  const [whInKho, setWhInKho] = useState("HH");
+  const [showPrintMenu, setShowPrintMenu] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const notify = useToast();
   const toFsId = sku => String(sku||"").replace(/\//g, "__");
   const handleSaveProduct = async () => {
     const f = productForm;
@@ -9713,12 +9742,205 @@ function MobileApp({ profile, logout }) {
     setSavingProd(false);
   };
 
+  const yr2 = () => String(new Date().getFullYear()).slice(-2);
+  const fmtMobId = (prefix, n) => prefix + yr2() + String(n).padStart(4,"0");
+  const nextMobileId = (prefix) => {
+    const rows = ((settingsFS||[]).find(d=>d._id==="docNums")?.rows)||[];
+    const row = rows.find(r => r.prefix === prefix);
+    let num = row ? row.num : 1;
+    while ((orders||[]).some(o => o.id === fmtMobId(prefix, num))) num++;
+    const newRows = rows.some(r => r.prefix === prefix)
+      ? rows.map(r => r.prefix === prefix ? {...r, num: num+1} : r)
+      : [...rows, {prefix, num: num+1}];
+    saveDoc("settings", "docNums", { rows: newRows });
+    return fmtMobId(prefix, num);
+  };
+  const saveMobileOrder = (asDraft) => {
+    if (!createForm.items.length) { alert("Vui lòng thêm ít nhất 1 sản phẩm"); return; }
+    if (editingOrderId) {
+      const orig = (orders||[]).find(o=>o.id===editingOrderId) || {};
+      const updated = {...orig, name:createForm.name.trim(), phone:createForm.phone.trim(), addr:createForm.addr.trim(), items:createForm.items, note:createForm.note.trim()};
+      saveDoc("orders", editingOrderId, updated);
+      setEditingOrderId(null); setEditingOrderRef(null);
+      setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+      setSelectedOrder(updated);
+      setTab(orig.draft ? "quotes" : "orders");
+      return;
+    }
+    const id = asDraft ? nextMobileId("BG") : nextMobileId("DH");
+    const order = {
+      id, draft: asDraft,
+      ...(asDraft ? {draftStatus:"Chưa tạo đơn hàng"} : {}),
+      name: createForm.name.trim(), phone: createForm.phone.trim(),
+      addr: createForm.addr.trim(), items: createForm.items,
+      note: createForm.note.trim(),
+      paid:0, expense:0, importExpense:0,
+      delivery:"Chưa giao hàng", orderStatus:"",
+      imported:false, exported:false, returned:false,
+      staff: profile?.name || "",
+      dt: new Date().toLocaleString("vi-VN",{hour12:false}).replace(",",""),
+    };
+    saveDoc("orders", id, order);
+    setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+    setTab(asDraft ? "quotes" : "orders");
+  };
+  const saveMobileOrderWithPayment = () => {
+    if (!createForm.name.trim()) { alert("Vui lòng nhập tên khách hàng"); return; }
+    if (!createForm.phone.trim()) { alert("Vui lòng nhập số điện thoại"); return; }
+    if (!createForm.addr.trim()) { alert("Vui lòng nhập địa chỉ giao hàng"); return; }
+    if (!createForm.items.length) { alert("Vui lòng thêm ít nhất 1 sản phẩm"); return; }
+    const now = new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","");
+    const validExp = payExpenses.filter(e=>e.amount>0);
+    const expense = validExp.reduce((s,e)=>s+(e.amount||0), 0);
+    const payments = [];
+    if (payDeposit>0) payments.push({kind:"Đặt cọc", amount:payDeposit, dt:now});
+    if (payPayment>0) payments.push({kind:"Thanh toán", amount:payPayment, dt:now});
+    if (editingOrderId) {
+      const orig = (orders||[]).find(o=>o.id===editingOrderId) || {};
+      const existingPmts = orig.payments || [];
+      saveDoc("orders", editingOrderId, {...orig, name:createForm.name.trim(), phone:createForm.phone.trim(), addr:createForm.addr.trim(), items:createForm.items, note:createForm.note.trim(), expense, custExpenses:validExp, payments:[...existingPmts,...payments]});
+      setEditingOrderId(null); setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+      setPayExpenses([]); setPayDeposit(0); setPayPayment(0); setShowPayModal(false); setTab("orders"); return;
+    }
+    const id = nextMobileId("DH");
+    saveDoc("orders", id, {
+      id, draft:false,
+      name:createForm.name.trim(), phone:createForm.phone.trim(),
+      addr:createForm.addr.trim(), items:createForm.items, note:createForm.note.trim(),
+      paid:payPayment, expense, custExpenses:validExp, importExpense:0, payments,
+      delivery:"Chưa giao hàng", orderStatus:"",
+      imported:false, exported:false, returned:false,
+      staff: profile?.name || "",
+      dt:now,
+    });
+    setCreateForm({name:"",phone:"",addr:"",note:"",items:[]});
+    setPayExpenses([]); setPayDeposit(0); setPayPayment(0);
+    setShowPayModal(false);
+    setTab("orders");
+  };
+
+  const cloneDraft = (o) => {
+    const newId = nextMobileId("BG");
+    const { _id, draftStatus, linkedOrderId, ...rest } = o;
+    saveDoc("orders", newId, { ...rest, id: newId, draft: true, draftStatus:"Chưa tạo đơn hàng",
+      dt: new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","") });
+    notify("Đã nhân bản → "+newId);
+  };
+
+  const convertDraftToOrder = async (draft) => {
+    if (converting) return;
+    setConverting(true);
+    try {
+      const dhId = nextMobileId("DH");
+      const draftDocId = draft.id || draft._id;
+      if (!draftDocId) throw new Error("Không tìm thấy ID báo giá");
+      const { _id: _rid, draftStatus: _ds, linkedOrderId: _li, ...rest } = draft;
+      await saveDoc("orders", dhId, { ...rest, id: dhId, draft: false });
+      const { _id: _rid2, ...draftClean } = draft;
+      await saveDoc("orders", draftDocId, { ...draftClean, draftStatus:"Đã tạo đơn hàng", linkedOrderId: dhId });
+      notify("Đã tạo đơn " + dhId);
+      setSelectedOrder(null);
+      setTab("orders");
+    } catch(e) {
+      alert("Lỗi tạo đơn: " + e.message);
+    } finally {
+      setConverting(false);
+    }
+  };
+
+  const doEdit = (o) => {
+    setEditingOrderId(o.id);
+    setEditingOrderRef(o);
+    setCreateForm({name:o.name||"",phone:o.phone||"",addr:o.addr||"",note:o.note||"",items:o.items||[]});
+    setSelectedOrder(null);
+    setTab("create");
+  };
+
+  const doWarehouseIn = (o) => {
+    const pn = "PN" + String(o.id).replace(/\D/g,"");
+    setWhInPn(o.pn || pn);
+    setWhInDate(o.dateIn || localToday());
+    setWhInKho((o.items||[])[0]?.kho || "HH");
+    setWhInRows((o.items||[]).map(it => ({name:it.name, slDat:it.qty, slNhap:it.qty, giaNhap:it.cost||0, nccIn:it.supplier||""})));
+    setShowWhIn(true);
+  };
+
+  const doSaveWhIn = (o) => {
+    const miss = whInRows.filter(r => r.slNhap > 0 && !r.nccIn.trim());
+    if (miss.length) { alert("Vui lòng nhập tên NCC cho: " + miss.map(r=>r.name).join(", ")); return; }
+    const missGia = whInRows.filter(r => r.slNhap > 0 && !(r.giaNhap > 0));
+    if (missGia.length) { alert("Vui lòng nhập giá nhập cho: " + missGia.map(r=>r.name).join(", ")); return; }
+    const now = new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","");
+    const updatedItems = (o.items||[]).map((it,i) => ({...it, cost:whInRows[i]?.giaNhap||it.cost||0, supplier:whInRows[i]?.nccIn||it.supplier||""}));
+    const updatedOrder = {...o, imported:true, pn:whInPn, dateIn:whInDate, importedAt:now, items:updatedItems};
+    saveDoc("orders", o.id, updatedOrder);
+    setSelectedOrder(updatedOrder);
+    setShowWhIn(false);
+  };
+
+  const doConfirmDelivery = (o) => {
+    if (!window.confirm(`Xác nhận đã giao hàng đơn ${o.id}?`)) return;
+    const now = new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","");
+    const updated = {...o, deliveryConfirmed:true, deliveredAt:now, orderStatus:"Hoàn thành"};
+    saveDoc("orders", o.id, updated);
+    setSelectedOrder(updated);
+  };
+
+  const doPartialDelivery = (o) => {
+    const now = new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","");
+    const partials = [...(o.partialDeliveries||[]), {dt:now}];
+    const updated = {...o, partialDeliveries:partials};
+    saveDoc("orders", o.id, updated);
+    setSelectedOrder(updated);
+  };
+
+  const doReturn = (o) => {
+    if (!window.confirm(`Xác nhận hoàn hàng đơn ${o.id}?`)) return;
+    const updated = {...o, returned:true, orderStatus:"Đã hoàn hàng"};
+    saveDoc("orders", o.id, updated);
+    setSelectedOrder(updated);
+  };
+
+  const doAddPayment = () => {
+    setDetailPayAmt(0);
+    setDetailPayKind("Thanh toán");
+    setShowDetailPay(true);
+  };
+
+  const doSaveDetailPay = (o) => {
+    if (!detailPayAmt || detailPayAmt <= 0) { alert("Nhập số tiền thanh toán"); return; }
+    const now = new Date().toLocaleString("vi-VN",{hour12:false}).replace(",","");
+    const pmts = [...(o.payments||[]), {kind:detailPayKind, amount:detailPayAmt, dt:now}];
+    const updated = {...o, payments:pmts};
+    saveDoc("orders", o.id, updated);
+    setSelectedOrder(updated);
+    setShowDetailPay(false); setDetailPayAmt(0);
+  };
+
+  const doPrint = () => setShowPrintMenu(true);
+
+  const doOpenPrint = (o, type) => {
+    const printCfg = (settingsFS||[]).find(s=>s._id==="print_template") || {};
+    openPrint(o, type, printCfg, prodsFS||[]);
+    setShowPrintMenu(false);
+  };
+
   const sortByDate = arr => [...(arr||[])].sort((a,b) => {
-    const parse = s => { const p=String(s||"").split(" "); const d=p[0]?.split("/"); return d?.length===3?new Date(d[2],d[1]-1,d[0],parseInt(p[1]||"0"),parseInt((p[1]||"0:0").split(":")[1]||"0")):new Date(0); };
+    const parse = s => {
+      const p = String(s||"").split(" ");
+      const datePart = p.find(t => t.includes("/"));
+      if (!datePart) return new Date(0);
+      const d = datePart.split("/");
+      if (d.length !== 3) return new Date(0);
+      const timePart = p.find(t => t.includes(":")) || "0:0";
+      const [hh, mm] = timePart.split(":");
+      return new Date(d[2], d[1]-1, d[0], parseInt(hh)||0, parseInt(mm)||0);
+    };
     return parse(b.dt) - parse(a.dt);
   });
-  const visibleOrders = sortByDate(orders).filter(o => !o.draft);
-  const visibleQuotes = sortByDate(orders).filter(o => o.draft);
+  const matchSearch = (o, q) => !q || [o.id, o.name, o.phone].some(f => String(f||"").toLowerCase().includes(q.toLowerCase()));
+  const visibleOrders = sortByDate(orders).filter(o => !o.draft && matchSearch(o, orderSearch));
+  const visibleQuotes = sortByDate(orders).filter(o => o.draft && matchSearch(o, quoteSearch));
 
   const tabs = [
     { key:"create",   icon: React.createElement(Plus,      {className:"h-6 w-6"}), label:"Tạo đơn", fab: true },
@@ -9734,47 +9956,135 @@ function MobileApp({ profile, logout }) {
 
   const deliveryColor = s => s==="Đã giao hàng"?"bg-green-100 text-green-700":"bg-orange-100 text-orange-700";
 
+  /* ── Màn hình Tổng quan ── */
+  const ScreenHome = () => {
+    const prevM = () => { if (homeMonth===1){setHomeMonth(12);setHomeYear(y=>y-1);}else setHomeMonth(m=>m-1); };
+    const nextM = () => { if (homeMonth===12){setHomeMonth(1);setHomeYear(y=>y+1);}else setHomeMonth(m=>m+1); };
+    const parseD = s => { if(!s)return new Date(0); const p=String(s).split(' ')[0].split('/'); return p.length===3?new Date(+p[2],+p[1]-1,+p[0]):new Date(0); };
+    const endOfMonth = new Date(homeYear,homeMonth,0,23,59,59);
+    const inM = s => { const d=parseD(s); return d.getFullYear()===homeYear&&d.getMonth()+1===homeMonth; };
+    const TRANSFER_KINDS = new Set(["Chuyển đi","Chuyển về"]);
+    const NCC_KINDS = new Set(["CP Thanh Toán NCC","CP Đặt Cọc NCC","CPVC Nhập Hàng"]);
+    const allTxns = txnsFS||[];
+    const bankSettings = (settingsFS||[]).find(s=>s._id==="bankAccounts");
+    const accs = (bankSettings?.accounts||[]).filter(a=>a.status==="Hoạt động");
+    const bankBal = accs.reduce((tot,a)=>{
+      const net=allTxns.filter(t=>!t.cancelled&&t.acc===a.key&&parseD(t.date)<=endOfMonth).reduce((s,t)=>s+(t.amount||0),0);
+      return tot+(a.openBal||0)+net;
+    },0);
+    const pTxns = allTxns.filter(t=>!t.cancelled&&inM(t.date)&&!TRANSFER_KINDS.has(t.kind));
+    const thuHang = pTxns.filter(t=>t.amount>0&&(t.kind==="Thanh toán"||t.kind==="Đặt cọc")).reduce((s,t)=>s+t.amount,0);
+    const thuKhac = pTxns.filter(t=>t.amount>0&&t.kind!=="Thanh toán"&&t.kind!=="Đặt cọc").reduce((s,t)=>s+t.amount,0);
+    const chiNCC = pTxns.filter(t=>t.amount<0&&NCC_KINDS.has(t.kind)).reduce((s,t)=>s+Math.abs(t.amount),0);
+    const chiKhac = pTxns.filter(t=>t.amount<0&&!NCC_KINDS.has(t.kind)).reduce((s,t)=>s+Math.abs(t.amount),0);
+    const stockVal = (whInFS||[]).reduce((s,r)=>s+(r.qtyRemaining??r.qtyNow??0)*(r.unitCost??r.costNcc??0),0);
+    const activeOrders = (orders||[]).filter(o=>!o.draft&&o.orderStatus!=="Huỷ"&&o.orderStatus!=="Hủy");
+    const totalRec = activeOrders.reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+    const delivRec = activeOrders.filter(o=>o.deliveryConfirmed||o.exported).reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+    const partRec = activeOrders.filter(o=>(o.partialDeliveries||[]).length>0&&!o.deliveryConfirmed&&!o.exported).reduce((s,o)=>s+Math.max(0,calc(o).remaining),0);
+    const thuDon = activeOrders.flatMap(o=>(o.payments||[]).filter(p=>inM(p.date||p.dt))).reduce((s,p)=>s+(p.amount||0),0);
+    const pOrders = activeOrders.filter(o=>inM(o.dt));
+    const pTotal = pOrders.reduce((s,o)=>s+calc(o).total,0);
+    const R = (label,val,color,bold) => React.createElement("div",{className:"flex justify-between items-center py-2 border-b border-slate-100 last:border-0"},
+      React.createElement("span",{className:"text-sm text-slate-500"},label),
+      React.createElement("span",{className:`text-sm ${bold?"font-bold":"font-medium"} ${color||"text-slate-700"}`},val));
+    const Card = (ico,title,rows) => React.createElement("div",{className:"bg-white rounded-2xl border border-slate-200 p-4 shadow-sm"},
+      React.createElement("div",{className:"flex items-center gap-2 mb-2.5 pb-2.5 border-b border-slate-100"},
+        React.createElement("div",{className:"w-7 h-7 rounded-lg bg-[#ffedd5] flex items-center justify-center shrink-0"},ico),
+        React.createElement("span",{className:"font-bold text-slate-700 text-sm"},title)),
+      ...rows);
+    return React.createElement("div",{className:"flex-1 overflow-y-auto"},
+      React.createElement("div",{className:"px-3 pt-3 pb-4 space-y-3"},
+        React.createElement("div",{className:"flex items-center justify-between bg-white rounded-2xl border border-slate-200 px-3 py-2"},
+          React.createElement("button",{onClick:prevM,className:"p-1.5 rounded-lg text-slate-400 active:bg-slate-100"},React.createElement(ChevronLeft,{className:"h-5 w-5"})),
+          React.createElement("span",{className:"font-semibold text-sm text-slate-700"},`Tháng ${homeMonth}/${homeYear}`),
+          React.createElement("button",{onClick:nextM,className:"p-1.5 rounded-lg text-slate-400 active:bg-slate-100"},React.createElement(ChevronRight,{className:"h-5 w-5"}))),
+        Card(React.createElement(Wallet,{className:"h-4 w-4 text-[#92400e]"}),`Dòng tiền — Tháng ${homeMonth}/${homeYear}`,[
+          R("Tài sản",num(bankBal)+"đ","text-blue-600",true),
+          R("Thu tiền hàng","+"+num(thuHang)+"đ","text-green-600"),
+          R("Thu khác","+"+num(thuKhac)+"đ","text-green-600"),
+          R("Chi Nhà cung cấp","-"+num(chiNCC)+"đ","text-red-500"),
+          R("Chi khác","-"+num(chiKhac)+"đ","text-red-500"),
+          R("Tồn kho (giá vốn)",num(stockVal)+"đ","text-slate-700",true),
+        ]),
+        Card(React.createElement(ReceiptText,{className:"h-4 w-4 text-[#92400e]"}),"Công nợ phải thu",[
+          R("Tổng phải thu",num(totalRec)+"đ","text-red-500",true),
+          R("Đã giao, chưa trả",num(delivRec)+"đ","text-red-500"),
+          R("Giao 1 phần",num(partRec)+"đ","text-red-500"),
+          R("Đã thu (đơn hàng)","+"+num(thuDon)+"đ","text-green-600"),
+        ]),
+        Card(React.createElement(BookText,{className:"h-4 w-4 text-[#92400e]"}),`Đơn hàng — Tháng ${homeMonth}/${homeYear}`,[
+          R("Số đơn mới",String(pOrders.length),"text-slate-700"),
+          R("Tổng tiền hàng",num(pTotal)+"đ","text-slate-700",true),
+          R("Hoàn thành",String(pOrders.filter(o=>o.orderStatus==="Hoàn thành").length),"text-green-600"),
+          R("Đang xử lý",String(pOrders.filter(o=>o.orderStatus!=="Hoàn thành").length),"text-amber-600"),
+        ])
+      )
+    );
+  };
+
   /* ── Màn hình Đơn hàng ── */
-  const ScreenOrders = () => React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
-    React.createElement("div", {className:"px-3 pt-3 space-y-2"},
-      (visibleOrders).map(o => {
-        const c = calc(o);
-        const pmts = o.payments || [];
-        const datCoc = pmts.filter(p=>p.kind==="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
-        const thanhToan = pmts.filter(p=>p.kind!=="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
-        return React.createElement("div", {
-          key: o.id,
-          className: "bg-white rounded-xl border border-slate-200 p-3 shadow-sm active:bg-slate-50",
-          onClick: () => setSelectedOrder(o),
-        },
-          /* Header */
-          React.createElement("div", {className:"flex items-start justify-between gap-2 mb-1"},
-            React.createElement("div", {className:"flex items-center gap-1.5 flex-wrap"},
-              React.createElement("span", {className:"font-bold text-[#92400e] text-sm"}, o.id),
-              React.createElement("span", {className:`text-[11px] font-medium px-2 py-0.5 rounded-full ${statusColor(c.orderStatus)}`}, c.orderStatus),
-              React.createElement("span", {className:`text-[11px] font-medium px-2 py-0.5 rounded-full ${deliveryColor(o.delivery)}`}, o.delivery||"Chưa giao")),
-            React.createElement("div", {className:"text-right shrink-0"},
-              React.createElement("div", {className:"text-sm font-semibold text-slate-700"}, num(c.total)+"đ"),
-              datCoc>0 && React.createElement("div", {className:"text-[11px] text-amber-600"}, "Cọc: "+num(datCoc)+"đ"),
-              thanhToan>0 && React.createElement("div", {className:"text-[11px] text-amber-600"}, "Trả: "+num(thanhToan)+"đ"),
-              c.remaining>0
-                ? React.createElement("div", {className:"text-[11px] font-semibold text-red-500"}, "Còn: "+num(c.remaining)+"đ")
-                : React.createElement("div", {className:"text-[11px] text-green-600"}, "Đã thu đủ"))),
-          /* KH */
-          React.createElement("div", {className:"text-sm font-medium text-slate-800"}, o.name),
-          React.createElement("div", {className:"text-xs text-slate-400 mt-0.5 flex items-center gap-1"},
-            React.createElement("span", null, o.phone||""),
-            o.phone && o.dt && React.createElement("span", null,"·"),
-            React.createElement("span", null, o.dt||""),
-            o.staff && React.createElement("span", null, "· "+o.staff)));
-      })
+  const ScreenOrders = () => React.createElement("div", {className:"flex-1 relative overflow-hidden"},
+    React.createElement("div", {className:"absolute inset-0 overflow-y-auto pb-4"},
+      React.createElement("div", {className:"px-3 pt-3"},
+        React.createElement("div", {className:"relative mb-3"},
+          React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
+          React.createElement("input", {value:orderSearch, onChange:e=>setOrderSearch(e.target.value),
+            placeholder:"Tìm mã đơn, tên KH, SĐT...",
+            style:{fontSize:'16px'},
+            className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+        visibleOrders.length === 0
+          ? React.createElement("div", {className:"text-center text-slate-400 pt-10 text-sm"},
+              orderSearch ? "Không tìm thấy đơn hàng nào" : "Chưa có đơn hàng")
+          : React.createElement("div", {className:"space-y-2"},
+              visibleOrders.map(o => {
+                const c = calc(o);
+                const pmts = o.payments || [];
+                const datCoc = pmts.filter(p=>p.kind==="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
+                const thanhToan = pmts.filter(p=>p.kind!=="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
+                const toggleStatus = e => {
+                  e.stopPropagation();
+                  if (o.orderStatus !== "Hoàn thành" && c.remaining > 0) {
+                    if (!window.confirm("Đơn còn nợ "+num(c.remaining)+"đ. Vẫn đánh dấu hoàn thành?")) return;
+                  }
+                  const next = o.orderStatus === "Hoàn thành" ? "Chờ xử lý" : "Hoàn thành";
+                  saveDoc("orders", o.id, {...o, orderStatus: next});
+                };
+                const mobStatus = (o.orderStatus === "Hoàn thành" && c.remaining <= 0) ? "Hoàn thành" : c.remaining <= 0 ? "Hoàn thành" : o.orderStatus === "Hoàn thành" ? "Hoàn thành*" : "Chờ xử lý";
+                const mobStatusColor = (mobStatus === "Hoàn thành") ? "bg-green-100 text-green-700" : mobStatus === "Hoàn thành*" ? "bg-orange-100 text-orange-700" : "bg-amber-100 text-amber-700";
+                return React.createElement("div", {
+                  key: o.id,
+                  className: "bg-white rounded-xl border border-slate-200 p-3 shadow-sm active:bg-slate-50",
+                  onClick: () => setSelectedOrder(o),
+                },
+                  React.createElement("div", {className:"flex items-start justify-between gap-2 mb-1.5"},
+                    React.createElement("div", {className:"flex items-center gap-1.5 flex-wrap"},
+                      React.createElement("span", {className:"font-bold text-[#92400e] text-sm"}, o.id),
+                      React.createElement("button", {onClick:toggleStatus, className:`text-[11px] font-medium px-2 py-0.5 rounded-full ${mobStatusColor}`}, mobStatus)),
+                    React.createElement("div", {className:"flex items-start gap-1.5 shrink-0"},
+                      React.createElement("div", {className:"text-right"},
+                        React.createElement("div", {className:"text-sm font-bold text-slate-700"}, num(c.total)+"đ"),
+                        React.createElement("div", {className:`text-[11px] ${c.remaining>0?"text-red-500":"text-green-600"}`},
+                          c.remaining>0 ? "Còn: "+num(c.remaining)+"đ" : "Đã thu đủ")),
+                      React.createElement("button", {
+                        onClick: e => { e.stopPropagation(); if (window.confirm("Xóa đơn "+o.id+"?")) deleteDocument("orders", o.id); },
+                        className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-red-50 active:text-red-600"},
+                        React.createElement(Trash2, {className:"h-4 w-4"})))),
+                  React.createElement("div", {className:"text-sm font-medium text-slate-800 flex items-baseline gap-1.5 flex-wrap"},
+                    React.createElement("span", null, o.name),
+                    o.phone && React.createElement("span", {className:"text-xs text-slate-400 font-normal"}, o.phone)),
+                  o.addr && React.createElement("div", {className:"text-xs text-slate-500 mt-0.5"}, o.addr),
+                  React.createElement("div", {className:"text-xs text-slate-400 mt-0.5"},
+                    o.dt||"", o.staff ? " · "+o.staff : ""));
+              }))
+      )
     )
   );
 
   /* ── Màn hình Sản phẩm ── */
   const ScreenProducts = () => {
-    const [q, setQ] = useState("");
-    const [limit, setLimit] = useState(50);
+    const q = prodQ; const setQ = (v) => { setProdQ(typeof v==="function"?v(prodQ):v); };
+    const limit = prodLimit; const setLimit = (v) => { setProdLimit(typeof v==="function"?v(prodLimit):v); };
     const skuImg = Object.fromEntries((prodsFS||[]).filter(p=>p.img).map(p=>[p.sku||p._id, p.img]));
     const enriched = PRODUCTS.map(p => ({ ...p, img: skuImg[p.sku] || null }));
     const filtered = enriched.filter(p => !q || (p.name+p.sku+(p.brand||"")).toLowerCase().includes(q.toLowerCase()));
@@ -9786,6 +10096,7 @@ function MobileApp({ profile, logout }) {
           React.createElement("div", {className:"relative mb-3"},
             React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
             React.createElement("input", {value:q, onChange:e=>{ setQ(e.target.value); setLimit(50); }, placeholder:"Tìm theo tên, mã...",
+              style:{fontSize:'16px'},
               className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
           React.createElement("div", {className:"text-xs text-slate-400 mb-2"},
             q ? filtered.length+"/"+PRODUCTS.length+" sản phẩm" : "Hiện "+visible.length+"/"+PRODUCTS.length+" — tìm kiếm để lọc nhanh"),
@@ -9820,55 +10131,186 @@ function MobileApp({ profile, logout }) {
   };
 
   /* ── Màn hình Báo giá ── */
-  const ScreenQuotes = () => React.createElement("div", {className:"flex-1 overflow-y-auto pb-4"},
-    visibleQuotes.length === 0
-      ? React.createElement("div", {className:"flex-1 flex items-center justify-center pt-20 text-center text-slate-400"},
-          React.createElement(FileText, {className:"h-12 w-12 mx-auto mb-3 opacity-30"}),
-          React.createElement("p", {className:"text-sm"}, "Chưa có báo giá nào"))
-      : React.createElement("div", {className:"px-3 pt-3 space-y-2"},
-          visibleQuotes.map(o => {
-            const c = calc(o);
-            return React.createElement("div", {
-              key: o.id,
-              className: "bg-white rounded-xl border border-slate-200 p-3 shadow-sm active:bg-slate-50",
-              onClick: () => setSelectedOrder(o),
-            },
-              React.createElement("div", {className:"flex items-start justify-between gap-2 mb-1"},
-                React.createElement("div", {className:"flex items-center gap-1.5 flex-wrap"},
-                  React.createElement("span", {className:"font-bold text-[#92400e] text-sm"}, o.id),
-                  React.createElement("span", {className:"text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-700"}, "Báo giá")),
-                React.createElement("div", {className:"text-right shrink-0"},
-                  React.createElement("div", {className:"text-sm font-semibold text-slate-700"}, num(c.total)+"đ"))),
-              React.createElement("div", {className:"text-sm font-medium text-slate-800"}, o.name),
-              React.createElement("div", {className:"text-xs text-slate-400 mt-0.5 flex items-center gap-1"},
-                React.createElement("span", null, o.phone||""),
-                o.phone && o.dt && React.createElement("span", null,"·"),
-                React.createElement("span", null, o.dt||""),
-                o.staff && React.createElement("span", null, "· "+o.staff)));
-          })
-        )
+  const ScreenQuotes = () => React.createElement("div", {className:"flex-1 relative overflow-hidden"},
+    React.createElement("div", {className:"absolute inset-0 overflow-y-auto pb-4"},
+      React.createElement("div", {className:"px-3 pt-3"},
+        React.createElement("div", {className:"relative mb-3"},
+          React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
+          React.createElement("input", {value:quoteSearch, onChange:e=>setQuoteSearch(e.target.value),
+            placeholder:"Tìm mã báo giá, tên KH, SĐT...",
+            style:{fontSize:'16px'},
+            className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+        visibleQuotes.length === 0
+          ? React.createElement("div", {className:"text-center text-slate-400 pt-10 text-sm"},
+              quoteSearch ? "Không tìm thấy báo giá nào" : "Chưa có báo giá nào")
+          : React.createElement("div", {className:"space-y-2"},
+              visibleQuotes.map(o => {
+                const c = calc(o);
+                return React.createElement("div", {
+                  key: o.id,
+                  className: "bg-white rounded-xl border border-slate-200 p-3 shadow-sm active:bg-slate-50",
+                  onClick: () => setSelectedOrder(o),
+                },
+                  React.createElement("div", {className:"flex items-start justify-between gap-2 mb-1"},
+                    React.createElement("div", {className:"flex items-center gap-1.5"},
+                      React.createElement("span", {className:"font-bold text-[#92400e] text-sm"}, o.id)),
+                    React.createElement("div", {className:"flex items-start gap-1.5 shrink-0"},
+                      React.createElement("div", {className:"text-sm font-bold text-slate-700"}, num(c.total)+"đ"),
+                      React.createElement("button", {
+                        onClick: e => { e.stopPropagation(); cloneDraft(o); },
+                        className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-[#ffedd5] active:text-[#92400e]",
+                        title:"Nhân bản"},
+                        React.createElement(Copy, {className:"h-4 w-4"})),
+                      React.createElement("button", {
+                        onClick: e => { e.stopPropagation(); if (window.confirm("Xóa báo giá "+o.id+"?")) deleteDocument("orders", o.id); },
+                        className:"p-1.5 rounded-full bg-slate-100 text-slate-500 active:bg-red-50 active:text-red-600",
+                        title:"Xóa"},
+                        React.createElement(Trash2, {className:"h-4 w-4"})))),
+                  React.createElement("div", {className:"text-sm font-medium text-slate-800 flex items-baseline gap-1.5 flex-wrap"},
+                    React.createElement("span", null, o.name),
+                    o.phone && React.createElement("span", {className:"text-xs text-slate-400 font-normal"}, o.phone)),
+                  o.addr && React.createElement("div", {className:"text-xs text-slate-500 mt-0.5"}, o.addr),
+                  React.createElement("div", {className:"text-xs text-slate-400 mt-0.5 flex items-center gap-1"},
+                    React.createElement("span", null, o.dt||""),
+                    o.staff && React.createElement("span", null, "· "+o.staff)));
+              }))
+      )
+    )
   );
 
   /* ── Màn hình Tạo đơn ── */
-  const ScreenCreate = () => React.createElement("div", {className:"flex-1 flex items-center justify-center"},
-    React.createElement("div", {className:"text-center text-slate-400"},
-      React.createElement(Plus, {className:"h-12 w-12 mx-auto mb-3 opacity-30"}),
-      React.createElement("p", {className:"text-sm"}, "Tính năng tạo đơn đang phát triển")));
+  const ScreenCreate = () => {
+    const pickerProds = PRODUCTS.filter(p => !pickerQ ||
+      (p.name+p.sku).toLowerCase().includes(pickerQ.toLowerCase())).slice(0, 30);
+    const addItem = (p) => {
+      setCreateForm(f => ({...f, items:[...f.items, {sku:p.sku, name:p.name, qty:1, price:p.sale||0}]}));
+      setShowPicker(false); setPickerQ("");
+    };
+    const updItem = (idx, key, val) =>
+      setCreateForm(f => ({...f, items:f.items.map((it,i)=>i===idx?{...it,[key]:parseInt(val)||0}:it)}));
+    const delItem = (idx) =>
+      setCreateForm(f => ({...f, items:f.items.filter((_,i)=>i!==idx)}));
+    const subtotal = createForm.items.reduce((s,it)=>s+(Number(it.price)||0)*(Number(it.qty)||0),0);
+    return React.createElement("div", {className:"flex-1 flex flex-col overflow-hidden"},
+      React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-2.5 bg-white border-b border-slate-200"},
+        React.createElement("span", {className:"font-semibold text-slate-700 text-sm"}, editingOrderId ? "Sửa đơn "+editingOrderId : "Tạo đơn mới"),
+        React.createElement("button", {
+          onClick:()=>{ setCreateForm({name:"",phone:"",addr:"",note:"",items:[]}); if (editingOrderRef) { setSelectedOrder(editingOrderRef); setTab(editingOrderRef.draft ? "quotes" : "orders"); } else { setTab("orders"); } setEditingOrderId(null); setEditingOrderRef(null); },
+          className:"text-slate-400 active:text-slate-600"},
+          React.createElement(X, {className:"h-5 w-5"}))),
+      React.createElement("div", {className:"flex-1 overflow-y-auto"},
+        React.createElement("div", {className:"p-4 space-y-4 pb-32"},
+          React.createElement("div", null,
+            React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2"}, "Khách hàng"),
+            React.createElement("div", {className:"space-y-2"},
+              React.createElement("input", {value:createForm.name, onChange:e=>setCreateForm(f=>({...f,name:e.target.value})),
+                placeholder:"Tên khách hàng *",
+                style:{fontSize:'16px'},
+                className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}),
+              React.createElement("input", {value:createForm.phone, onChange:e=>setCreateForm(f=>({...f,phone:e.target.value})),
+                placeholder:"Số điện thoại", type:"tel",
+                style:{fontSize:'16px'},
+                className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}),
+              React.createElement("input", {value:createForm.addr, onChange:e=>setCreateForm(f=>({...f,addr:e.target.value})),
+                placeholder:"Địa chỉ giao hàng",
+                style:{fontSize:'16px'},
+                className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}))),
+          React.createElement("div", null,
+            React.createElement("div", {className:"flex items-center justify-between mb-2"},
+              React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide"}, "Sản phẩm"),
+              React.createElement("button", {onClick:()=>setShowPicker(true),
+                className:"flex items-center gap-1 text-xs text-[#92400e] font-medium border border-[#92400e] rounded-lg px-2 py-1 active:bg-orange-50"},
+                React.createElement(Plus, {className:"h-3 w-3"}), "Thêm")),
+            createForm.items.length === 0
+              ? React.createElement("div", {className:"text-sm text-slate-400 text-center py-6 bg-white rounded-xl border border-dashed border-slate-200"},
+                  "Bấm Thêm để chọn sản phẩm")
+              : React.createElement("div", {className:"space-y-2"},
+                  createForm.items.map((it,idx) => React.createElement("div", {key:idx, className:"bg-white rounded-xl border border-slate-200 p-3"},
+                    React.createElement("div", {className:"flex items-center justify-between mb-2"},
+                      React.createElement("div", {className:"text-sm font-medium text-slate-800 flex-1 mr-2 leading-snug line-clamp-2"}, it.name),
+                      React.createElement("button", {onClick:()=>delItem(idx), className:"shrink-0 text-slate-300 active:text-red-400"},
+                        React.createElement(X, {className:"h-4 w-4"}))),
+                    React.createElement("div", {className:"grid grid-cols-2 gap-2"},
+                      React.createElement("div", null,
+                        React.createElement("label", {className:"text-[10px] text-slate-400 uppercase tracking-wide"}, "Số lượng"),
+                        React.createElement("input", {type:"text", inputMode:"numeric", pattern:"[0-9]*", value:it.qty||"",
+                          onFocus:e=>e.target.select(),
+                          onChange:e=>updItem(idx,"qty",e.target.value.replace(/\D/g,"")),
+                          style:{fontSize:'16px'},
+                          className:"w-full mt-0.5 rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+                      React.createElement("div", null,
+                        React.createElement("label", {className:"text-[10px] text-slate-400 uppercase tracking-wide"}, "Đơn giá (đ)"),
+                        React.createElement("input", {type:"text", inputMode:"numeric", pattern:"[0-9]*", value:num(it.price)||"",
+                          onFocus:e=>e.target.select(),
+                          onChange:e=>updItem(idx,"price",e.target.value.replace(/\D/g,"")),
+                          style:{fontSize:'16px'},
+                          className:"w-full mt-0.5 rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"}))))),
+                  subtotal > 0 && React.createElement("div", {className:"flex justify-between items-center mt-2 px-1"},
+                    React.createElement("span", {className:"text-sm text-slate-500"}, "Tổng"),
+                    React.createElement("span", {className:"text-base font-bold text-[#92400e]"}, num(subtotal)+"đ")))),
+          React.createElement("div", null,
+            React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2"}, "Ghi chú"),
+            React.createElement("textarea", {value:createForm.note, onChange:e=>setCreateForm(f=>({...f,note:e.target.value})),
+              rows:3, placeholder:"Ghi chú cho đơn...",
+              style:{fontSize:'16px'},
+              className:"w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none resize-none"})))),
+      React.createElement("div", {className:"shrink-0 p-4 border-t border-slate-200 bg-white flex gap-3 safe-area-bottom"},
+        editingOrderId
+          ? React.createElement("button", {onClick:()=>saveMobileOrder(false),
+              className:"flex-1 py-3 rounded-xl bg-[#92400e] text-white font-semibold text-sm active:opacity-80"},
+              "Lưu lại")
+          : React.createElement(React.Fragment, null,
+              React.createElement("button", {onClick:()=>saveMobileOrder(true),
+                className:"flex-1 py-3 rounded-xl border-2 border-[#92400e] text-[#92400e] font-semibold text-sm active:bg-orange-50"},
+                "Báo giá"),
+              React.createElement("button", {onClick:()=>{
+                  if (!createForm.name.trim()) { alert("Vui lòng nhập tên khách hàng"); return; }
+                  if (!createForm.phone.trim()) { alert("Vui lòng nhập số điện thoại"); return; }
+                  if (!createForm.addr.trim()) { alert("Vui lòng nhập địa chỉ giao hàng"); return; }
+                  if (!createForm.items.length) { alert("Vui lòng thêm ít nhất 1 sản phẩm"); return; }
+                  setShowPayModal(true);
+                },
+                className:"flex-1 py-3 rounded-xl bg-[#92400e] text-white font-semibold text-sm active:opacity-80"},
+                "Thanh toán"))),
+      showPicker && React.createElement("div", {className:"absolute inset-0 z-[80] bg-white flex flex-col"},
+        React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
+          React.createElement("span", {className:"text-white font-semibold text-base"}, "Chọn sản phẩm"),
+          React.createElement("button", {onClick:()=>{setShowPicker(false);setPickerQ("");}, className:"text-white/80"},
+            React.createElement(X, {className:"h-6 w-6"}))),
+        React.createElement("div", {className:"px-3 py-2 border-b border-slate-100"},
+          React.createElement("div", {className:"relative"},
+            React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
+            React.createElement("input", {value:pickerQ, onChange:e=>setPickerQ(e.target.value),
+              placeholder:"Tìm theo tên, mã SKU...",
+              autoFocus:true,
+              style:{fontSize:'16px'},
+              className:"w-full rounded-xl border border-slate-200 pl-8 pr-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"}))),
+        React.createElement("div", {className:"flex-1 overflow-y-auto"},
+          React.createElement("div", {className:"divide-y divide-slate-100"},
+            pickerProds.map(p => React.createElement("button", {
+              key:p.sku, onClick:()=>addItem(p),
+              className:"w-full flex items-center gap-3 px-4 py-3 text-left active:bg-orange-50"},
+              React.createElement("div", {className:"flex-1 min-w-0"},
+                React.createElement("div", {className:"text-sm font-medium text-slate-800 leading-snug"}, p.name),
+                React.createElement("div", {className:"text-xs text-slate-400 mt-0.5"}, p.sku+(p.unit?" · "+p.unit:""))),
+              p.sale > 0 && React.createElement("div", {className:"text-sm font-semibold text-[#92400e] shrink-0"}, num(p.sale)+"đ")))))));
+  };
 
-  const screens = { orders: ScreenOrders, quotes: ScreenQuotes, create: ScreenCreate, products: ScreenProducts };
-  const Screen = screens[tab] || ScreenOrders;
-
-  return React.createElement("div", {className:"flex flex-col h-screen bg-slate-50 overflow-hidden"},
+  return React.createElement("div", {className:"relative flex flex-col h-screen bg-slate-50 overflow-hidden"},
     /* Header */
     React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200 safe-area-top"},
       React.createElement("div", {className:"flex items-center gap-2"},
         React.createElement("img", {src:"/banner.jpg", alt:"BLTK", className:"w-8 h-8 rounded-lg object-cover"}),
         React.createElement("span", {className:"font-bold text-[#92400e] text-base"}, "BLTK Hải Phòng")),
       React.createElement("div", {className:"flex items-center gap-2"},
+        React.createElement("button", {onClick:()=>setTab("home"),
+          className:`p-1.5 rounded-lg transition-colors ${tab==="home"?"bg-[#ffedd5] text-[#92400e]":"text-slate-400 active:bg-slate-100"}`,
+          title:"Tổng quan"},
+          React.createElement(Home, {className:"h-5 w-5"})),
         React.createElement("span", {className:"text-xs text-slate-500"}, profile?.name||""),
         React.createElement("button", {onClick:logout, className:"text-xs text-slate-400 border border-slate-200 rounded-lg px-2 py-1"}, "Đăng xuất"))),
-    /* Screen */
-    React.createElement(Screen, null),
+    /* Screen — gọi thẳng function để tránh unmount khi re-render */
+    tab==="home" ? ScreenHome() : tab==="orders" ? ScreenOrders() : tab==="quotes" ? ScreenQuotes() : tab==="create" ? ScreenCreate() : ScreenProducts(),
     /* Bottom nav */
     React.createElement("div", {className:"shrink-0 border-t border-slate-200 bg-white safe-area-bottom"},
       React.createElement("div", {className:"flex"},
@@ -9915,6 +10357,52 @@ function MobileApp({ profile, logout }) {
               pmts.map((p,i) => React.createElement("div", {key:i, className:"flex justify-between text-sm"}, React.createElement("span", {className:"text-slate-500"}, (p.kind||"Thanh toán")+" - "+(p.date||"")), React.createElement("span", {className:"text-amber-600"}, num(p.amount)+"đ"))),
               React.createElement("div", {className:"flex justify-between text-sm font-bold border-t border-slate-100 pt-1.5"}, React.createElement("span", {className:c.remaining>0?"text-red-500":"text-green-600"}, "Còn lại"), React.createElement("span", {className:c.remaining>0?"text-red-500":"text-green-600"}, num(c.remaining)+"đ")))
           );
+        })()),
+      React.createElement("div", {className:"shrink-0 px-3 py-2.5 border-t border-[#fed7aa] bg-[#fffbf5] safe-area-bottom"},
+        (() => {
+          const o = selectedOrder;
+          const c = calc(o);
+          if (o.draft) {
+            const printCfg = (settingsFS||[]).find(s=>s._id==="print_template")||{};
+            const dPill = "flex-1 flex items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-semibold rounded-full bg-[#ffedd5] text-[#92400e] border border-[#fed7aa] active:opacity-75";
+            return React.createElement("div", {className:"flex gap-2"},
+              React.createElement("button", {onClick:()=>{ openPrint(o,"bao-gia",printCfg,prodsFS||[]); }, className:dPill},
+                React.createElement(Printer, {className:"h-3.5 w-3.5 shrink-0"}), "In báo giá"),
+              React.createElement("button", {onClick:()=>convertDraftToOrder(o), disabled:converting, className:dPill+(converting?" opacity-50":"")},
+                React.createElement(CheckCircle, {className:"h-3.5 w-3.5 shrink-0"}), converting?"Đang tạo...":"Tạo đơn ngay"),
+              React.createElement("button", {onClick:()=>doEdit(o), className:dPill},
+                React.createElement(Pencil, {className:"h-3.5 w-3.5 shrink-0"}), "Sửa đơn"));
+          }
+          const pill = "bg-[#ffedd5] text-[#92400e] border border-[#fed7aa] rounded-full";
+          const pillRed = "bg-red-50 text-red-600 border border-red-200 rounded-full";
+          const btn = (onClick, icon, label, cls) => React.createElement("button", {onClick,
+            className:`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 text-xs font-semibold active:opacity-75 ${cls}`},
+            icon, label);
+          const btnSm = (onClick, icon, label, cls) => React.createElement("button", {onClick,
+            className:`w-16 shrink-0 flex items-center justify-center gap-1 py-2 text-xs font-semibold active:opacity-75 ${cls}`},
+            icon, label);
+          const ic = (I) => React.createElement(I, {className:"h-3.5 w-3.5 shrink-0"});
+          if (o.deliveryConfirmed || o.returned) {
+            return React.createElement("div", {className:"flex gap-2"},
+              !o.returned && btn(()=>doReturn(o), ic(RotateCcw), "Hoàn hàng", pillRed),
+              c.remaining > 0 && btn(doAddPayment, ic(CreditCard), "Thanh toán", pill),
+              btnSm(doPrint, ic(Printer), "In", pill));
+          }
+          if (o.imported) {
+            return React.createElement("div", {className:"space-y-2"},
+              React.createElement("div", {className:"flex gap-2"},
+                btn(()=>doConfirmDelivery(o), ic(Truck), "Xác nhận giao", pill),
+                btn(()=>doPartialDelivery(o), ic(Layers), "Giao từng phần", pill)),
+              React.createElement("div", {className:"flex gap-2"},
+                btn(doAddPayment, ic(CreditCard), "Thanh toán", pill),
+                btnSm(()=>doEdit(o), ic(Pencil), "Sửa", pill),
+                btnSm(doPrint, ic(Printer), "In", pill)));
+          }
+          return React.createElement("div", {className:"flex gap-2"},
+            btnSm(()=>doWarehouseIn(o), ic(ArrowDownToLine), "Nhập", pill),
+            btn(doAddPayment, ic(CreditCard), "Thanh toán", pill),
+            btnSm(()=>doEdit(o), ic(Pencil), "Sửa", pill),
+            btnSm(doPrint, ic(Printer), "In", pill));
         })())),
     /* Chi tiết sản phẩm overlay */
     selectedProduct && React.createElement("div", {className:"absolute inset-0 z-50 bg-white flex flex-col"},
@@ -9963,33 +10451,189 @@ function MobileApp({ profile, logout }) {
         React.createElement("div", null,
           React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Tên sản phẩm *"),
           React.createElement("input", {value:productForm.name||"", onChange:e=>setProductForm(p=>({...p,name:e.target.value})),
-            placeholder:"Nhập tên sản phẩm", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+            placeholder:"Nhập tên sản phẩm", style:{fontSize:'16px'}, className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
         React.createElement("div", null,
           React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Mã SKU *"),
           React.createElement("input", {value:productForm.sku||"", onChange:e=>setProductForm(p=>({...p,sku:e.target.value})),
             disabled:!!productForm._id, placeholder:"Nhập mã SKU",
-            className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"})),
+            style:{fontSize:'16px'}, className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none disabled:bg-slate-50 disabled:text-slate-400"})),
         React.createElement("div", {className:"grid grid-cols-2 gap-3"},
           React.createElement("div", null,
             React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Giá bán"),
             React.createElement("input", {type:"number", value:productForm.sale||"", onChange:e=>setProductForm(p=>({...p,sale:e.target.value})),
-              placeholder:"0", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+              placeholder:"0", style:{fontSize:'16px'}, className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
           React.createElement("div", null,
             React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Giá niêm yết"),
             React.createElement("input", {type:"number", value:productForm.list||"", onChange:e=>setProductForm(p=>({...p,list:e.target.value})),
-              placeholder:"0", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}))),
+              placeholder:"0", style:{fontSize:'16px'}, className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}))),
         React.createElement("div", null,
           React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Đơn vị"),
           React.createElement("input", {value:productForm.unit||"", onChange:e=>setProductForm(p=>({...p,unit:e.target.value})),
-            placeholder:"Cái, Bộ, ...", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+            placeholder:"Cái, Bộ, ...", style:{fontSize:'16px'}, className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"})),
         React.createElement("div", null,
           React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Mô tả"),
           React.createElement("textarea", {value:productForm.desc||"", onChange:e=>setProductForm(p=>({...p,desc:e.target.value})),
-            rows:4, placeholder:"Mô tả sản phẩm...", className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none resize-none"})),
+            rows:4, placeholder:"Mô tả sản phẩm...", style:{fontSize:'16px'}, className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none resize-none"})),
         React.createElement("button", {onClick:handleSaveProduct, disabled:savingProd,
           className:"w-full bg-[#92400e] text-white rounded-xl py-3 font-semibold text-sm active:opacity-80 disabled:opacity-50"},
-          savingProd ? "Đang lưu..." : (productForm._id ? "Lưu thay đổi" : "Thêm sản phẩm")))));
+          savingProd ? "Đang lưu..." : (productForm._id ? "Lưu thay đổi" : "Thêm sản phẩm"))))
+    ,
+    /* Payment modal */
+    showPayModal && React.createElement("div", {className:"absolute inset-0 z-[90] bg-white flex flex-col"},
+      React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
+        React.createElement("span", {className:"text-white font-semibold text-base"}, "Thanh toán đơn hàng"),
+        React.createElement("button", {onClick:()=>{setShowPayModal(false);setPayExpenses([]);setPayDeposit(0);setPayPayment(0);}, className:"text-white/80"},
+          React.createElement(X, {className:"h-6 w-6"}))),
+      React.createElement("div", {className:"flex-1 overflow-y-auto p-4 space-y-5"},
+        /* Chi phí phát sinh */
+        React.createElement("div", null,
+          React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2"}, "Chi phí phát sinh (KH thanh toán)"),
+          React.createElement("div", {className:"flex gap-2 flex-wrap mb-3"},
+            ["Chi phí giao hàng >15km","Chi phí lắp đặt","Chi phí đổi trả"]
+              .filter(t=>!payExpenses.find(e=>e.type===t))
+              .map(t=>React.createElement("button", {key:t,
+                onClick:()=>setPayExpenses(p=>[...p,{type:t,amount:0}]),
+                className:"text-xs px-3 py-1.5 rounded-lg border border-[#92400e] text-[#92400e] active:bg-orange-50"},
+                "+ "+t.replace("Chi phí ","")))),
+          React.createElement("div", {className:"space-y-2"},
+            payExpenses.map((e,i)=>React.createElement("div", {key:i, className:"flex items-center gap-2"},
+              React.createElement("span", {className:"flex-1 text-sm text-slate-700"}, e.type.replace("Chi phí ","")),
+              React.createElement("input", {type:"text",inputMode:"numeric",value:num(e.amount)||"",
+                onFocus:ev=>ev.target.select(),
+                onChange:ev=>setPayExpenses(p=>p.map((x,j)=>j===i?{...x,amount:parseInt(ev.target.value.replace(/\D/g,""))||0}:x)),
+                style:{fontSize:'16px'},className:"w-28 rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-right focus:border-[#92400e] focus:outline-none"}),
+              React.createElement("span",{className:"text-xs text-slate-400"},"đ"),
+              React.createElement("button",{onClick:()=>setPayExpenses(p=>p.filter((_,j)=>j!==i)),className:"text-slate-300 active:text-red-400"},
+                React.createElement(X,{className:"h-4 w-4"})))))),
+        /* Thanh toán */
+        React.createElement("div", {className:"space-y-3"},
+          React.createElement("div", {className:"text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1"}, "Thanh toán"),
+          React.createElement("div", {className:"flex items-center gap-3"},
+            React.createElement("span", {className:"text-sm text-slate-700 w-24 shrink-0"}, "Đặt cọc"),
+            React.createElement("input", {type:"text",inputMode:"numeric",value:num(payDeposit)||"",
+              onFocus:e=>e.target.select(),onChange:e=>setPayDeposit(parseInt(e.target.value.replace(/\D/g,""))||0),
+              style:{fontSize:'16px'},className:"flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}),
+            React.createElement("span",{className:"text-sm text-slate-400"},"đ")),
+          React.createElement("div", {className:"flex items-center gap-3"},
+            React.createElement("span", {className:"text-sm text-slate-700 w-24 shrink-0"}, "Thanh toán"),
+            React.createElement("input", {type:"text",inputMode:"numeric",value:num(payPayment)||"",
+              onFocus:e=>e.target.select(),onChange:e=>setPayPayment(parseInt(e.target.value.replace(/\D/g,""))||0),
+              style:{fontSize:'16px'},className:"flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none"}),
+            React.createElement("span",{className:"text-sm text-slate-400"},"đ"))),
+        /* Tóm tắt */
+        (()=>{
+          const sub=createForm.items.reduce((s,it)=>s+(Number(it.price)||0)*(Number(it.qty)||0),0);
+          const exp=payExpenses.reduce((s,e)=>s+(e.amount||0),0);
+          const total=sub+exp;
+          const paid=payDeposit+payPayment;
+          return React.createElement("div",{className:"bg-slate-50 rounded-xl p-3 space-y-1.5"},
+            React.createElement("div",{className:"flex justify-between text-sm"},React.createElement("span",{className:"text-slate-500"},"Tiền hàng"),React.createElement("span",null,num(sub)+"đ")),
+            exp>0&&React.createElement("div",{className:"flex justify-between text-sm"},React.createElement("span",{className:"text-slate-500"},"Chi phí"),React.createElement("span",null,num(exp)+"đ")),
+            React.createElement("div",{className:"flex justify-between text-sm font-semibold border-t border-slate-100 pt-1.5"},React.createElement("span",{className:"text-[#92400e]"},"Tổng cộng"),React.createElement("span",{className:"text-[#92400e]"},num(total)+"đ")),
+            paid>0&&React.createElement("div",{className:"flex justify-between text-sm"},React.createElement("span",{className:"text-slate-500"},"Đã thanh toán"),React.createElement("span",{className:"text-amber-600"},num(paid)+"đ")),
+            React.createElement("div",{className:"flex justify-between text-sm font-bold"},React.createElement("span",{className:(total-paid)>0?"text-red-500":"text-green-600"},"Còn lại"),React.createElement("span",{className:(total-paid)>0?"text-red-500":"text-green-600"},num(total-paid)+"đ")));
+        })()),
+      React.createElement("div", {className:"shrink-0 p-4 border-t border-slate-200 bg-white safe-area-bottom"},
+        React.createElement("button", {onClick:saveMobileOrderWithPayment,
+          className:"w-full py-3 bg-[#92400e] text-white rounded-xl font-semibold text-sm active:opacity-80"},
+          editingOrderId ? "Cập nhật đơn hàng" : "Xác nhận tạo đơn hàng"))),
+    /* Overlay thanh toán thêm cho đơn đang xem */
+    showDetailPay && selectedOrder && React.createElement("div", {className:"absolute inset-0 z-[100] bg-black/40 flex items-end"},
+      React.createElement("div", {className:"w-full bg-white rounded-t-2xl p-5 space-y-4 safe-area-bottom"},
+        React.createElement("div", {className:"flex items-center justify-between"},
+          React.createElement("span", {className:"font-semibold text-[#7c2d12]"}, "Thanh toán — "+selectedOrder.id),
+          React.createElement("button", {onClick:()=>{setShowDetailPay(false);setDetailPayAmt(0);}, className:"text-slate-400"},
+            React.createElement(X, {className:"h-5 w-5"}))),
+        React.createElement("div", {className:"flex gap-2"},
+          ["Đặt cọc","Thanh toán","Hoàn tiền"].map(k=>React.createElement("button", {key:k,
+            onClick:()=>setDetailPayKind(k),
+            className:`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors ${detailPayKind===k?"bg-[#92400e] text-white border-[#92400e]":"border-[#fed7aa] text-[#92400e]"}`},
+            k))),
+        React.createElement("div", {className:"flex items-center gap-3"},
+          React.createElement("input", {type:"text", inputMode:"numeric",
+            value:num(detailPayAmt)||"",
+            autoFocus:true,
+            onFocus:e=>e.target.select(),
+            onChange:e=>setDetailPayAmt(parseInt(e.target.value.replace(/\D/g,""))||0),
+            style:{fontSize:'16px'}, className:"flex-1 rounded-xl border border-[#fed7aa] px-3 py-2.5 text-sm focus:border-[#92400e] focus:outline-none text-right"}),
+          React.createElement("span", {className:"text-sm text-slate-400"}, "đ")),
+        React.createElement("button", {onClick:()=>doSaveDetailPay(selectedOrder),
+          className:"w-full py-2.5 bg-[#92400e] text-white rounded-xl font-semibold text-sm active:opacity-80"},
+          "Xác nhận"))),
+    /* Overlay nhập kho mobile */
+    showWhIn && selectedOrder && React.createElement("div", {className:"absolute inset-0 z-[100] bg-white flex flex-col"},
+      React.createElement("div", {className:"shrink-0 flex items-center justify-between px-4 py-3 bg-[#92400e]"},
+        React.createElement("span", {className:"text-white font-semibold text-base"}, "Nhập kho — "+selectedOrder.id),
+        React.createElement("button", {onClick:()=>setShowWhIn(false), className:"text-white/80"},
+          React.createElement(X, {className:"h-6 w-6"}))),
+      React.createElement("div", {className:"flex-1 overflow-y-auto p-4 space-y-4"},
+        React.createElement("div", {className:"grid grid-cols-2 gap-3"},
+          React.createElement("div", null,
+            React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Số phiếu nhập"),
+            React.createElement("input", {value:whInPn, onChange:e=>setWhInPn(e.target.value), style:{fontSize:'16px'},
+              className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+          React.createElement("div", null,
+            React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Ngày nhập"),
+            React.createElement("input", {type:"date", value:whInDate, onChange:e=>setWhInDate(e.target.value), style:{fontSize:'16px'},
+              className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none"})),
+          React.createElement("div", null,
+            React.createElement("label", {className:"text-xs font-semibold text-slate-500 uppercase tracking-wide"}, "Kho hàng"),
+            React.createElement("select", {value:whInKho, onChange:e=>setWhInKho(e.target.value), style:{fontSize:'16px'},
+              className:"mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-[#92400e] focus:outline-none bg-white"},
+              React.createElement("option", {value:"HH"}, "HH"),
+              React.createElement("option", {value:"TB"}, "TB"),
+              React.createElement("option", {value:"HG"}, "HG")))),
+        React.createElement("datalist", {id:"mob-ncc"},
+          SUPPLIERS.map(s=>React.createElement("option", {key:s.code, value:s.name}))),
+        React.createElement("div", {className:"space-y-3"},
+          whInRows.map((r,i)=>React.createElement("div", {key:i, className:"bg-[#fffbf5] border border-[#fed7aa] rounded-xl p-3 space-y-2"},
+            React.createElement("div", {className:"text-sm font-semibold text-[#7c2d12]"}, r.name,
+              React.createElement("span", {className:"ml-2 text-xs font-normal text-slate-400"}, "SL: "+r.slDat)),
+            React.createElement("div", {className:"grid grid-cols-2 gap-2"},
+              React.createElement("div", null,
+                React.createElement("label", {className:"text-xs text-slate-500"}, "SL nhập"),
+                React.createElement("input", {type:"number", inputMode:"numeric", value:r.slNhap,
+                  onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,slNhap:parseInt(e.target.value)||0}:x)),
+                  style:{fontSize:'16px'}, className:"mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none"})),
+              React.createElement("div", null,
+                React.createElement("label", {className:"text-xs text-slate-500"}, "Giá nhập (*)"),
+                React.createElement("input", {type:"text", inputMode:"numeric",
+                  value:num(r.giaNhap)||"",
+                  onFocus:e=>e.target.select(),
+                  onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,giaNhap:parseInt(e.target.value.replace(/\D/g,""))||0}:x)),
+                  style:{fontSize:'16px'}, className:"mt-0.5 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none text-right"}))),
+            React.createElement("div", null,
+              React.createElement("label", {className:"text-xs text-slate-500"}, "Nhà cung cấp (*)"),
+              React.createElement("input", {list:"mob-ncc", value:r.nccIn, placeholder:"Nhập tên NCC",
+                onChange:e=>setWhInRows(xs=>xs.map((x,k)=>k===i?{...x,nccIn:e.target.value}:x)),
+                style:{fontSize:'16px'}, className:`mt-0.5 w-full rounded-lg border px-2 py-1.5 text-sm focus:border-[#92400e] focus:outline-none ${r.slNhap>0&&!r.nccIn.trim()?"border-amber-300 bg-amber-50":"border-slate-200"}`})))))),
+      React.createElement("div", {className:"shrink-0 p-4 border-t border-[#fed7aa] bg-[#fffbf5] safe-area-bottom"},
+        React.createElement("button", {onClick:()=>doSaveWhIn(selectedOrder),
+          className:"w-full py-3 bg-[#92400e] text-white rounded-xl font-semibold text-sm active:opacity-80"},
+          "Xác nhận nhập kho"))),
+    /* Print menu bottom sheet */
+    showPrintMenu && selectedOrder && React.createElement("div", {className:"absolute inset-0 z-[100] bg-black/40 flex items-end",
+      onClick:()=>setShowPrintMenu(false)},
+      React.createElement("div", {className:"w-full bg-white rounded-t-2xl p-5 space-y-3 safe-area-bottom", onClick:e=>e.stopPropagation()},
+        React.createElement("div", {className:"flex items-center justify-between mb-1"},
+          React.createElement("span", {className:"font-semibold text-[#7c2d12]"}, "In — "+selectedOrder.id),
+          React.createElement("button", {onClick:()=>setShowPrintMenu(false), className:"text-slate-400"},
+            React.createElement(X, {className:"h-5 w-5"}))),
+        React.createElement("button", {onClick:()=>doOpenPrint(selectedOrder,"xac-nhan"),
+          className:"w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#fed7aa] bg-[#ffedd5] active:opacity-75"},
+          React.createElement(Printer, {className:"h-4 w-4 text-[#92400e]"}),
+          React.createElement("span", {className:"text-sm font-medium text-[#92400e]"}, "Xác nhận đặt hàng")),
+        React.createElement("button", {onClick:()=>doOpenPrint(selectedOrder,"phieu-giao-gia"),
+          className:"w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#fed7aa] bg-[#ffedd5] active:opacity-75"},
+          React.createElement(Printer, {className:"h-4 w-4 text-[#92400e]"}),
+          React.createElement("span", {className:"text-sm font-medium text-[#92400e]"}, "Phiếu giao hàng (có giá)")),
+        React.createElement("button", {onClick:()=>doOpenPrint(selectedOrder,"phieu-giao"),
+          className:"w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 active:opacity-75"},
+          React.createElement(Printer, {className:"h-4 w-4 text-slate-500"}),
+          React.createElement("span", {className:"text-sm font-medium text-slate-600"}, "Phiếu giao hàng (không giá)"))))
+    );
 }
+
 
 /* ───────── App wrapper với Auth ───────── */
 function AppWithAuth() {
