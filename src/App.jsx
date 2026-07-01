@@ -9892,6 +9892,13 @@ function MobileApp({ profile, logout }) {
   const [notifs, setNotifs] = useState([]);
   const [showRetListMob, setShowRetListMob] = useState(false);
   const [showNotifs, setShowNotifs] = useState(false);
+  /* ScreenReport state — hoisted để tránh vi phạm Rules of Hooks */
+  const [rTab,      setRTab]      = useState("sales");
+  const [rFrom,     setRFrom]     = useState(localMonthStart);
+  const [rTo,       setRTo]       = useState(localToday);
+  const [rSpQ,      setRSpQ]      = useState("");
+  const [rNvFilter, setRNvFilter] = useState("Tất cả");
+  const [rExpanded, setRExpanded] = useState(new Set());
   const notify = useToast();
 
   /* ── FCM: đăng ký token push + lắng nghe foreground ── */
@@ -10276,13 +10283,10 @@ function MobileApp({ profile, logout }) {
 
   /* ── Màn hình Báo cáo (admin) ── */
   const ScreenReport = () => {
-    const [rTab, setRTab] = React.useState("sales");
-    const [rFrom, setRFrom] = React.useState(localMonthStart());
-    const [rTo,   setRTo]   = React.useState(localToday());
-    const [spQ,   setSpQ]   = React.useState("");
-    const [nvFilter, setNvFilter] = React.useState("Tất cả");
-    const [expanded, setExpanded] = React.useState(new Set());
-    const { whInItems = [] } = useInventory() || {};
+    const spQ = rSpQ; const setSpQ = setRSpQ;
+    const nvFilter = rNvFilter; const setNvFilter = setRNvFilter;
+    const expanded = rExpanded; const setExpanded = setRExpanded;
+    const whInItems = whInFS || [];
 
     const inR = dt => { const d = parseViDate(dt); return (!rFrom || d >= parseISO(rFrom)) && (!rTo || d <= parseISOEnd(rTo)); };
     const cpbhOf = o => (o.compCosts||[]).filter(x=>["Chi phí Ship hàng","Chi phí hoa hồng","Chi phí lắp đặt"].includes(x.type)).reduce((s,x)=>s+(x.amount||0),0) + (o.importExpense||0) + (o.expense||0);
@@ -10297,10 +10301,10 @@ function MobileApp({ profile, logout }) {
 
     /* ── Bán hàng ── */
     const SaleTab = () => {
-      const rows = React.useMemo(() => activeOrders.map(o => {
+      const rows = activeOrders.map(o => {
         const c = calc(o); const cpbh = cpbhOf(o); const lai = c.total - c.totalCost - cpbh;
         return {...o, _c:c, _cpbh:cpbh, _lai:lai, _pct:c.total?(lai/c.total*100).toFixed(1):"0.0", _dt:String(o.dt||"").split(" ").find(p=>p.includes("/"))||""};
-      }), [activeOrders]);
+      });
       const totRevenue = rows.reduce((s,o)=>s+o._c.total,0);
       const totLai     = rows.reduce((s,o)=>s+o._lai,0);
       const totPaid    = rows.reduce((s,o)=>s+(o.paid||0),0);
@@ -10368,8 +10372,8 @@ function MobileApp({ profile, logout }) {
 
     /* ── Nhân viên ── */
     const NvTab = () => {
-      const staffNames = React.useMemo(()=>[...new Set(activeOrders.map(o=>o.staff).filter(Boolean))].sort(),[activeOrders]);
-      const filtered = React.useMemo(()=>nvFilter==="Tất cả"?activeOrders:activeOrders.filter(o=>o.staff===nvFilter),[activeOrders,nvFilter]);
+      const staffNames = [...new Set(activeOrders.map(o=>o.staff).filter(Boolean))].sort();
+      const filtered = nvFilter==="Tất cả" ? activeOrders : activeOrders.filter(o=>o.staff===nvFilter);
       const map = {};
       filtered.forEach(o=>{
         const s = o.staff||"Chưa phân công";
@@ -10813,7 +10817,7 @@ function MobileApp({ profile, logout }) {
               style:{fontSize:'16px'},
               className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"})),
           React.createElement("div", {className:"text-xs text-slate-400 mb-2"},
-            q ? filtered.length+"/"+PRODUCTS.length+" sản phẩm" : "Hiện "+visible.length+"/"+PRODUCTS.length+" — tìm kiếm để lọc nhanh"),
+            q ? filtered.length+"/"+baseProd.length+" sản phẩm" : "Hiện "+visible.length+"/"+baseProd.length+" — tìm kiếm để lọc nhanh"),
           React.createElement("div", {className:"space-y-2"},
             visible.map(p => React.createElement("div", {
               key:p.sku,
