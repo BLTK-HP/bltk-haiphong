@@ -9898,6 +9898,9 @@ function MobileApp({ profile, logout }) {
   const [pickerQ, setPickerQ] = useState("");
   const [orderSearch, setOrderSearch] = useState("");
   const [quoteSearch, setQuoteSearch] = useState("");
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderFrom, setOrderFrom] = useState("");
+  const [orderTo, setOrderTo] = useState("");
   const [showPayModal, setShowPayModal] = useState(false);
   const [payExpenses, setPayExpenses] = useState([]);
   const [payDeposit, setPayDeposit] = useState(0);
@@ -10311,7 +10314,14 @@ function MobileApp({ profile, logout }) {
   });
   const matchSearch = (o, q) => !q || [o.id, o.name, o.phone].some(f => String(f||"").toLowerCase().includes(q.toLowerCase()));
   const sortedOrders = React.useMemo(() => sortByDate(orders), [orders]);
-  const visibleOrders = React.useMemo(() => sortedOrders.filter(o => !o.draft && matchSearch(o, orderSearch)), [sortedOrders, orderSearch]);
+  const ORD_PAGE_SIZE = 20;
+  const visibleOrders = React.useMemo(() => {
+    const inR = dt => {
+      const d = parseViDate(dt);
+      return (!orderFrom || d >= parseISO(orderFrom)) && (!orderTo || d <= parseISOEnd(orderTo));
+    };
+    return sortedOrders.filter(o => !o.draft && matchSearch(o, orderSearch) && inR(o.dt));
+  }, [sortedOrders, orderSearch, orderFrom, orderTo]);
   const visibleQuotes = React.useMemo(() => sortedOrders.filter(o => o.draft && matchSearch(o, quoteSearch)), [sortedOrders, quoteSearch]);
 
   /* ── Màn hình Báo cáo (admin) ── */
@@ -10789,20 +10799,47 @@ function MobileApp({ profile, logout }) {
   };
 
   /* ── Màn hình Đơn hàng ── */
-  const ScreenOrders = () => React.createElement("div", {className:"flex-1 relative overflow-hidden"},
+  const ScreenOrders = () => {
+    const totalOrdPages = Math.max(1, Math.ceil(visibleOrders.length / ORD_PAGE_SIZE));
+    const safePage = Math.min(orderPage, totalOrdPages);
+    const pageOrders = visibleOrders.slice((safePage-1)*ORD_PAGE_SIZE, safePage*ORD_PAGE_SIZE);
+    const resetPage = () => setOrderPage(1);
+    return React.createElement("div", {className:"flex-1 relative overflow-hidden"},
     React.createElement("div", {className:"absolute inset-0 overflow-y-auto pb-4"},
       React.createElement("div", {className:"px-3 pt-3"},
-        React.createElement("div", {className:"relative mb-3"},
-          React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
-          React.createElement("input", {value:orderSearch, onChange:e=>setOrderSearch(e.target.value),
-            placeholder:"Tìm mã đơn, tên KH, SĐT...",
-            style:{fontSize:'16px'},
-            className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"})),
+        React.createElement("div", {className:"flex gap-2 mb-2"},
+          React.createElement("div", {className:"relative flex-1"},
+            React.createElement(Search, {className:"absolute left-2.5 top-2.5 h-4 w-4 text-slate-400"}),
+            React.createElement("input", {value:orderSearch, onChange:e=>{setOrderSearch(e.target.value);resetPage();},
+              placeholder:"Tìm mã đơn, tên KH, SĐT...",
+              style:{fontSize:'16px'},
+              className:"w-full rounded-xl border border-slate-200 bg-white pl-8 pr-3 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"}))),
+        React.createElement("div", {className:"flex gap-2 mb-3"},
+          React.createElement("div", {className:"flex-1"},
+            React.createElement("label", {className:"block text-[10px] text-slate-400 mb-0.5"}, "Từ ngày"),
+            React.createElement("input", {type:"date", value:orderFrom, onChange:e=>{setOrderFrom(e.target.value);resetPage();},
+              style:{fontSize:'16px'},
+              className:"w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"})),
+          React.createElement("div", {className:"flex-1"},
+            React.createElement("label", {className:"block text-[10px] text-slate-400 mb-0.5"}, "Đến ngày"),
+            React.createElement("input", {type:"date", value:orderTo, onChange:e=>{setOrderTo(e.target.value);resetPage();},
+              style:{fontSize:'16px'},
+              className:"w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-sm focus:border-[#fed7aa] focus:outline-none"})),
+          (orderFrom || orderTo) && React.createElement("div", {className:"flex items-end pb-0.5"},
+            React.createElement("button", {onClick:()=>{setOrderFrom("");setOrderTo("");resetPage();},
+              className:"rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs text-slate-500 active:bg-slate-100"}, "✕"))),
+        React.createElement("div", {className:"flex items-center justify-between mb-2"},
+          React.createElement("span", {className:"text-xs text-slate-400"}, visibleOrders.length + " đơn" + (totalOrdPages>1 ? " · trang "+safePage+"/"+totalOrdPages : "")),
+          totalOrdPages > 1 && React.createElement("div", {className:"flex gap-1"},
+            React.createElement("button", {disabled:safePage===1, onClick:()=>setOrderPage(p=>Math.max(1,p-1)),
+              className:"px-2 py-1 rounded-lg text-sm border border-slate-200 disabled:opacity-30 active:bg-slate-100"}, "←"),
+            React.createElement("button", {disabled:safePage===totalOrdPages, onClick:()=>setOrderPage(p=>Math.min(totalOrdPages,p+1)),
+              className:"px-2 py-1 rounded-lg text-sm border border-slate-200 disabled:opacity-30 active:bg-slate-100"}, "→"))),
         visibleOrders.length === 0
           ? React.createElement("div", {className:"text-center text-slate-400 pt-10 text-sm"},
-              orderSearch ? "Không tìm thấy đơn hàng nào" : "Chưa có đơn hàng")
+              orderSearch || orderFrom || orderTo ? "Không tìm thấy đơn hàng nào" : "Chưa có đơn hàng")
           : React.createElement("div", {className:"space-y-2"},
-              visibleOrders.map(o => {
+              pageOrders.map(o => {
                 const c = calc(o);
                 const pmts = o.payments || [];
                 const datCoc = pmts.filter(p=>p.kind==="Đặt cọc").reduce((s,p)=>s+(p.amount||0),0);
@@ -10844,7 +10881,7 @@ function MobileApp({ profile, logout }) {
               }))
       )
     )
-  );
+  );};
 
   /* ── Màn hình Sản phẩm ── */
   const ScreenProducts = () => {
