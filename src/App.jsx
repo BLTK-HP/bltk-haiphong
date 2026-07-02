@@ -5436,7 +5436,7 @@ function WhOut({whOutItems: items, setWhOutItems: setItems, onOpenOrder}) {
             /*#__PURE__*/React.createElement("button", {onClick: doEditSave, disabled: saving, className: blueBtn}, "Lưu"),
             /*#__PURE__*/React.createElement("button", {onClick: () => setEditMode(false), className: ghostBtn}, "Hủy"))
         : /*#__PURE__*/React.createElement(React.Fragment, null,
-            isAdmin && /*#__PURE__*/React.createElement("button", {onClick: openEdit, className: "inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"},
+            isAdmin && /*#__PURE__*/React.createElement("button", {onClick: openEdit, className: "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"},
               /*#__PURE__*/React.createElement(Pencil, {className:"h-4 w-4"}), "Sửa"),
             isAdmin && /*#__PURE__*/React.createElement("button", {onClick: doDelete, className: "inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-100"},
               /*#__PURE__*/React.createElement(Trash2, {className:"h-4 w-4"}), "Xóa"),
